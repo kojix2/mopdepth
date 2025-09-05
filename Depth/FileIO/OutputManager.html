@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Crystal Docs 1.16.3">
+<meta name="crystal_docs.project_version" content="main">
+<meta name="crystal_docs.project_name" content="mopdepth">
+
+
+
+<link href="../../css/style.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="../../js/doc.js"></script>
+
+  <meta name="repository-name" content="mopdepth">
+  <title>Depth::FileIO::OutputManager - mopdepth main</title>
+  <script type="text/javascript">
+    CrystalDocs.base_path = "../../";
+  </script>
+</head>
+<body>
+
+<svg class="hidden">
+  <symbol id="octicon-link" viewBox="0 0 16 16">
+    <path fill="currentColor" fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+  </symbol>
+</svg>
+<input type="checkbox" id="sidebar-btn">
+<label for="sidebar-btn" id="sidebar-btn-label">
+  <svg class="open" xmlns="http://www.w3.org/2000/svg" height="2em" width="2em" viewBox="0 0 512 512"><title>Open Sidebar</title><path fill="currentColor" d="M80 96v64h352V96H80zm0 112v64h352v-64H80zm0 112v64h352v-64H80z"></path></svg>
+  <svg class="close" xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 512 512"><title>Close Sidebar</title><path fill="currentColor" d="m118.6 73.4-45.2 45.2L210.7 256 73.4 393.4l45.2 45.2L256 301.3l137.4 137.3 45.2-45.2L301.3 256l137.3-137.4-45.2-45.2L256 210.7Z"></path></svg>
+</label>
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="search-box">
+      <input type="search" class="search-input" placeholder="Search..." spellcheck="false" aria-label="Search">
+    </div>
+
+    <div class="project-summary">
+      <h1 class="project-name">
+        <a href="../../index.html">
+          mopdepth
+        </a>
+      </h1>
+
+      <span class="project-version">
+        main
+      </span>
+    </div>
+  </div>
+
+  <div class="search-results hidden">
+    <ul class="search-list"></ul>
+  </div>
+
+  <div class="types-list">
+    <ul>
+  
+  <li class="parent open current" data-id="mopdepth/Depth" data-name="depth">
+      <a href="../../Depth.html">Depth</a>
+      
+        <ul>
+  
+  <li class=" " data-id="mopdepth/Depth/BamIndexError" data-name="depth::bamindexerror">
+      <a href="../../Depth/BamIndexError.html">BamIndexError</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/CLI" data-name="depth::cli">
+      <a href="../../Depth/CLI.html">CLI</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Config" data-name="depth::config">
+      <a href="../../Depth/Config.html">Config</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/ConfigError" data-name="depth::configerror">
+      <a href="../../Depth/ConfigError.html">ConfigError</a>
+      
+    </li>
+  
+  <li class="parent " data-id="mopdepth/Depth/Core" data-name="depth::core">
+      <a href="../../Depth/Core.html">Core</a>
+      
+        <ul>
+  
+  <li class=" " data-id="mopdepth/Depth/Core/Cigar" data-name="depth::core::cigar">
+      <a href="../../Depth/Core/Cigar.html">Cigar</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Core/Coverage" data-name="depth::core::coverage">
+      <a href="../../Depth/Core/Coverage.html">Coverage</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Core/CoverageCalculator" data-name="depth::core::coveragecalculator">
+      <a href="../../Depth/Core/CoverageCalculator.html">CoverageCalculator</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Core/CoverageResult" data-name="depth::core::coverageresult">
+      <a href="../../Depth/Core/CoverageResult.html">CoverageResult</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Core/CoverageUtils" data-name="depth::core::coverageutils">
+      <a href="../../Depth/Core/CoverageUtils.html">CoverageUtils</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Core/Options" data-name="depth::core::options">
+      <a href="../../Depth/Core/Options.html">Options</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Core/Region" data-name="depth::core::region">
+      <a href="../../Depth/Core/Region.html">Region</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Core/Target" data-name="depth::core::target">
+      <a href="../../Depth/Core/Target.html">Target</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/CoverageCalculationError" data-name="depth::coveragecalculationerror">
+      <a href="../../Depth/CoverageCalculationError.html">CoverageCalculationError</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Error" data-name="depth::error">
+      <a href="../../Depth/Error.html">Error</a>
+      
+    </li>
+  
+  <li class="parent open current" data-id="mopdepth/Depth/FileIO" data-name="depth::fileio">
+      <a href="../../Depth/FileIO.html">FileIO</a>
+      
+        <ul>
+  
+  <li class=" current" data-id="mopdepth/Depth/FileIO/OutputManager" data-name="depth::fileio::outputmanager">
+      <a href="../../Depth/FileIO/OutputManager.html">OutputManager</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/FileNotFoundError" data-name="depth::filenotfounderror">
+      <a href="../../Depth/FileNotFoundError.html">FileNotFoundError</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/InvalidRegionError" data-name="depth::invalidregionerror">
+      <a href="../../Depth/InvalidRegionError.html">InvalidRegionError</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Runner" data-name="depth::runner">
+      <a href="../../Depth/Runner.html">Runner</a>
+      
+    </li>
+  
+  <li class="parent " data-id="mopdepth/Depth/Stats" data-name="depth::stats">
+      <a href="../../Depth/Stats.html">Stats</a>
+      
+        <ul>
+  
+  <li class=" " data-id="mopdepth/Depth/Stats/DepthStat" data-name="depth::stats::depthstat">
+      <a href="../../Depth/Stats/DepthStat.html">DepthStat</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Stats/Distribution" data-name="depth::stats::distribution">
+      <a href="../../Depth/Stats/Distribution.html">Distribution</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Stats/IntHistogram" data-name="depth::stats::inthistogram">
+      <a href="../../Depth/Stats/IntHistogram.html">IntHistogram</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Stats/Quantize" data-name="depth::stats::quantize">
+      <a href="../../Depth/Stats/Quantize.html">Quantize</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+</ul>
+
+  </div>
+</div>
+
+
+<div class="main-content">
+<h1 class="type-name">
+
+  <span class="kind">
+    class
+  </span> Depth::<wbr>FileIO::<wbr>OutputManager
+
+</h1>
+
+
+  <ul class="superclass-hierarchy"><li class="superclass"><a href="../../Depth/FileIO/OutputManager.html">Depth::FileIO::OutputManager</a></li><li class="superclass">Reference</li><li class="superclass">Object</li></ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2>
+    <a id="defined-in" class="anchor" href="#defined-in">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Defined in:
+  </h2>
+  
+    
+      <a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/io/output_manager.cr#L6" target="_blank">
+        depth/io/output_manager.cr
+      </a>
+    
+    <br/>
+  
+
+
+
+
+
+  
+  <h2>
+    <a id="constructors" class="anchor" href="#constructors">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Constructors
+  </h2>
+  <ul class="list-summary">
+    
+      <li class="entry-summary">
+        <a href="#new%28config%3AConfig%29-class-method" class="signature"><strong>.new</strong>(config : Config)</a>
+        
+      </li>
+    
+  </ul>
+
+
+  
+
+  
+
+  
+  <h2>
+    <a id="instance-method-summary" class="anchor" href="#instance-method-summary">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Instance Method Summary
+  </h2>
+  <ul class="list-summary">
+    
+      <li class="entry-summary">
+        <a href="#close_all-instance-method" class="signature"><strong>#close_all</strong></a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#f_global%3AFile%7CNil-instance-method" class="signature"><strong>#f_global</strong> : File | Nil</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#f_perbase%3AFile%7CHTS%3A%3ABgzf%7CNil-instance-method" class="signature"><strong>#f_perbase</strong> : File | HTS::Bgzf | Nil</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#f_quantized%3AFile%7CHTS%3A%3ABgzf%7CNil-instance-method" class="signature"><strong>#f_quantized</strong> : File | HTS::Bgzf | Nil</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#f_region%3AFile%7CNil-instance-method" class="signature"><strong>#f_region</strong> : File | Nil</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#f_regions%3AFile%7CHTS%3A%3ABgzf%7CNil-instance-method" class="signature"><strong>#f_regions</strong> : File | HTS::Bgzf | Nil</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#f_summary%3AFile%7CNil-instance-method" class="signature"><strong>#f_summary</strong> : File | Nil</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#f_thresholds%3AFile%7CHTS%3A%3ABgzf%7CNil-instance-method" class="signature"><strong>#f_thresholds</strong> : File | HTS::Bgzf | Nil</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#write_per_base_interval%28chrom%3AString%2Cstart%3AInt32%2Cstop%3AInt32%2Cdepth%3AInt32%29-instance-method" class="signature"><strong>#write_per_base_interval</strong>(chrom : String, start : Int32, stop : Int32, depth : Int32)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#write_quantized_interval%28chrom%3AString%2Cstart%3AInt32%2Cstop%3AInt32%2Clabel%3AString%29-instance-method" class="signature"><strong>#write_quantized_interval</strong>(chrom : String, start : Int32, stop : Int32, label : String)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#write_region_stat%28chrom%3AString%2Cstart%3AInt32%2Cstop%3AInt32%2Cname%3AString%7CNil%2Cvalue%3AFloat64%29-instance-method" class="signature"><strong>#write_region_stat</strong>(chrom : String, start : Int32, stop : Int32, name : String | Nil, value : Float64)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#write_summary_line%28region%3AString%2Cstat%3ADepth%3A%3AStats%3A%3ADepthStat%29-instance-method" class="signature"><strong>#write_summary_line</strong>(region : String, stat : Depth::Stats::DepthStat)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#write_summary_total%28total%3ADepth%3A%3AStats%3A%3ADepthStat%29-instance-method" class="signature"><strong>#write_summary_total</strong>(total : Depth::Stats::DepthStat)</a>
+        
+          <div class="summary"><p>Optionally call at end to add a total line like mosdepth</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#write_threshold_counts%28chrom%3AString%2Cstart%3AInt32%2Cstop%3AInt32%2Cname%3AString%7CNil%2Ccounts%3AArray%28Int32%29%29-instance-method" class="signature"><strong>#write_threshold_counts</strong>(chrom : String, start : Int32, stop : Int32, name : String | Nil, counts : Array(Int32))</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#write_thresholds_header%28thresholds%3AArray%28Int32%29%29-instance-method" class="signature"><strong>#write_thresholds_header</strong>(thresholds : Array(Int32))</a>
+        
+      </li>
+    
+  </ul>
+
+
+
+  <div class="methods-inherited">
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+  </div>
+
+  
+  <h2>
+    <a id="constructor-detail" class="anchor" href="#constructor-detail">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Constructor Detail
+  </h2>
+  
+    <div class="entry-detail" id="new(config:Config)-class-method">
+      <div class="signature">
+        
+        def self.<strong>new</strong>(config : <a href="../../Depth/Config.html">Config</a>)
+
+        <a class="method-permalink" href="#new%28config%3AConfig%29-class-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/io/output_manager.cr#L19" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+
+
+  
+
+  
+
+  
+  <h2>
+    <a id="instance-method-detail" class="anchor" href="#instance-method-detail">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Instance Method Detail
+  </h2>
+  
+    <div class="entry-detail" id="close_all-instance-method">
+      <div class="signature">
+        
+        def <strong>close_all</strong>
+
+        <a class="method-permalink" href="#close_all-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/io/output_manager.cr#L127" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="f_global:File|Nil-instance-method">
+      <div class="signature">
+        
+        def <strong>f_global</strong> : File | Nil
+
+        <a class="method-permalink" href="#f_global%3AFile%7CNil-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/io/output_manager.cr#L8" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="f_perbase:File|HTS::Bgzf|Nil-instance-method">
+      <div class="signature">
+        
+        def <strong>f_perbase</strong> : File | HTS::Bgzf | Nil
+
+        <a class="method-permalink" href="#f_perbase%3AFile%7CHTS%3A%3ABgzf%7CNil-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/io/output_manager.cr#L10" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="f_quantized:File|HTS::Bgzf|Nil-instance-method">
+      <div class="signature">
+        
+        def <strong>f_quantized</strong> : File | HTS::Bgzf | Nil
+
+        <a class="method-permalink" href="#f_quantized%3AFile%7CHTS%3A%3ABgzf%7CNil-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/io/output_manager.cr#L12" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="f_region:File|Nil-instance-method">
+      <div class="signature">
+        
+        def <strong>f_region</strong> : File | Nil
+
+        <a class="method-permalink" href="#f_region%3AFile%7CNil-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/io/output_manager.cr#L9" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="f_regions:File|HTS::Bgzf|Nil-instance-method">
+      <div class="signature">
+        
+        def <strong>f_regions</strong> : File | HTS::Bgzf | Nil
+
+        <a class="method-permalink" href="#f_regions%3AFile%7CHTS%3A%3ABgzf%7CNil-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/io/output_manager.cr#L11" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="f_summary:File|Nil-instance-method">
+      <div class="signature">
+        
+        def <strong>f_summary</strong> : File | Nil
+
+        <a class="method-permalink" href="#f_summary%3AFile%7CNil-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/io/output_manager.cr#L7" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="f_thresholds:File|HTS::Bgzf|Nil-instance-method">
+      <div class="signature">
+        
+        def <strong>f_thresholds</strong> : File | HTS::Bgzf | Nil
+
+        <a class="method-permalink" href="#f_thresholds%3AFile%7CHTS%3A%3ABgzf%7CNil-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/io/output_manager.cr#L13" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="write_per_base_interval(chrom:String,start:Int32,stop:Int32,depth:Int32)-instance-method">
+      <div class="signature">
+        
+        def <strong>write_per_base_interval</strong>(chrom : String, start : Int32, stop : Int32, depth : Int32)
+
+        <a class="method-permalink" href="#write_per_base_interval%28chrom%3AString%2Cstart%3AInt32%2Cstop%3AInt32%2Cdepth%3AInt32%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/io/output_manager.cr#L88" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="write_quantized_interval(chrom:String,start:Int32,stop:Int32,label:String)-instance-method">
+      <div class="signature">
+        
+        def <strong>write_quantized_interval</strong>(chrom : String, start : Int32, stop : Int32, label : String)
+
+        <a class="method-permalink" href="#write_quantized_interval%28chrom%3AString%2Cstart%3AInt32%2Cstop%3AInt32%2Clabel%3AString%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/io/output_manager.cr#L104" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="write_region_stat(chrom:String,start:Int32,stop:Int32,name:String|Nil,value:Float64)-instance-method">
+      <div class="signature">
+        
+        def <strong>write_region_stat</strong>(chrom : String, start : Int32, stop : Int32, name : String | Nil, value : Float64)
+
+        <a class="method-permalink" href="#write_region_stat%28chrom%3AString%2Cstart%3AInt32%2Cstop%3AInt32%2Cname%3AString%7CNil%2Cvalue%3AFloat64%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/io/output_manager.cr#L93" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="write_summary_line(region:String,stat:Depth::Stats::DepthStat)-instance-method">
+      <div class="signature">
+        
+        def <strong>write_summary_line</strong>(region : String, stat : <a href="../../Depth/Stats/DepthStat.html">Depth::Stats::DepthStat</a>)
+
+        <a class="method-permalink" href="#write_summary_line%28region%3AString%2Cstat%3ADepth%3A%3AStats%3A%3ADepthStat%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/io/output_manager.cr#L62" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="write_summary_total(total:Depth::Stats::DepthStat)-instance-method">
+      <div class="signature">
+        
+        def <strong>write_summary_total</strong>(total : <a href="../../Depth/Stats/DepthStat.html">Depth::Stats::DepthStat</a>)
+
+        <a class="method-permalink" href="#write_summary_total%28total%3ADepth%3A%3AStats%3A%3ADepthStat%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Optionally call at end to add a total line like mosdepth</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/io/output_manager.cr#L79" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="write_threshold_counts(chrom:String,start:Int32,stop:Int32,name:String|Nil,counts:Array(Int32))-instance-method">
+      <div class="signature">
+        
+        def <strong>write_threshold_counts</strong>(chrom : String, start : Int32, stop : Int32, name : String | Nil, counts : Array(Int32))
+
+        <a class="method-permalink" href="#write_threshold_counts%28chrom%3AString%2Cstart%3AInt32%2Cstop%3AInt32%2Cname%3AString%7CNil%2Ccounts%3AArray%28Int32%29%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/io/output_manager.cr#L118" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="write_thresholds_header(thresholds:Array(Int32))-instance-method">
+      <div class="signature">
+        
+        def <strong>write_thresholds_header</strong>(thresholds : Array(Int32))
+
+        <a class="method-permalink" href="#write_thresholds_header%28thresholds%3AArray%28Int32%29%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/io/output_manager.cr#L109" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+
+
+
+</div>
+
+</body>
+</html>

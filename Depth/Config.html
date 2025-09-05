@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Crystal Docs 1.16.3">
+<meta name="crystal_docs.project_version" content="main">
+<meta name="crystal_docs.project_name" content="mopdepth">
+
+
+
+<link href="../css/style.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="../js/doc.js"></script>
+
+  <meta name="repository-name" content="mopdepth">
+  <title>Depth::Config - mopdepth main</title>
+  <script type="text/javascript">
+    CrystalDocs.base_path = "../";
+  </script>
+</head>
+<body>
+
+<svg class="hidden">
+  <symbol id="octicon-link" viewBox="0 0 16 16">
+    <path fill="currentColor" fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+  </symbol>
+</svg>
+<input type="checkbox" id="sidebar-btn">
+<label for="sidebar-btn" id="sidebar-btn-label">
+  <svg class="open" xmlns="http://www.w3.org/2000/svg" height="2em" width="2em" viewBox="0 0 512 512"><title>Open Sidebar</title><path fill="currentColor" d="M80 96v64h352V96H80zm0 112v64h352v-64H80zm0 112v64h352v-64H80z"></path></svg>
+  <svg class="close" xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 512 512"><title>Close Sidebar</title><path fill="currentColor" d="m118.6 73.4-45.2 45.2L210.7 256 73.4 393.4l45.2 45.2L256 301.3l137.4 137.3 45.2-45.2L301.3 256l137.3-137.4-45.2-45.2L256 210.7Z"></path></svg>
+</label>
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="search-box">
+      <input type="search" class="search-input" placeholder="Search..." spellcheck="false" aria-label="Search">
+    </div>
+
+    <div class="project-summary">
+      <h1 class="project-name">
+        <a href="../index.html">
+          mopdepth
+        </a>
+      </h1>
+
+      <span class="project-version">
+        main
+      </span>
+    </div>
+  </div>
+
+  <div class="search-results hidden">
+    <ul class="search-list"></ul>
+  </div>
+
+  <div class="types-list">
+    <ul>
+  
+  <li class="parent open current" data-id="mopdepth/Depth" data-name="depth">
+      <a href="../Depth.html">Depth</a>
+      
+        <ul>
+  
+  <li class=" " data-id="mopdepth/Depth/BamIndexError" data-name="depth::bamindexerror">
+      <a href="../Depth/BamIndexError.html">BamIndexError</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/CLI" data-name="depth::cli">
+      <a href="../Depth/CLI.html">CLI</a>
+      
+    </li>
+  
+  <li class=" current" data-id="mopdepth/Depth/Config" data-name="depth::config">
+      <a href="../Depth/Config.html">Config</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/ConfigError" data-name="depth::configerror">
+      <a href="../Depth/ConfigError.html">ConfigError</a>
+      
+    </li>
+  
+  <li class="parent " data-id="mopdepth/Depth/Core" data-name="depth::core">
+      <a href="../Depth/Core.html">Core</a>
+      
+        <ul>
+  
+  <li class=" " data-id="mopdepth/Depth/Core/Cigar" data-name="depth::core::cigar">
+      <a href="../Depth/Core/Cigar.html">Cigar</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Core/Coverage" data-name="depth::core::coverage">
+      <a href="../Depth/Core/Coverage.html">Coverage</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Core/CoverageCalculator" data-name="depth::core::coveragecalculator">
+      <a href="../Depth/Core/CoverageCalculator.html">CoverageCalculator</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Core/CoverageResult" data-name="depth::core::coverageresult">
+      <a href="../Depth/Core/CoverageResult.html">CoverageResult</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Core/CoverageUtils" data-name="depth::core::coverageutils">
+      <a href="../Depth/Core/CoverageUtils.html">CoverageUtils</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Core/Options" data-name="depth::core::options">
+      <a href="../Depth/Core/Options.html">Options</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Core/Region" data-name="depth::core::region">
+      <a href="../Depth/Core/Region.html">Region</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Core/Target" data-name="depth::core::target">
+      <a href="../Depth/Core/Target.html">Target</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/CoverageCalculationError" data-name="depth::coveragecalculationerror">
+      <a href="../Depth/CoverageCalculationError.html">CoverageCalculationError</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Error" data-name="depth::error">
+      <a href="../Depth/Error.html">Error</a>
+      
+    </li>
+  
+  <li class="parent " data-id="mopdepth/Depth/FileIO" data-name="depth::fileio">
+      <a href="../Depth/FileIO.html">FileIO</a>
+      
+        <ul>
+  
+  <li class=" " data-id="mopdepth/Depth/FileIO/OutputManager" data-name="depth::fileio::outputmanager">
+      <a href="../Depth/FileIO/OutputManager.html">OutputManager</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/FileNotFoundError" data-name="depth::filenotfounderror">
+      <a href="../Depth/FileNotFoundError.html">FileNotFoundError</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/InvalidRegionError" data-name="depth::invalidregionerror">
+      <a href="../Depth/InvalidRegionError.html">InvalidRegionError</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Runner" data-name="depth::runner">
+      <a href="../Depth/Runner.html">Runner</a>
+      
+    </li>
+  
+  <li class="parent " data-id="mopdepth/Depth/Stats" data-name="depth::stats">
+      <a href="../Depth/Stats.html">Stats</a>
+      
+        <ul>
+  
+  <li class=" " data-id="mopdepth/Depth/Stats/DepthStat" data-name="depth::stats::depthstat">
+      <a href="../Depth/Stats/DepthStat.html">DepthStat</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Stats/Distribution" data-name="depth::stats::distribution">
+      <a href="../Depth/Stats/Distribution.html">Distribution</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Stats/IntHistogram" data-name="depth::stats::inthistogram">
+      <a href="../Depth/Stats/IntHistogram.html">IntHistogram</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Stats/Quantize" data-name="depth::stats::quantize">
+      <a href="../Depth/Stats/Quantize.html">Quantize</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+</ul>
+
+  </div>
+</div>
+
+
+<div class="main-content">
+<h1 class="type-name">
+
+  <span class="kind">
+    class
+  </span> Depth::<wbr>Config
+
+</h1>
+
+
+  <ul class="superclass-hierarchy"><li class="superclass"><a href="../Depth/Config.html">Depth::Config</a></li><li class="superclass">Reference</li><li class="superclass">Object</li></ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2>
+    <a id="defined-in" class="anchor" href="#defined-in">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Defined in:
+  </h2>
+  
+    
+      <a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L6" target="_blank">
+        depth/config.cr
+      </a>
+    
+    <br/>
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  <h2>
+    <a id="instance-method-summary" class="anchor" href="#instance-method-summary">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Instance Method Summary
+  </h2>
+  <ul class="list-summary">
+    
+      <li class="entry-summary">
+        <a href="#bed_path%3AString%7CNil-instance-method" class="signature"><strong>#bed_path</strong> : String | Nil</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#by%3AString-instance-method" class="signature"><strong>#by</strong> : String</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#by%3D%28by%3AString%29-instance-method" class="signature"><strong>#by=</strong>(by : String)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#chrom%3AString-instance-method" class="signature"><strong>#chrom</strong> : String</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#chrom%3D%28chrom%3AString%29-instance-method" class="signature"><strong>#chrom=</strong>(chrom : String)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#exclude_flag%3AUInt16-instance-method" class="signature"><strong>#exclude_flag</strong> : UInt16</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#exclude_flag%3D%28exclude_flag%3AUInt16%29-instance-method" class="signature"><strong>#exclude_flag=</strong>(exclude_flag : UInt16)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#fast_mode%3D%28fast_mode%3ABool%29-instance-method" class="signature"><strong>#fast_mode=</strong>(fast_mode : Bool)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#fast_mode%3F%3ABool-instance-method" class="signature"><strong>#fast_mode?</strong> : Bool</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#fragment_mode%3D%28fragment_mode%3ABool%29-instance-method" class="signature"><strong>#fragment_mode=</strong>(fragment_mode : Bool)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#fragment_mode%3F%3ABool-instance-method" class="signature"><strong>#fragment_mode?</strong> : Bool</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#has_quantize%3F%3ABool-instance-method" class="signature"><strong>#has_quantize?</strong> : Bool</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#has_regions%3F%3ABool-instance-method" class="signature"><strong>#has_regions?</strong> : Bool</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#has_thresholds%3F%3ABool-instance-method" class="signature"><strong>#has_thresholds?</strong> : Bool</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#include_flag%3AUInt16-instance-method" class="signature"><strong>#include_flag</strong> : UInt16</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#include_flag%3D%28include_flag%3AUInt16%29-instance-method" class="signature"><strong>#include_flag=</strong>(include_flag : UInt16)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#mapq%3AInt32-instance-method" class="signature"><strong>#mapq</strong> : Int32</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#mapq%3D%28mapq%3AInt32%29-instance-method" class="signature"><strong>#mapq=</strong>(mapq : Int32)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#max_frag_len%3AInt32-instance-method" class="signature"><strong>#max_frag_len</strong> : Int32</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#max_frag_len%3D%28max_frag_len%3AInt32%29-instance-method" class="signature"><strong>#max_frag_len=</strong>(max_frag_len : Int32)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#min_frag_len%3AInt32-instance-method" class="signature"><strong>#min_frag_len</strong> : Int32</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#min_frag_len%3D%28min_frag_len%3AInt32%29-instance-method" class="signature"><strong>#min_frag_len=</strong>(min_frag_len : Int32)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#mos_style%3D%28mos_style%3ABool%29-instance-method" class="signature"><strong>#mos_style=</strong>(mos_style : Bool)</a>
+        
+          <div class="summary"><p>When true, use mosdepth-compatible names (mosdepth.<em>); otherwise mopdepth.</em></p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#mos_style%3F%3ABool-instance-method" class="signature"><strong>#mos_style?</strong> : Bool</a>
+        
+          <div class="summary"><p>When true, use mosdepth-compatible names (mosdepth.<em>); otherwise mopdepth.</em></p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#no_per_base%3D%28no_per_base%3ABool%29-instance-method" class="signature"><strong>#no_per_base=</strong>(no_per_base : Bool)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#no_per_base%3F%3ABool-instance-method" class="signature"><strong>#no_per_base?</strong> : Bool</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#path%3AString-instance-method" class="signature"><strong>#path</strong> : String</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#path%3D%28path%3AString%29-instance-method" class="signature"><strong>#path=</strong>(path : String)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#prefix%3AString-instance-method" class="signature"><strong>#prefix</strong> : String</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#prefix%3D%28prefix%3AString%29-instance-method" class="signature"><strong>#prefix=</strong>(prefix : String)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#quantize%3AString-instance-method" class="signature"><strong>#quantize</strong> : String</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#quantize%3D%28quantize%3AString%29-instance-method" class="signature"><strong>#quantize=</strong>(quantize : String)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#quantize_args%3AArray%28Int32%29-instance-method" class="signature"><strong>#quantize_args</strong> : Array(Int32)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#read_groups_str%3AString-instance-method" class="signature"><strong>#read_groups_str</strong> : String</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#read_groups_str%3D%28read_groups_str%3AString%29-instance-method" class="signature"><strong>#read_groups_str=</strong>(read_groups_str : String)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#threads%3AInt32-instance-method" class="signature"><strong>#threads</strong> : Int32</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#threads%3D%28threads%3AInt32%29-instance-method" class="signature"><strong>#threads=</strong>(threads : Int32)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#threshold_values%3AArray%28Int32%29-instance-method" class="signature"><strong>#threshold_values</strong> : Array(Int32)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#thresholds%3AArray%28Int32%29-instance-method" class="signature"><strong>#thresholds</strong> : Array(Int32)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#thresholds%3D%28thresholds%3AArray%28Int32%29%29-instance-method" class="signature"><strong>#thresholds=</strong>(thresholds : Array(Int32))</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#thresholds_str%3AString-instance-method" class="signature"><strong>#thresholds_str</strong> : String</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#thresholds_str%3D%28thresholds_str%3AString%29-instance-method" class="signature"><strong>#thresholds_str=</strong>(thresholds_str : String)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#to_options%3ACore%3A%3AOptions-instance-method" class="signature"><strong>#to_options</strong> : Core::Options</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#use_median%3D%28use_median%3ABool%29-instance-method" class="signature"><strong>#use_median=</strong>(use_median : Bool)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#use_median%3F%3ABool-instance-method" class="signature"><strong>#use_median?</strong> : Bool</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#validate%21-instance-method" class="signature"><strong>#validate!</strong></a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#window_size%3AInt32-instance-method" class="signature"><strong>#window_size</strong> : Int32</a>
+        
+      </li>
+    
+  </ul>
+
+
+
+  <div class="methods-inherited">
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+  </div>
+
+  
+
+  
+
+  
+
+  
+  <h2>
+    <a id="instance-method-detail" class="anchor" href="#instance-method-detail">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Instance Method Detail
+  </h2>
+  
+    <div class="entry-detail" id="bed_path:String|Nil-instance-method">
+      <div class="signature">
+        
+        def <strong>bed_path</strong> : String | Nil
+
+        <a class="method-permalink" href="#bed_path%3AString%7CNil-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L70" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="by:String-instance-method">
+      <div class="signature">
+        
+        def <strong>by</strong> : String
+
+        <a class="method-permalink" href="#by%3AString-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L11" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="by=(by:String)-instance-method">
+      <div class="signature">
+        
+        def <strong>by=</strong>(by : String)
+
+        <a class="method-permalink" href="#by%3D%28by%3AString%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L11" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="chrom:String-instance-method">
+      <div class="signature">
+        
+        def <strong>chrom</strong> : String
+
+        <a class="method-permalink" href="#chrom%3AString-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L10" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="chrom=(chrom:String)-instance-method">
+      <div class="signature">
+        
+        def <strong>chrom=</strong>(chrom : String)
+
+        <a class="method-permalink" href="#chrom%3D%28chrom%3AString%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L10" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="exclude_flag:UInt16-instance-method">
+      <div class="signature">
+        
+        def <strong>exclude_flag</strong> : UInt16
+
+        <a class="method-permalink" href="#exclude_flag%3AUInt16-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L22" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="exclude_flag=(exclude_flag:UInt16)-instance-method">
+      <div class="signature">
+        
+        def <strong>exclude_flag=</strong>(exclude_flag : UInt16)
+
+        <a class="method-permalink" href="#exclude_flag%3D%28exclude_flag%3AUInt16%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L22" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="fast_mode=(fast_mode:Bool)-instance-method">
+      <div class="signature">
+        
+        def <strong>fast_mode=</strong>(fast_mode : Bool)
+
+        <a class="method-permalink" href="#fast_mode%3D%28fast_mode%3ABool%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L16" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="fast_mode?:Bool-instance-method">
+      <div class="signature">
+        
+        def <strong>fast_mode?</strong> : Bool
+
+        <a class="method-permalink" href="#fast_mode%3F%3ABool-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L16" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="fragment_mode=(fragment_mode:Bool)-instance-method">
+      <div class="signature">
+        
+        def <strong>fragment_mode=</strong>(fragment_mode : Bool)
+
+        <a class="method-permalink" href="#fragment_mode%3D%28fragment_mode%3ABool%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L17" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="fragment_mode?:Bool-instance-method">
+      <div class="signature">
+        
+        def <strong>fragment_mode?</strong> : Bool
+
+        <a class="method-permalink" href="#fragment_mode%3F%3ABool-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L17" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="has_quantize?:Bool-instance-method">
+      <div class="signature">
+        
+        def <strong>has_quantize?</strong> : Bool
+
+        <a class="method-permalink" href="#has_quantize%3F%3ABool-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L76" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="has_regions?:Bool-instance-method">
+      <div class="signature">
+        
+        def <strong>has_regions?</strong> : Bool
+
+        <a class="method-permalink" href="#has_regions%3F%3ABool-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L60" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="has_thresholds?:Bool-instance-method">
+      <div class="signature">
+        
+        def <strong>has_thresholds?</strong> : Bool
+
+        <a class="method-permalink" href="#has_thresholds%3F%3ABool-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L85" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="include_flag:UInt16-instance-method">
+      <div class="signature">
+        
+        def <strong>include_flag</strong> : UInt16
+
+        <a class="method-permalink" href="#include_flag%3AUInt16-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L23" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="include_flag=(include_flag:UInt16)-instance-method">
+      <div class="signature">
+        
+        def <strong>include_flag=</strong>(include_flag : UInt16)
+
+        <a class="method-permalink" href="#include_flag%3D%28include_flag%3AUInt16%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L23" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="mapq:Int32-instance-method">
+      <div class="signature">
+        
+        def <strong>mapq</strong> : Int32
+
+        <a class="method-permalink" href="#mapq%3AInt32-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L13" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="mapq=(mapq:Int32)-instance-method">
+      <div class="signature">
+        
+        def <strong>mapq=</strong>(mapq : Int32)
+
+        <a class="method-permalink" href="#mapq%3D%28mapq%3AInt32%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L13" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="max_frag_len:Int32-instance-method">
+      <div class="signature">
+        
+        def <strong>max_frag_len</strong> : Int32
+
+        <a class="method-permalink" href="#max_frag_len%3AInt32-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L15" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="max_frag_len=(max_frag_len:Int32)-instance-method">
+      <div class="signature">
+        
+        def <strong>max_frag_len=</strong>(max_frag_len : Int32)
+
+        <a class="method-permalink" href="#max_frag_len%3D%28max_frag_len%3AInt32%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L15" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="min_frag_len:Int32-instance-method">
+      <div class="signature">
+        
+        def <strong>min_frag_len</strong> : Int32
+
+        <a class="method-permalink" href="#min_frag_len%3AInt32-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L14" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="min_frag_len=(min_frag_len:Int32)-instance-method">
+      <div class="signature">
+        
+        def <strong>min_frag_len=</strong>(min_frag_len : Int32)
+
+        <a class="method-permalink" href="#min_frag_len%3D%28min_frag_len%3AInt32%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L14" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="mos_style=(mos_style:Bool)-instance-method">
+      <div class="signature">
+        
+        def <strong>mos_style=</strong>(mos_style : Bool)
+
+        <a class="method-permalink" href="#mos_style%3D%28mos_style%3ABool%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>When true, use mosdepth-compatible names (mosdepth.<em>); otherwise mopdepth.</em></p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L26" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="mos_style?:Bool-instance-method">
+      <div class="signature">
+        
+        def <strong>mos_style?</strong> : Bool
+
+        <a class="method-permalink" href="#mos_style%3F%3ABool-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>When true, use mosdepth-compatible names (mosdepth.<em>); otherwise mopdepth.</em></p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L26" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="no_per_base=(no_per_base:Bool)-instance-method">
+      <div class="signature">
+        
+        def <strong>no_per_base=</strong>(no_per_base : Bool)
+
+        <a class="method-permalink" href="#no_per_base%3D%28no_per_base%3ABool%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L12" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="no_per_base?:Bool-instance-method">
+      <div class="signature">
+        
+        def <strong>no_per_base?</strong> : Bool
+
+        <a class="method-permalink" href="#no_per_base%3F%3ABool-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L12" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="path:String-instance-method">
+      <div class="signature">
+        
+        def <strong>path</strong> : String
+
+        <a class="method-permalink" href="#path%3AString-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L8" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="path=(path:String)-instance-method">
+      <div class="signature">
+        
+        def <strong>path=</strong>(path : String)
+
+        <a class="method-permalink" href="#path%3D%28path%3AString%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L8" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="prefix:String-instance-method">
+      <div class="signature">
+        
+        def <strong>prefix</strong> : String
+
+        <a class="method-permalink" href="#prefix%3AString-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L7" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="prefix=(prefix:String)-instance-method">
+      <div class="signature">
+        
+        def <strong>prefix=</strong>(prefix : String)
+
+        <a class="method-permalink" href="#prefix%3D%28prefix%3AString%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L7" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="quantize:String-instance-method">
+      <div class="signature">
+        
+        def <strong>quantize</strong> : String
+
+        <a class="method-permalink" href="#quantize%3AString-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L21" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="quantize=(quantize:String)-instance-method">
+      <div class="signature">
+        
+        def <strong>quantize=</strong>(quantize : String)
+
+        <a class="method-permalink" href="#quantize%3D%28quantize%3AString%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L21" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="quantize_args:Array(Int32)-instance-method">
+      <div class="signature">
+        
+        def <strong>quantize_args</strong> : Array(Int32)
+
+        <a class="method-permalink" href="#quantize_args%3AArray%28Int32%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L80" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="read_groups_str:String-instance-method">
+      <div class="signature">
+        
+        def <strong>read_groups_str</strong> : String
+
+        <a class="method-permalink" href="#read_groups_str%3AString-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L24" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="read_groups_str=(read_groups_str:String)-instance-method">
+      <div class="signature">
+        
+        def <strong>read_groups_str=</strong>(read_groups_str : String)
+
+        <a class="method-permalink" href="#read_groups_str%3D%28read_groups_str%3AString%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L24" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="threads:Int32-instance-method">
+      <div class="signature">
+        
+        def <strong>threads</strong> : Int32
+
+        <a class="method-permalink" href="#threads%3AInt32-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L9" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="threads=(threads:Int32)-instance-method">
+      <div class="signature">
+        
+        def <strong>threads=</strong>(threads : Int32)
+
+        <a class="method-permalink" href="#threads%3D%28threads%3AInt32%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L9" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="threshold_values:Array(Int32)-instance-method">
+      <div class="signature">
+        
+        def <strong>threshold_values</strong> : Array(Int32)
+
+        <a class="method-permalink" href="#threshold_values%3AArray%28Int32%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L89" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="thresholds:Array(Int32)-instance-method">
+      <div class="signature">
+        
+        def <strong>thresholds</strong> : Array(Int32)
+
+        <a class="method-permalink" href="#thresholds%3AArray%28Int32%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L19" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="thresholds=(thresholds:Array(Int32))-instance-method">
+      <div class="signature">
+        
+        def <strong>thresholds=</strong>(thresholds : Array(Int32))
+
+        <a class="method-permalink" href="#thresholds%3D%28thresholds%3AArray%28Int32%29%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L19" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="thresholds_str:String-instance-method">
+      <div class="signature">
+        
+        def <strong>thresholds_str</strong> : String
+
+        <a class="method-permalink" href="#thresholds_str%3AString-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L20" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="thresholds_str=(thresholds_str:String)-instance-method">
+      <div class="signature">
+        
+        def <strong>thresholds_str=</strong>(thresholds_str : String)
+
+        <a class="method-permalink" href="#thresholds_str%3D%28thresholds_str%3AString%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L20" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="to_options:Core::Options-instance-method">
+      <div class="signature">
+        
+        def <strong>to_options</strong> : <a href="../Depth/Core/Options.html">Core::Options</a>
+
+        <a class="method-permalink" href="#to_options%3ACore%3A%3AOptions-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L47" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="use_median=(use_median:Bool)-instance-method">
+      <div class="signature">
+        
+        def <strong>use_median=</strong>(use_median : Bool)
+
+        <a class="method-permalink" href="#use_median%3D%28use_median%3ABool%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L18" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="use_median?:Bool-instance-method">
+      <div class="signature">
+        
+        def <strong>use_median?</strong> : Bool
+
+        <a class="method-permalink" href="#use_median%3F%3ABool-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L18" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="validate!-instance-method">
+      <div class="signature">
+        
+        def <strong>validate!</strong>
+
+        <a class="method-permalink" href="#validate%21-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L28" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="window_size:Int32-instance-method">
+      <div class="signature">
+        
+        def <strong>window_size</strong> : Int32
+
+        <a class="method-permalink" href="#window_size%3AInt32-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/config.cr#L64" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+
+
+
+</div>
+
+</body>
+</html>

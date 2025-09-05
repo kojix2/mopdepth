@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Crystal Docs 1.16.3">
+<meta name="crystal_docs.project_version" content="main">
+<meta name="crystal_docs.project_name" content="mopdepth">
+
+
+
+<link href="../../css/style.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="../../js/doc.js"></script>
+
+  <meta name="repository-name" content="mopdepth">
+  <title>Depth::Core::CoverageCalculator - mopdepth main</title>
+  <script type="text/javascript">
+    CrystalDocs.base_path = "../../";
+  </script>
+</head>
+<body>
+
+<svg class="hidden">
+  <symbol id="octicon-link" viewBox="0 0 16 16">
+    <path fill="currentColor" fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path>
+  </symbol>
+</svg>
+<input type="checkbox" id="sidebar-btn">
+<label for="sidebar-btn" id="sidebar-btn-label">
+  <svg class="open" xmlns="http://www.w3.org/2000/svg" height="2em" width="2em" viewBox="0 0 512 512"><title>Open Sidebar</title><path fill="currentColor" d="M80 96v64h352V96H80zm0 112v64h352v-64H80zm0 112v64h352v-64H80z"></path></svg>
+  <svg class="close" xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 512 512"><title>Close Sidebar</title><path fill="currentColor" d="m118.6 73.4-45.2 45.2L210.7 256 73.4 393.4l45.2 45.2L256 301.3l137.4 137.3 45.2-45.2L301.3 256l137.3-137.4-45.2-45.2L256 210.7Z"></path></svg>
+</label>
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="search-box">
+      <input type="search" class="search-input" placeholder="Search..." spellcheck="false" aria-label="Search">
+    </div>
+
+    <div class="project-summary">
+      <h1 class="project-name">
+        <a href="../../index.html">
+          mopdepth
+        </a>
+      </h1>
+
+      <span class="project-version">
+        main
+      </span>
+    </div>
+  </div>
+
+  <div class="search-results hidden">
+    <ul class="search-list"></ul>
+  </div>
+
+  <div class="types-list">
+    <ul>
+  
+  <li class="parent open current" data-id="mopdepth/Depth" data-name="depth">
+      <a href="../../Depth.html">Depth</a>
+      
+        <ul>
+  
+  <li class=" " data-id="mopdepth/Depth/BamIndexError" data-name="depth::bamindexerror">
+      <a href="../../Depth/BamIndexError.html">BamIndexError</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/CLI" data-name="depth::cli">
+      <a href="../../Depth/CLI.html">CLI</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Config" data-name="depth::config">
+      <a href="../../Depth/Config.html">Config</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/ConfigError" data-name="depth::configerror">
+      <a href="../../Depth/ConfigError.html">ConfigError</a>
+      
+    </li>
+  
+  <li class="parent open current" data-id="mopdepth/Depth/Core" data-name="depth::core">
+      <a href="../../Depth/Core.html">Core</a>
+      
+        <ul>
+  
+  <li class=" " data-id="mopdepth/Depth/Core/Cigar" data-name="depth::core::cigar">
+      <a href="../../Depth/Core/Cigar.html">Cigar</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Core/Coverage" data-name="depth::core::coverage">
+      <a href="../../Depth/Core/Coverage.html">Coverage</a>
+      
+    </li>
+  
+  <li class=" current" data-id="mopdepth/Depth/Core/CoverageCalculator" data-name="depth::core::coveragecalculator">
+      <a href="../../Depth/Core/CoverageCalculator.html">CoverageCalculator</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Core/CoverageResult" data-name="depth::core::coverageresult">
+      <a href="../../Depth/Core/CoverageResult.html">CoverageResult</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Core/CoverageUtils" data-name="depth::core::coverageutils">
+      <a href="../../Depth/Core/CoverageUtils.html">CoverageUtils</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Core/Options" data-name="depth::core::options">
+      <a href="../../Depth/Core/Options.html">Options</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Core/Region" data-name="depth::core::region">
+      <a href="../../Depth/Core/Region.html">Region</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Core/Target" data-name="depth::core::target">
+      <a href="../../Depth/Core/Target.html">Target</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/CoverageCalculationError" data-name="depth::coveragecalculationerror">
+      <a href="../../Depth/CoverageCalculationError.html">CoverageCalculationError</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Error" data-name="depth::error">
+      <a href="../../Depth/Error.html">Error</a>
+      
+    </li>
+  
+  <li class="parent " data-id="mopdepth/Depth/FileIO" data-name="depth::fileio">
+      <a href="../../Depth/FileIO.html">FileIO</a>
+      
+        <ul>
+  
+  <li class=" " data-id="mopdepth/Depth/FileIO/OutputManager" data-name="depth::fileio::outputmanager">
+      <a href="../../Depth/FileIO/OutputManager.html">OutputManager</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/FileNotFoundError" data-name="depth::filenotfounderror">
+      <a href="../../Depth/FileNotFoundError.html">FileNotFoundError</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/InvalidRegionError" data-name="depth::invalidregionerror">
+      <a href="../../Depth/InvalidRegionError.html">InvalidRegionError</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Runner" data-name="depth::runner">
+      <a href="../../Depth/Runner.html">Runner</a>
+      
+    </li>
+  
+  <li class="parent " data-id="mopdepth/Depth/Stats" data-name="depth::stats">
+      <a href="../../Depth/Stats.html">Stats</a>
+      
+        <ul>
+  
+  <li class=" " data-id="mopdepth/Depth/Stats/DepthStat" data-name="depth::stats::depthstat">
+      <a href="../../Depth/Stats/DepthStat.html">DepthStat</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Stats/Distribution" data-name="depth::stats::distribution">
+      <a href="../../Depth/Stats/Distribution.html">Distribution</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Stats/IntHistogram" data-name="depth::stats::inthistogram">
+      <a href="../../Depth/Stats/IntHistogram.html">IntHistogram</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/Stats/Quantize" data-name="depth::stats::quantize">
+      <a href="../../Depth/Stats/Quantize.html">Quantize</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
+</ul>
+
+  </div>
+</div>
+
+
+<div class="main-content">
+<h1 class="type-name">
+
+  <span class="kind">
+    class
+  </span> Depth::<wbr>Core::<wbr>CoverageCalculator
+
+</h1>
+
+
+  <ul class="superclass-hierarchy"><li class="superclass"><a href="../../Depth/Core/CoverageCalculator.html">Depth::Core::CoverageCalculator</a></li><li class="superclass">Reference</li><li class="superclass">Object</li></ul>
+
+
+
+
+
+
+
+
+
+
+  <h2>
+    <a id="included-modules" class="anchor" href="#included-modules">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Included Modules
+  </h2>
+  <ul class="other-types-list">
+    
+      <li class="other-type"><a href="../../Depth/Core/Cigar.html">Depth::Core::Cigar</a></li>
+    
+  </ul>
+
+
+
+
+
+
+
+
+
+
+  <h2>
+    <a id="defined-in" class="anchor" href="#defined-in">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Defined in:
+  </h2>
+  
+    
+      <a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/core/coverage_calculator.cr#L8" target="_blank">
+        depth/core/coverage_calculator.cr
+      </a>
+    
+    <br/>
+  
+
+
+
+
+
+  
+  <h2>
+    <a id="constructors" class="anchor" href="#constructors">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Constructors
+  </h2>
+  <ul class="list-summary">
+    
+      <li class="entry-summary">
+        <a href="#new%28bam%3AHTS%3A%3ABam%2Coptions%3AOptions%29-class-method" class="signature"><strong>.new</strong>(bam : HTS::Bam, options : Options)</a>
+        
+      </li>
+    
+  </ul>
+
+
+  
+
+  
+
+  
+  <h2>
+    <a id="instance-method-summary" class="anchor" href="#instance-method-summary">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Instance Method Summary
+  </h2>
+  <ul class="list-summary">
+    
+      <li class="entry-summary">
+        <a href="#calculate%28a%3ACoverage%2Cr%3ARegion%7CNil%2Coffset%3AInt32%3D0%29%3AInt32-instance-method" class="signature"><strong>#calculate</strong>(a : Coverage, r : Region | Nil, offset : Int32 = <span class="n">0</span>) : Int32</a>
+        
+          <div class="summary"><p>Returns: CoverageResult enum values or tid</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#initialize_coverage_array%28coverage%3ACoverage%2Cchrom_len%3AInt32%29-instance-method" class="signature"><strong>#initialize_coverage_array</strong>(coverage : Coverage, chrom_len : Int32)</a>
+        
+          <div class="summary"><p>Initialize coverage array for a chromosome</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#reset_coverage%21%28a%3ACoverage%2Climit%3AInt32%29-instance-method" class="signature"><strong>#reset_coverage!</strong>(a : Coverage, limit : Int32)</a>
+        
+          <div class="summary"><p>Reset using touch marks: zero only indices written in current generation (up to limit)</p></div>
+        
+      </li>
+    
+  </ul>
+
+
+
+  <div class="methods-inherited">
+    
+      
+
+  <h3>Instance methods inherited from module <code><a href="../../Depth/Core/Cigar.html">Depth::Core::Cigar</a></code></h3>
+  
+  
+    <a href="../../Depth/Core/Cigar.html#cigar_each_segment%28cigar%2Cipos%3AInt32%2C%26%3ATuple%28Int32%2CInt32%29-%3E%29-instance-method" class="tooltip">
+      <span>cigar_each_segment(cigar, ipos : Int32, & : Tuple(Int32, Int32) -> )</span>
+    cigar_each_segment</a>, 
+    
+  
+    <a href="../../Depth/Core/Cigar.html#cigar_fill_events%21%28cigar%2Cipos%3AInt32%2Cevbuf%3AArray%28Tuple%28Int32%2CInt32%29%29%29%3ANil-instance-method" class="tooltip">
+      <span>cigar_fill_events!(cigar, ipos : Int32, evbuf : Array(Tuple(Int32, Int32))) : Nil</span>
+    cigar_fill_events!</a>, 
+    
+  
+    <a href="../../Depth/Core/Cigar.html#cigar_segments%28cigar%2Cipos%3AInt32%29%3AArray%28Tuple%28Int32%2CInt32%29%29-instance-method" class="tooltip">
+      <span>cigar_segments(cigar, ipos : Int32) : Array(Tuple(Int32, Int32))</span>
+    cigar_segments</a>, 
+    
+  
+    <a href="../../Depth/Core/Cigar.html#cigar_start_end_events%28cigar%2Cipos%3AInt32%29%3AArray%28Tuple%28Int32%2CInt32%29%29-instance-method" class="tooltip">
+      <span>cigar_start_end_events(cigar, ipos : Int32) : Array(Tuple(Int32, Int32))</span>
+    cigar_start_end_events</a>, 
+    
+  
+    <a href="../../Depth/Core/Cigar.html#inc_coverage%28cigar%2Cipos%3AInt32%2Ca%3ACoverage%29-instance-method" class="tooltip">
+      <span>inc_coverage(cigar, ipos : Int32, a : Coverage)</span>
+    inc_coverage</a>
+    
+  
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+  </div>
+
+  
+  <h2>
+    <a id="constructor-detail" class="anchor" href="#constructor-detail">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Constructor Detail
+  </h2>
+  
+    <div class="entry-detail" id="new(bam:HTS::Bam,options:Options)-class-method">
+      <div class="signature">
+        
+        def self.<strong>new</strong>(bam : HTS::Bam, options : <a href="../../Depth/Core/Options.html">Options</a>)
+
+        <a class="method-permalink" href="#new%28bam%3AHTS%3A%3ABam%2Coptions%3AOptions%29-class-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/core/coverage_calculator.cr#L16" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+
+
+  
+
+  
+
+  
+  <h2>
+    <a id="instance-method-detail" class="anchor" href="#instance-method-detail">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Instance Method Detail
+  </h2>
+  
+    <div class="entry-detail" id="calculate(a:Coverage,r:Region|Nil,offset:Int32=0):Int32-instance-method">
+      <div class="signature">
+        
+        def <strong>calculate</strong>(a : <a href="../../Depth/Core/Coverage.html">Coverage</a>, r : <a href="../../Depth/Core/Region.html">Region</a> | Nil, offset : Int32 = <span class="n">0</span>) : Int32
+
+        <a class="method-permalink" href="#calculate%28a%3ACoverage%2Cr%3ARegion%7CNil%2Coffset%3AInt32%3D0%29%3AInt32-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Returns: CoverageResult enum values or tid</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/core/coverage_calculator.cr#L187" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="initialize_coverage_array(coverage:Coverage,chrom_len:Int32)-instance-method">
+      <div class="signature">
+        
+        def <strong>initialize_coverage_array</strong>(coverage : <a href="../../Depth/Core/Coverage.html">Coverage</a>, chrom_len : Int32)
+
+        <a class="method-permalink" href="#initialize_coverage_array%28coverage%3ACoverage%2Cchrom_len%3AInt32%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Initialize coverage array for a chromosome</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/core/coverage_calculator.cr#L129" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="reset_coverage!(a:Coverage,limit:Int32)-instance-method">
+      <div class="signature">
+        
+        def <strong>reset_coverage!</strong>(a : <a href="../../Depth/Core/Coverage.html">Coverage</a>, limit : Int32)
+
+        <a class="method-permalink" href="#reset_coverage%21%28a%3ACoverage%2Climit%3AInt32%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Reset using touch marks: zero only indices written in current generation (up to limit)</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/04d3438570aae0cfa7380d9fed43161e0892a3be/src/depth/core/coverage_calculator.cr#L210" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+
+
+
+</div>
+
+</body>
+</html>

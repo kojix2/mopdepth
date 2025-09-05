@@ -1,0 +1,18 @@
+name: mopdepth
+version: 0.0.0
+
+authors:
+  - kojix2 <2xijok@gmail.com>
+
+targets:
+  mopdepth:
+    main: src/depth.cr
+
+dependencies:
+  hts:
+    github: bio-cr/hts.cr
+    branch: develop
+
+crystal: '>= 1.17.1'
+
+license: MIT

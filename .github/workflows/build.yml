@@ -1,0 +1,188 @@
+name: build
+
+on:
+  push:
+    branches: ["*"]
+    tags: ["v*"]
+  pull_request:
+
+jobs:
+  build:
+    name: build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-gnu
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          submodules: true
+
+      - name: Install Crystal (Linux/macOS)
+        if: matrix.os != 'windows-latest'
+        uses: crystal-lang/install-crystal@v1
+        with:
+          crystal: latest
+
+      - name: Install Crystal (MinGW64)
+        if: matrix.os == 'windows-latest'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            git
+            mingw-w64-x86_64-crystal
+            mingw-w64-x86_64-shards
+            mingw-w64-x86_64-xz
+            mingw-w64-x86_64-libdeflate
+            mingw-w64-x86_64-pkgconf
+            mingw-w64-x86_64-openssl
+            mingw-w64-x86_64-libtre
+            mingw-w64-x86_64-libsystre
+            zip
+            file
+
+      - name: Set version variables
+        shell: bash
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION=${{ github.ref_name }}
+          else
+            VERSION="build-$(date +%Y%m%d-%H%M%S)"
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "BIN=mopdepth" >> $GITHUB_ENV
+
+      - name: Install dependencies (Linux/macOS)
+        if: matrix.os != 'windows-latest'
+        run: shards install --without-development
+
+      - name: Install dependencies (MinGW64)
+        if: matrix.os == 'windows-latest'
+        shell: msys2 {0}
+        run: shards install --without-development
+
+      - name: Build on Linux (musl)
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        shell: bash
+        run: |
+          mkdir -p bin
+          docker run -d --name alpine -v $(pwd):/workspace -w /workspace crystallang/crystal:latest-alpine tail -f /dev/null
+          docker exec alpine apk add --no-cache \
+            autoconf automake libtool build-base pkgconf \
+            zlib-dev zlib-static \
+            bzip2-dev bzip2-static \
+            xz-dev xz-static
+          docker exec alpine sh -c "
+            git clone --depth 1 --branch develop https://github.com/samtools/htslib.git htslib &&
+            cd htslib &&
+            git submodule update --init --recursive &&
+            autoreconf -i && ./configure --disable-libcurl && make && make install
+            "
+          docker exec alpine shards install --without-development
+          docker exec alpine shards build --release --static
+          docker exec alpine chmod +x bin/$BIN
+          ldd bin/$BIN || echo "Static binary (no dynamic dependencies)"
+          file bin/$BIN
+          bin/$BIN --help
+          PKG=mopdepth-${VERSION}-${{ matrix.target }}
+          mkdir -p $PKG
+          cp bin/$BIN $PKG/
+          cp LICENSE $PKG/
+          cp README.md $PKG/
+          tar czf $PKG.tar.gz $PKG
+
+      - name: Build on macOS
+        if: matrix.os == 'macos-latest'
+        shell: bash
+        run: |
+          brew update
+          brew install pkg-config autoconf automake libtool bzip2 xz zlib
+          # Build local static htslib without libcurl (to avoid extra non-system deps)
+          git clone --depth 1 --branch develop https://github.com/samtools/htslib.git htslib
+          (
+            cd htslib && \
+            git submodule update --init --recursive && \
+            autoreconf -i && \
+            ./configure --disable-libcurl --disable-shared --enable-static && \
+            make
+          )
+          # Ensure no dylib is available to accidentally link against
+          rm -f htslib/*.dylib htslib/libhts*.dylib || true
+          # Prefer the local static libhts.a
+          export LIBRARY_PATH="$(pwd)/htslib"
+          export CRYSTAL_LIBRARY_PATH="$(pwd)/htslib"
+          # Force load the static archive to satisfy symbols regardless of link order
+          shards build --release --link-flags="-Wl,-force_load,$(pwd)/htslib/libhts.a -lbz2 -llzma -lz -framework CoreFoundation -framework SystemConfiguration"
+          chmod +x bin/$BIN
+          otool -L bin/$BIN | tee otool.txt
+          if grep -E -q "libhts.*dylib" otool.txt; then
+            echo "Error: dynamic libhts linked on macOS (should be static)" >&2
+            exit 1
+          fi
+          file bin/$BIN
+          bin/$BIN --help
+          PKG=mopdepth-${VERSION}-${{ matrix.target }}
+          mkdir -p $PKG
+          cp bin/$BIN $PKG/
+          cp LICENSE $PKG/
+          cp README.md $PKG/
+          tar czf $PKG.tar.gz $PKG
+
+      - name: Build on Windows (MinGW64)
+        if: matrix.os == 'windows-latest'
+        shell: msys2 {0}
+        run: |
+          pacman -S --noconfirm --needed autoconf automake libtool make git mingw-w64-x86_64-toolchain mingw-w64-x86_64-bzip2 mingw-w64-x86_64-xz mingw-w64-x86_64-zlib mingw-w64-x86_64-libdeflate
+          git clone --depth 1 --branch develop https://github.com/samtools/htslib.git htslib
+          cd htslib
+          git submodule update --init --recursive
+          autoreconf -i
+          ./configure --disable-libcurl --disable-shared --enable-static
+          make -j2
+          # ensure static archive exists
+          test -f libhts.a || { echo "libhts.a not found" >&2; ls -l; exit 1; }
+          # remove DLL/import libs to prefer static archive when resolving -lhts
+          rm -f *.dll *.dll.a *.lib || true
+          cd ..
+          # Link statically against libhts and compression libs; keep system ws2_32 dynamic
+          export LIBRARY_PATH="$(pwd)/htslib"
+          export CRYSTAL_LIBRARY_PATH="$(pwd)/htslib"
+          # Add local htslib to library search path and group static archives to avoid order issues
+          STATIC_LIBS="-L$(pwd)/htslib -Wl,--start-group -l:libhts.a -lbz2 -llzma -lz -ldeflate -lregex -ltre -Wl,--end-group -lws2_32"
+          echo "Using STATIC_LIBS=$STATIC_LIBS"
+          shards build --release --link-flags="$STATIC_LIBS"
+          file bin/$BIN.exe
+          bin/$BIN --help
+          PKG=mopdepth-${VERSION}-${{ matrix.target }}
+          mkdir -p $PKG
+          cp bin/$BIN.exe $PKG/
+          cp LICENSE $PKG/
+          cp README.md $PKG/
+          zip -r $PKG.zip $PKG
+
+      - name: Upload artifacts (non-release)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: mopdepth-${{ matrix.target }}
+          path: |
+            mopdepth-*.tar.gz
+            mopdepth-*.zip
+
+      - name: Upload release assets (release only)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            mopdepth-*.tar.gz
+            mopdepth-*.zip

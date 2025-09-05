@@ -1,0 +1,3 @@
+[submodule "mosdepth"]
+	path = mosdepth
+	url = https://github.com/brentp/mosdepth

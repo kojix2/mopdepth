@@ -1,0 +1,110 @@
+name: test
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  ubuntu-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository (with submodules)
+        uses: actions/checkout@v5
+        with:
+          submodules: true
+
+      - name: Install Crystal
+        uses: crystal-lang/install-crystal@v1
+        with:
+          crystal: latest
+
+      - name: Install native dependencies
+        run: |
+          sudo apt-get update
+          # Install basic packages first
+          sudo apt-get install -y build-essential autoconf automake libtool \
+            libbz2-dev liblzma-dev zlib1g-dev libdeflate-dev \
+            pkg-config curl git
+          
+          # Resolve libcurl conflicts
+          sudo apt-get remove -y libcurl4-gnutls-dev libcurl4-nss-dev || true
+          sudo apt-get autoremove -y || true
+          sudo apt-get install -y --no-install-recommends libcurl4-openssl-dev
+          
+          # Reinstall HTSlib after libcurl setup
+          sudo apt-get install -y libhts-dev
+          
+          # Verify HTSlib installation and set up environment
+          echo "HTSlib pkg-config info:"
+          pkg-config --exists htslib && echo "HTSlib found" || echo "HTSlib not found"
+          pkg-config --libs htslib || echo "HTSlib libs not available"
+          pkg-config --cflags htslib || echo "HTSlib cflags not available"
+          
+          # Set up library paths for Crystal
+          echo "LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LIBRARY_PATH" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=/usr/lib/x86_64-linux-gnu/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
+
+      - name: Install Nim (choosenim)
+        env:
+          CHOOSENIM_NO_ANALYTICS: 1
+        run: |
+          curl -sSf https://nim-lang.org/choosenim/init.sh | bash -s -- -y
+          echo "/home/runner/.nimble/bin" >> $GITHUB_PATH
+          export PATH="/home/runner/.nimble/bin:$PATH"
+          nim --version
+          nimble --version
+
+      - name: Cache Nimble packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.nimble
+          key: ${{ runner.os }}-nimble-${{ hashFiles('mosdepth/mosdepth.nimble') }}
+          restore-keys: |
+            ${{ runner.os }}-nimble-
+
+      - name: Set up Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Build and install d4-format (Rust binding)
+        run: |
+          git clone --depth 1 https://github.com/38/d4-format
+          cd d4-format
+          cargo build --release
+          sudo cp target/release/libd4binding.* /usr/local/lib || true
+          sudo cp d4binding/include/d4.h /usr/local/include/ || true
+          sudo ldconfig
+
+      - name: Build mosdepth from submodule
+        working-directory: mosdepth
+        run: |
+          nimble install -y
+          nim c -d:release mosdepth.nim
+          ls -l mosdepth || true
+          echo "MOSDEPTH_PATH=$PWD/mosdepth" >> $GITHUB_ENV
+
+      - name: Install shards (project deps)
+        run: shards install
+
+      - name: Cache shards
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/shards
+            lib
+          key: ${{ runner.os }}-shards-${{ hashFiles('shard.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-shards-
+
+      - name: Run specs (using built mosdepth)
+        env:
+          MOSDEPTH_PATH: ${{ env.MOSDEPTH_PATH }}
+        run: |
+          echo "Using MOSDEPTH_PATH=$MOSDEPTH_PATH"
+          crystal spec -Dpreview_mt

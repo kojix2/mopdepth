@@ -3,3 +3,7 @@
 /bin/
 /.shards/
 *.dwarf
+
+*.gz
+*.csi
+*.tbi

@@ -18,6 +18,11 @@ module TestCleanup
       "#{prefix}.mosdepth.region.dist.txt",
       "#{prefix}.regions.bed.gz",
       "#{prefix}.thresholds.bed.gz",
+      # CSI index files
+      "#{prefix}.quantized.bed.gz.csi",
+      "#{prefix}.per-base.bed.gz.csi",
+      "#{prefix}.regions.bed.gz.csi",
+      "#{prefix}.thresholds.bed.gz.csi",
     ]
 
     files_to_clean.each do |file|

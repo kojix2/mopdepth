@@ -63,6 +63,7 @@ describe "Threshold Integration" do
       ensure
         output.close_all
         File.delete("#{prefix}.thresholds.bed.gz") if File.exists?("#{prefix}.thresholds.bed.gz")
+        File.delete("#{prefix}.thresholds.bed.gz.csi") if File.exists?("#{prefix}.thresholds.bed.gz.csi")
         # remove both labels (mopdepth and mosdepth)
         [
           "#{prefix}.mopdepth.summary.txt",
@@ -73,7 +74,9 @@ describe "Threshold Integration" do
           "#{prefix}.mosdepth.region.dist.txt",
         ].each { |f| File.delete(f) if File.exists?(f) }
         File.delete("#{prefix}.regions.bed.gz") if File.exists?("#{prefix}.regions.bed.gz")
+        File.delete("#{prefix}.regions.bed.gz.csi") if File.exists?("#{prefix}.regions.bed.gz.csi")
         File.delete("#{prefix}.per-base.bed.gz") if File.exists?("#{prefix}.per-base.bed.gz")
+        File.delete("#{prefix}.per-base.bed.gz.csi") if File.exists?("#{prefix}.per-base.bed.gz.csi")
       end
     end
 
@@ -100,7 +103,9 @@ describe "Threshold Integration" do
           "#{prefix}.mosdepth.region.dist.txt",
         ].each { |f| File.delete(f) if File.exists?(f) }
         File.delete("#{prefix}.regions.bed.gz") if File.exists?("#{prefix}.regions.bed.gz")
+        File.delete("#{prefix}.regions.bed.gz.csi") if File.exists?("#{prefix}.regions.bed.gz.csi")
         File.delete("#{prefix}.per-base.bed.gz") if File.exists?("#{prefix}.per-base.bed.gz")
+        File.delete("#{prefix}.per-base.bed.gz.csi") if File.exists?("#{prefix}.per-base.bed.gz.csi")
       end
     end
 
@@ -123,6 +128,7 @@ describe "Threshold Integration" do
         content.should eq("#chrom\tstart\tend\tregion\t1X\t5X\t10X\n")
       ensure
         File.delete("#{prefix}.thresholds.bed.gz") if File.exists?("#{prefix}.thresholds.bed.gz")
+        File.delete("#{prefix}.thresholds.bed.gz.csi") if File.exists?("#{prefix}.thresholds.bed.gz.csi")
         [
           "#{prefix}.mopdepth.summary.txt",
           "#{prefix}.mopdepth.global.dist.txt",
@@ -132,7 +138,9 @@ describe "Threshold Integration" do
           "#{prefix}.mosdepth.region.dist.txt",
         ].each { |f| File.delete(f) if File.exists?(f) }
         File.delete("#{prefix}.regions.bed.gz") if File.exists?("#{prefix}.regions.bed.gz")
+        File.delete("#{prefix}.regions.bed.gz.csi") if File.exists?("#{prefix}.regions.bed.gz.csi")
         File.delete("#{prefix}.per-base.bed.gz") if File.exists?("#{prefix}.per-base.bed.gz")
+        File.delete("#{prefix}.per-base.bed.gz.csi") if File.exists?("#{prefix}.per-base.bed.gz.csi")
       end
     end
 
@@ -162,11 +170,14 @@ describe "Threshold Integration" do
         lines[2].should eq("chr1\t100\t200\tunknown\t50\t30\t10")
       ensure
         File.delete("#{prefix}.thresholds.bed.gz") if File.exists?("#{prefix}.thresholds.bed.gz")
+        File.delete("#{prefix}.thresholds.bed.gz.csi") if File.exists?("#{prefix}.thresholds.bed.gz.csi")
         File.delete("#{prefix}.mopdepth.summary.txt") if File.exists?("#{prefix}.mopdepth.summary.txt")
         File.delete("#{prefix}.mopdepth.global.dist.txt") if File.exists?("#{prefix}.mopdepth.global.dist.txt")
         File.delete("#{prefix}.mopdepth.region.dist.txt") if File.exists?("#{prefix}.mopdepth.region.dist.txt")
         File.delete("#{prefix}.regions.bed.gz") if File.exists?("#{prefix}.regions.bed.gz")
+        File.delete("#{prefix}.regions.bed.gz.csi") if File.exists?("#{prefix}.regions.bed.gz.csi")
         File.delete("#{prefix}.per-base.bed.gz") if File.exists?("#{prefix}.per-base.bed.gz")
+        File.delete("#{prefix}.per-base.bed.gz.csi") if File.exists?("#{prefix}.per-base.bed.gz.csi")
       end
     end
   end

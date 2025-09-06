@@ -110,8 +110,14 @@ module Depth
             # grow once; keep capacity for reuse
             coverage.concat(Array(Int32).new(target_size - coverage.size, 0))
           end
-          # partial reset only within effective window
+          # Reset diff indices touched last target (generation-based) then unconditionally zero
+          # the working slice to avoid stale prefix-summed values corrupting next diff pass.
           calculator.reset_coverage!(coverage, target_size)
+          i_full = 0
+          while i_full < target_size
+            coverage[i_full] = 0
+            i_full += 1
+          end
 
           tid = calculator.calculate(coverage, query_region, offset)
           next if tid == Core::CoverageResult::ChromNotFound.value

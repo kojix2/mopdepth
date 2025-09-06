@@ -1,18 +1,18 @@
 module Depth::Stats
   struct DepthStat
-    property n_bases : Int32 = 0
+    property n_bases : Int64 = 0_i64
     property sum_depth : UInt64 = 0_u64
     property min_depth : Int32 = Int32::MAX
     property max_depth : Int32 = 0
     # number of bases with coverage > 0 (mosdepth "bases")
-    property bases : Int32 = 0
+    property bases : Int64 = 0_i64
 
     def clear
-      @n_bases = 0
+      @n_bases = 0_i64
       @sum_depth = 0_u64
       @min_depth = Int32::MAX
       @max_depth = 0
-      @bases = 0
+      @bases = 0_i64
     end
 
     def self.from_slice(slice : Slice(Int32))

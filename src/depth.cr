@@ -53,15 +53,19 @@ module Depth
         runner.run
       rescue ex : ConfigError
         STDERR.puts "Config error: #{ex.message}"
+        STDERR.puts ex.backtrace.first
         exit 1
       rescue ex : FileNotFoundError
         STDERR.puts "File not found: #{ex.message}"
+        STDERR.puts ex.backtrace.first
         exit 1
       rescue ex : BamIndexError
         STDERR.puts "Index error: #{ex.message}"
+        STDERR.puts ex.backtrace.first
         exit 1
       rescue ex : Exception
         STDERR.puts "Error: #{ex.message}"
+        STDERR.puts ex.backtrace.join("\n")
         exit 1
       end
     end

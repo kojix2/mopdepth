@@ -1,7 +1,7 @@
 module Depth::Stats
   struct DepthStat
     property n_bases : Int32 = 0
-    property sum_depth : Int64 = 0_i64
+    property sum_depth : UInt64 = 0_u64
     property min_depth : Int32 = Int32::MAX
     property max_depth : Int32 = 0
     # number of bases with coverage > 0 (mosdepth "bases")
@@ -9,7 +9,7 @@ module Depth::Stats
 
     def clear
       @n_bases = 0
-      @sum_depth = 0
+      @sum_depth = 0_u64
       @min_depth = Int32::MAX
       @max_depth = 0
       @bases = 0
@@ -19,7 +19,7 @@ module Depth::Stats
       s = DepthStat.new
       s.n_bases = slice.size
       slice.each do |v|
-        s.sum_depth += v
+        s.sum_depth += v.to_u64
         s.min_depth = v if v < s.min_depth
         s.max_depth = v if v > s.max_depth
         s.bases += 1 if v > 0
@@ -33,7 +33,7 @@ module Depth::Stats
       s.n_bases = end_idx - start_idx + 1
       (start_idx..end_idx).each do |i|
         v = array[i]
-        s.sum_depth += v
+        s.sum_depth += v.to_u64
         s.min_depth = v if v < s.min_depth
         s.max_depth = v if v > s.max_depth
         s.bases += 1 if v > 0

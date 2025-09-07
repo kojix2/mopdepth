@@ -14,7 +14,7 @@
 <script type="text/javascript" src="../../js/doc.js"></script>
 
   <meta name="repository-name" content="mopdepth">
-  <title>Depth::Core::CoverageUtils - mopdepth main</title>
+  <title>Depth::Core::SimpleMate - mopdepth main</title>
   <script type="text/javascript">
     CrystalDocs.base_path = "../../";
   </script>
@@ -107,7 +107,7 @@
       
     </li>
   
-  <li class=" current" data-id="mopdepth/Depth/Core/CoverageUtils" data-name="depth::core::coverageutils">
+  <li class=" " data-id="mopdepth/Depth/Core/CoverageUtils" data-name="depth::core::coverageutils">
       <a href="../../Depth/Core/CoverageUtils.html">CoverageUtils</a>
       
     </li>
@@ -122,7 +122,7 @@
       
     </li>
   
-  <li class=" " data-id="mopdepth/Depth/Core/SimpleMate" data-name="depth::core::simplemate">
+  <li class=" current" data-id="mopdepth/Depth/Core/SimpleMate" data-name="depth::core::simplemate">
       <a href="../../Depth/Core/SimpleMate.html">SimpleMate</a>
       
     </li>
@@ -232,14 +232,27 @@
 <h1 class="type-name">
 
   <span class="kind">
-    module
-  </span> Depth::<wbr>Core::<wbr>CoverageUtils
+    struct
+  </span> Depth::<wbr>Core::<wbr>SimpleMate
 
 </h1>
 
 
+  <ul class="superclass-hierarchy"><li class="superclass"><a href="../../Depth/Core/SimpleMate.html">Depth::Core::SimpleMate</a></li><li class="superclass">Struct</li><li class="superclass">Value</li><li class="superclass">Object</li></ul>
 
 
+
+
+  <h2>
+    <a id="overview" class="anchor" href="#overview">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Overview
+  </h2>
+
+  <p>Minimal info needed for simple overlap correction (single contiguous match)</p>
 
 
 
@@ -266,8 +279,8 @@
   </h2>
   
     
-      <a href="https://github.com/kojix2/mopdepth/blob/9ffcdc9edf453ed1e4059168f2f174caf61feaf2/src/depth/core/coverage_utils.cr#L2" target="_blank">
-        depth/core/coverage_utils.cr
+      <a href="https://github.com/kojix2/mopdepth/blob/9ffcdc9edf453ed1e4059168f2f174caf61feaf2/src/depth/core/coverage_calculator.cr#L9" target="_blank">
+        depth/core/coverage_calculator.cr
       </a>
     
     <br/>
@@ -278,6 +291,23 @@
 
 
   
+  <h2>
+    <a id="constructors" class="anchor" href="#constructors">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Constructors
+  </h2>
+  <ul class="list-summary">
+    
+      <li class="entry-summary">
+        <a href="#new%28start%3AInt32%2Cendpos%3AInt32%29-class-method" class="signature"><strong>.new</strong>(start : Int32, endpos : Int32)</a>
+        
+      </li>
+    
+  </ul>
+
 
   
 
@@ -295,16 +325,12 @@
   <ul class="list-summary">
     
       <li class="entry-summary">
-        <a href="#each_constant_segment%28a%3ACoverage%2Cstop_at%3AInt32%3D-1%2C%26%29-instance-method" class="signature"><strong>#each_constant_segment</strong>(a : Coverage, stop_at : Int32 = <span class="n">-1</span>, &)</a>
-        
-          <div class="summary"><p>Yield intervals [start, stop) with constant depth value</p></div>
+        <a href="#endpos%3AInt32-instance-method" class="signature"><strong>#endpos</strong> : Int32</a>
         
       </li>
     
       <li class="entry-summary">
-        <a href="#prefix_sum%21%28a%3ACoverage%29-instance-method" class="signature"><strong>#prefix_sum!</strong>(a : Coverage)</a>
-        
-          <div class="summary"><p>Utility function for cumulative sum</p></div>
+        <a href="#start%3AInt32-instance-method" class="signature"><strong>#start</strong> : Int32</a>
         
       </li>
     
@@ -314,9 +340,74 @@
 
   <div class="methods-inherited">
     
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
   </div>
 
   
+  <h2>
+    <a id="constructor-detail" class="anchor" href="#constructor-detail">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Constructor Detail
+  </h2>
+  
+    <div class="entry-detail" id="new(start:Int32,endpos:Int32)-class-method">
+      <div class="signature">
+        
+        def self.<strong>new</strong>(start : Int32, endpos : Int32)
+
+        <a class="method-permalink" href="#new%28start%3AInt32%2Cendpos%3AInt32%29-class-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/9ffcdc9edf453ed1e4059168f2f174caf61feaf2/src/depth/core/coverage_calculator.cr#L12" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+
 
   
 
@@ -332,44 +423,34 @@
     Instance Method Detail
   </h2>
   
-    <div class="entry-detail" id="each_constant_segment(a:Coverage,stop_at:Int32=-1,&amp;)-instance-method">
+    <div class="entry-detail" id="endpos:Int32-instance-method">
       <div class="signature">
         
-        def <strong>each_constant_segment</strong>(a : <a href="../../Depth/Core/Coverage.html">Coverage</a>, stop_at : Int32 = <span class="n">-1</span>, &)
+        def <strong>endpos</strong> : Int32
 
-        <a class="method-permalink" href="#each_constant_segment%28a%3ACoverage%2Cstop_at%3AInt32%3D-1%2C%26%29-instance-method">#</a>
+        <a class="method-permalink" href="#endpos%3AInt32-instance-method">#</a>
       </div>
-      
-        <div class="doc">
-          
-          <p>Yield intervals [start, stop) with constant depth value</p>
-        </div>
       
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/9ffcdc9edf453ed1e4059168f2f174caf61feaf2/src/depth/core/coverage_utils.cr#L15" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/9ffcdc9edf453ed1e4059168f2f174caf61feaf2/src/depth/core/coverage_calculator.cr#L11" target="_blank">View source</a>]
         
       </div>
     </div>
   
-    <div class="entry-detail" id="prefix_sum!(a:Coverage)-instance-method">
+    <div class="entry-detail" id="start:Int32-instance-method">
       <div class="signature">
         
-        def <strong>prefix_sum!</strong>(a : <a href="../../Depth/Core/Coverage.html">Coverage</a>)
+        def <strong>start</strong> : Int32
 
-        <a class="method-permalink" href="#prefix_sum%21%28a%3ACoverage%29-instance-method">#</a>
+        <a class="method-permalink" href="#start%3AInt32-instance-method">#</a>
       </div>
-      
-        <div class="doc">
-          
-          <p>Utility function for cumulative sum</p>
-        </div>
       
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/9ffcdc9edf453ed1e4059168f2f174caf61feaf2/src/depth/core/coverage_utils.cr#L4" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/9ffcdc9edf453ed1e4059168f2f174caf61feaf2/src/depth/core/coverage_calculator.cr#L10" target="_blank">View source</a>]
         
       </div>
     </div>

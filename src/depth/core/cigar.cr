@@ -7,81 +7,72 @@ module Depth::Core
       events
     end
 
-    # CIGAR → start/end events on reference
-    # Returns array of {pos, +1/-1}; pos is 0-based ref coordinate
-    #
-    # Key points (what contributes to depth):
-    # - Only operations that consume both reference and query contribute to depth: M, =, X
-    # - D, N consume reference only (gaps). They do not add to depth; we just advance the ref position (pos)
-    # - I, S consume query only. They do not advance reference and do not add to depth
-    #
-    # Implementation strategy:
-    # - Operations that don't consume reference are skipped entirely (next unless consumes_ref)
-    # - Only when an op consumes both reference and query (M/= /X) we emit start(+1)/end(-1) events
-    #   This ensures only M/= /X spans change coverage when later applied to the diff array
-    # Fill start/end events into a provided buffer to avoid allocations.
-    # Each event is a tuple: {pos, +1/-1}
-    def cigar_fill_events!(cigar, ipos : Int32, evbuf : Array(Tuple(Int32, Int32))) : Nil
+    # Bit classification: bit0 = consumes reference, bit1 = consumes query
+    private def classify_cigar(op : Char) : UInt8
+      case op
+      when 'M', '=', 'X' then 0b11_u8
+      when 'D', 'N'      then 0b01_u8
+      when 'I', 'S'      then 0b10_u8
+      else                    0_u8
+      end
+    end
+
+    # Streaming iterator for start/end events (pos, +1/-1) without allocations
+    def cigar_each_event(cigar, ipos : Int32, & : Int32, Int32 ->)
       pos = ipos
       last_stop = -1
       cigar.each do |op_char, olen|
-        # Check if operation consumes reference: M, D, N, =, X
-        consumes_ref = ['M', 'D', 'N', '=', 'X'].includes?(op_char)
-        next unless consumes_ref
-
-        # Check if operation consumes query: M, I, S, =, X
-        consumes_query = ['M', 'I', 'S', '=', 'X'].includes?(op_char)
-        if consumes_query
-          # We get here only for M/= /X (I/S don't consume reference and were filtered above).
-          # If the previous segment doesn't continue, start a new one;
-          # if a prior segment exists, emit its end event.
+        cls = classify_cigar(op_char)
+        next if (cls & 0b01) == 0
+        len = olen.to_i32
+        if (cls & 0b11) == 0b11
           if pos != last_stop
-            evbuf << {pos, 1}
-            evbuf << {last_stop, -1} if last_stop >= 0
+            yield pos, 1
+            yield last_stop, -1 if last_stop >= 0
           end
-          last_stop = pos + olen.to_i32
+          last_stop = pos + len
         end
-        # For D/N (consume reference only), consumes_query is false:
-        # don't create events, only advance pos (treat as a gap)
-        pos += olen.to_i32
+        pos += len
       end
-      # Close the last open segment if any
-      evbuf << {last_stop, -1} if last_stop >= 0
+      yield last_stop, -1 if last_stop >= 0
+    end
+
+    # CIGAR → start/end events on reference, filling provided buffer
+    def cigar_fill_events!(cigar, ipos : Int32, evbuf : Array(Tuple(Int32, Int32))) : Nil
+      evbuf.clear
+      cigar_each_event(cigar, ipos) do |p, v|
+        evbuf << {p, v}
+      end
       nil
     end
 
     def inc_coverage(cigar, ipos : Int32, a : Coverage)
-      # Apply the start(+1)/end(-1) events to the diff array 'a'.
-      # A subsequent prefix_sum! turns it into actual per-base coverage.
-      cigar_start_end_events(cigar, ipos).each do |pos, val|
-        next if pos < 0 || a.empty?
+      return if a.empty?
+      cigar_each_event(cigar, ipos) do |pos, val|
+        next if pos < 0
         p = pos.clamp(0, a.size - 1)
         a[p] += val
       end
     end
 
     # Build contiguous reference-aligned segments [start, stop) for M/= /X parts.
-    # This mirrors cigar_start_end_events but returns merged intervals directly.
     def cigar_segments(cigar, ipos : Int32) : Array(Tuple(Int32, Int32))
       segs = [] of Tuple(Int32, Int32)
       pos = ipos
       seg_start = -1
       seg_stop = -1
       cigar.each do |op_char, olen|
-        consumes_ref = ['M', 'D', 'N', '=', 'X'].includes?(op_char)
-        next unless consumes_ref
-
-        consumes_query = ['M', 'I', 'S', '=', 'X'].includes?(op_char)
-        if consumes_query
-          # start new segment if discontinuous
+        cls = classify_cigar(op_char)
+        next if (cls & 0b01) == 0
+        len = olen.to_i32
+        if (cls & 0b11) == 0b11
           if pos != seg_stop
-            # close previous
             segs << {seg_start, seg_stop} if seg_start >= 0 && seg_stop >= 0
             seg_start = pos
           end
-          seg_stop = pos + olen.to_i32
+          seg_stop = pos + len
         end
-        pos += olen.to_i32
+        pos += len
       end
       segs << {seg_start, seg_stop} if seg_start >= 0 && seg_stop >= 0
       segs
@@ -93,21 +84,19 @@ module Depth::Core
       seg_start = -1
       seg_stop = -1
       cigar.each do |op_char, olen|
-        consumes_ref = ['M', 'D', 'N', '=', 'X'].includes?(op_char)
-        unless consumes_ref
-          next
-        end
-        consumes_query = ['M', 'I', 'S', '=', 'X'].includes?(op_char)
-        if consumes_query
+        cls = classify_cigar(op_char)
+        next if (cls & 0b01) == 0
+        len = olen.to_i32
+        if (cls & 0b11) == 0b11
           if pos != seg_stop
             if seg_start >= 0 && seg_stop >= 0
               yield({seg_start, seg_stop})
             end
             seg_start = pos
           end
-          seg_stop = pos + olen.to_i32
+          seg_stop = pos + len
         end
-        pos += olen.to_i32
+        pos += len
       end
       if seg_start >= 0 && seg_stop >= 0
         yield({seg_start, seg_stop})

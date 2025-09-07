@@ -5,6 +5,13 @@ require "./coverage_result"
 require "./coverage_utils"
 
 module Depth::Core
+  # Minimal info needed for simple overlap correction (single contiguous match)
+  struct SimpleMate
+    getter start : Int32
+    getter endpos : Int32
+    def initialize(@start : Int32, @endpos : Int32); end
+  end
+
   class CoverageCalculator
     include Cigar
     # touched tracking
@@ -16,12 +23,15 @@ module Depth::Core
     def initialize(@bam : HTS::Bam, @options : Options)
       # store first-read of overlapping proper pairs to correct double-counting when mate arrives
       @seen = Hash(String, HTS::Bam::Record).new
+      # lightweight store for simple (single-M) mates to avoid cloning whole record
+      @seen_simple = Hash(String, SimpleMate).new
       # generation-based touched tracking (avoid full memset)
       @generation = 1_u32
       @marks = [] of UInt32  # same length as coverage capacity
       @touched = [] of Int32 # indices touched during current generation
       @evbuf = [] of Tuple(Int32, Int32)
     end
+
 
     # Check if record should be filtered out
     private def filtered_out?(rec) : Bool
@@ -68,11 +78,52 @@ module Depth::Core
           rec_start = rec.pos.to_i32
           rec_stop = rec.endpos.to_i32
           # If this read overlaps its mate and is the earlier (or equal) one, store it; otherwise, if mate was stored, correct overlap now
-          if rec_stop > rec.mate_pos && (rec_start < rec.mate_pos || (rec_start == rec.mate_pos && !@seen.has_key?(rec.qname)))
-            # store a clone since records are reused
-            @seen[rec.qname] = rec.clone
+          if rec_stop > rec.mate_pos && (rec_start < rec.mate_pos || (rec_start == rec.mate_pos && !(@seen_simple.has_key?(rec.qname) || @seen.has_key?(rec.qname))))
+            # Store lightweight if single M, else fall back to cloning
+            if rec.cigar.size == 1
+              @seen_simple[rec.qname] = SimpleMate.new(start: rec_start, endpos: rec_stop)
+            else
+              @seen[rec.qname] = rec.clone
+            end
           else
-            if mate = @seen.delete(rec.qname)
+            # Try simple first
+            if sm = @seen_simple.delete(rec.qname)
+              if rec.cigar.size == 1
+                s = {rec_start, sm.start}.max
+                e = {rec_stop, sm.endpos}.min
+                if e > s
+                  s = (s - offset).clamp(0, coverage.size - 1)
+                  e = (e - offset).clamp(0, coverage.size - 1)
+                  mark_and_add!(coverage, s, -1)
+                  mark_and_add!(coverage, e, 1)
+                end
+              else
+                # Mixed simple + complex: build events for complex read + synthetic events for simple mate
+                ses = @evbuf
+                ses.clear
+                cigar_fill_events!(rec.cigar, rec_start, ses)
+                # simple mate contributes one segment [sm.start, sm.endpos)
+                ses << {sm.start, 1}
+                ses << {sm.endpos, -1}
+                ses.sort_by! { |(p, _)| p }
+                pair_depth = 0
+                last_pos = 0
+                ses.each do |pos, val|
+                  if val == -1 && pair_depth == 2
+                    s = last_pos
+                    e = pos
+                    if e > s
+                      s = (s - offset).clamp(0, coverage.size - 1)
+                      e = (e - offset).clamp(0, coverage.size - 1)
+                      mark_and_add!(coverage, s, -1)
+                      mark_and_add!(coverage, e, 1)
+                    end
+                  end
+                  pair_depth += val
+                  last_pos = pos
+                end
+              end
+            elsif mate = @seen.delete(rec.qname)
               # Fast path: both reads have single M op
               if rec.cigar.size == 1 && mate.cigar.size == 1
                 s = [rec_start, mate.pos.to_i32].max
@@ -146,7 +197,8 @@ module Depth::Core
       q_stop = (r.stop > 0 ? r.stop : @bam.header.target_len[tid].to_i32)
 
       # Assume Runner already sized/zeroed the coverage buffer; avoid duplicate initialization here
-      @seen.clear
+  @seen.clear
+  @seen_simple.clear
       @bam.query(tid, q_start, q_stop) do |rec|
         next if filtered_out?(rec)
         found = true unless found
@@ -162,7 +214,8 @@ module Depth::Core
       chrom_tid = UNKNOWN_CHROM_TID
       current_tid = Int32::MIN
 
-      @seen.clear
+  @seen.clear
+  @seen_simple.clear
       @bam.each(copy: false) do |rec|
         # Break if we encounter a different chromosome to prevent array corruption
         if current_tid != Int32::MIN && rec.tid != current_tid

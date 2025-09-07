@@ -144,11 +144,10 @@ module Depth::Core
 
       q_start = (r.start > 0 ? r.start : 0)
       q_stop = (r.stop > 0 ? r.stop : @bam.header.target_len[tid].to_i32)
-      region_str = "#{r.chrom}:#{q_start + 1}-#{q_stop}"
 
       # Assume Runner already sized/zeroed the coverage buffer; avoid duplicate initialization here
       @seen.clear
-      @bam.query(region_str) do |rec|
+      @bam.query(tid, q_start, q_stop) do |rec|
         next if filtered_out?(rec)
         found = true unless found
         accumulate_record!(rec, a, offset)

@@ -275,7 +275,7 @@
   </h2>
   
     
-      <a href="https://github.com/kojix2/mopdepth/blob/acf83cbc4dcac6eb8c2a7110dc64bbd64e1ed617/src/depth/core/cigar.cr#L2" target="_blank">
+      <a href="https://github.com/kojix2/mopdepth/blob/8a4e662e4576910e1ae9f3789a840fee4bf541de/src/depth/core/cigar.cr#L2" target="_blank">
         depth/core/cigar.cr
       </a>
     
@@ -304,6 +304,13 @@
   <ul class="list-summary">
     
       <li class="entry-summary">
+        <a href="#cigar_each_event%28cigar%2Cipos%3AInt32%2C%26%3AInt32%2CInt32-%3E%29-instance-method" class="signature"><strong>#cigar_each_event</strong>(cigar, ipos : Int32, & : Int32, Int32 -> )</a>
+        
+          <div class="summary"><p>Streaming iterator for start/end events (pos, +1/-1) without allocations</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
         <a href="#cigar_each_segment%28cigar%2Cipos%3AInt32%2C%26%3ATuple%28Int32%2CInt32%29-%3E%29-instance-method" class="signature"><strong>#cigar_each_segment</strong>(cigar, ipos : Int32, & : Tuple(Int32, Int32) -> )</a>
         
           <div class="summary"><p>Stream segments without building an array</p></div>
@@ -313,7 +320,7 @@
       <li class="entry-summary">
         <a href="#cigar_fill_events%21%28cigar%2Cipos%3AInt32%2Cevbuf%3AArray%28Tuple%28Int32%2CInt32%29%29%29%3ANil-instance-method" class="signature"><strong>#cigar_fill_events!</strong>(cigar, ipos : Int32, evbuf : Array(Tuple(Int32, Int32))) : Nil</a>
         
-          <div class="summary"><p>CIGAR → start/end events on reference Returns array of {pos, +1/-1}; pos is 0-based ref coordinate</p></div>
+          <div class="summary"><p>CIGAR → start/end events on reference, filling provided buffer</p></div>
         
       </li>
     
@@ -360,6 +367,27 @@
     Instance Method Detail
   </h2>
   
+    <div class="entry-detail" id="cigar_each_event(cigar,ipos:Int32,&amp;:Int32,Int32-&gt;)-instance-method">
+      <div class="signature">
+        
+        def <strong>cigar_each_event</strong>(cigar, ipos : Int32, & : Int32, Int32 -> )
+
+        <a class="method-permalink" href="#cigar_each_event%28cigar%2Cipos%3AInt32%2C%26%3AInt32%2CInt32-%3E%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Streaming iterator for start/end events (pos, +1/-1) without allocations</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/8a4e662e4576910e1ae9f3789a840fee4bf541de/src/depth/core/cigar.cr#L21" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
     <div class="entry-detail" id="cigar_each_segment(cigar,ipos:Int32,&amp;:Tuple(Int32,Int32)-&gt;)-instance-method">
       <div class="signature">
         
@@ -376,7 +404,7 @@
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/acf83cbc4dcac6eb8c2a7110dc64bbd64e1ed617/src/depth/core/cigar.cr#L91" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/8a4e662e4576910e1ae9f3789a840fee4bf541de/src/depth/core/cigar.cr#L82" target="_blank">View source</a>]
         
       </div>
     </div>
@@ -391,28 +419,13 @@
       
         <div class="doc">
           
-          <p>CIGAR → start/end events on reference
-Returns array of {pos, +1/-1}; pos is 0-based ref coordinate</p>
-<p>Key points (what contributes to depth):</p>
-<ul>
-<li>Only operations that consume both reference and query contribute to depth: M, =, X</li>
-<li>D, N consume reference only (gaps). They do not add to depth; we just advance the ref position (pos)</li>
-<li>I, S consume query only. They do not advance reference and do not add to depth</li>
-</ul>
-<p>Implementation strategy:</p>
-<ul>
-<li>Operations that don't consume reference are skipped entirely (next unless consumes_ref)</li>
-<li>Only when an op consumes both reference and query (M/= /X) we emit start(+1)/end(-1) events
-This ensures only M/= /X spans change coverage when later applied to the diff array
-Fill start/end events into a provided buffer to avoid allocations.
-Each event is a tuple: {pos, +1/-1}</li>
-</ul>
+          <p>CIGAR → start/end events on reference, filling provided buffer</p>
         </div>
       
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/acf83cbc4dcac6eb8c2a7110dc64bbd64e1ed617/src/depth/core/cigar.cr#L24" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/8a4e662e4576910e1ae9f3789a840fee4bf541de/src/depth/core/cigar.cr#L41" target="_blank">View source</a>]
         
       </div>
     </div>
@@ -427,14 +440,13 @@ Each event is a tuple: {pos, +1/-1}</li>
       
         <div class="doc">
           
-          <p>Build contiguous reference-aligned segments [start, stop) for M/= /X parts.
-This mirrors cigar_start_end_events but returns merged intervals directly.</p>
+          <p>Build contiguous reference-aligned segments [start, stop) for M/= /X parts.</p>
         </div>
       
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/acf83cbc4dcac6eb8c2a7110dc64bbd64e1ed617/src/depth/core/cigar.cr#L65" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/8a4e662e4576910e1ae9f3789a840fee4bf541de/src/depth/core/cigar.cr#L59" target="_blank">View source</a>]
         
       </div>
     </div>
@@ -455,7 +467,7 @@ This mirrors cigar_start_end_events but returns merged intervals directly.</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/acf83cbc4dcac6eb8c2a7110dc64bbd64e1ed617/src/depth/core/cigar.cr#L4" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/8a4e662e4576910e1ae9f3789a840fee4bf541de/src/depth/core/cigar.cr#L4" target="_blank">View source</a>]
         
       </div>
     </div>
@@ -471,7 +483,7 @@ This mirrors cigar_start_end_events but returns merged intervals directly.</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/acf83cbc4dcac6eb8c2a7110dc64bbd64e1ed617/src/depth/core/cigar.cr#L53" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/8a4e662e4576910e1ae9f3789a840fee4bf541de/src/depth/core/cigar.cr#L49" target="_blank">View source</a>]
         
       </div>
     </div>

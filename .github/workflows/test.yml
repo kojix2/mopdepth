@@ -58,7 +58,7 @@ jobs:
           nimble --version
 
       - name: Cache Nimble packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.nimble
@@ -93,7 +93,7 @@ jobs:
         run: shards install
 
       - name: Cache shards
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cache/shards

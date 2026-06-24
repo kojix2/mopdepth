@@ -7,6 +7,17 @@ require "./coverage_utils"
 module Depth::Core
   class CoverageCalculator
     include Cigar
+
+    private class SeenMate
+      getter start : Int32
+      getter stop : Int32
+      getter cigar_size : UInt32
+      getter events : Array(Tuple(Int32, Int32))?
+
+      def initialize(@start : Int32, @stop : Int32, @cigar_size : UInt32, @events : Array(Tuple(Int32, Int32))?)
+      end
+    end
+
     # touched tracking
     @generation : UInt8
     @marks : Array(UInt8)
@@ -15,7 +26,7 @@ module Depth::Core
 
     def initialize(@bam : HTS::Bam, @options : Options)
       # store first-read of overlapping proper pairs to correct double-counting when mate arrives
-      @seen = Hash(String, HTS::Bam::Record).new
+      @seen = Hash(String, SeenMate).new
       # generation-based touched tracking (avoid full memset)
       @generation = 1_u8
       @marks = [] of UInt8   # same length as coverage capacity
@@ -73,8 +84,7 @@ module Depth::Core
           if rec_stop > rec.mate_pos
             qname = rec.qname
             if rec_start < rec.mate_pos || (rec_start == rec.mate_pos && !@seen.has_key?(qname))
-              # store a clone since records are reused
-              @seen[qname] = rec.clone
+              @seen[qname] = capture_seen_mate(rec, rec_start, rec_stop)
             elsif mate = @seen.delete(qname)
               correct_mate_overlap_coverage!(rec, mate, rec_start, rec_stop, coverage, offset)
             end
@@ -89,11 +99,31 @@ module Depth::Core
       end
     end
 
-    private def correct_mate_overlap_coverage!(rec, mate, rec_start : Int32, rec_stop : Int32,
+    private def capture_seen_mate(rec, rec_start : Int32, rec_stop : Int32) : SeenMate
+      cigar_size = rec.cigar_size
+      events = nil
+      if cigar_size != 1
+        ev = [] of Tuple(Int32, Int32)
+        record_cigar_append_events!(rec, rec_start, ev)
+        events = ev
+      end
+      SeenMate.new(rec_start, rec_stop, cigar_size, events)
+    end
+
+    private def append_seen_mate_events!(mate : SeenMate, events : Array(Tuple(Int32, Int32)))
+      if mate_events = mate.events
+        events.concat(mate_events)
+      else
+        events << {mate.start, 1}
+        events << {mate.stop, -1}
+      end
+    end
+
+    private def correct_mate_overlap_coverage!(rec, mate : SeenMate, rec_start : Int32, rec_stop : Int32,
                                                coverage : Coverage, offset : Int32)
       if rec.cigar_size == 1 && mate.cigar_size == 1
-        s = [rec_start, mate.pos.to_i32].max
-        e = [rec_stop, mate.endpos.to_i32].min
+        s = [rec_start, mate.start].max
+        e = [rec_stop, mate.stop].min
         if e > s
           s = (s - offset).clamp(0, coverage.size - 1)
           e = (e - offset).clamp(0, coverage.size - 1)
@@ -104,8 +134,8 @@ module Depth::Core
         ses = @evbuf
         ses.clear
         record_cigar_append_events!(rec, rec_start, ses)
-        record_cigar_append_events!(mate, mate.pos.to_i32, ses)
-        ses.sort_by! { |(p, _)| p }
+        append_seen_mate_events!(mate, ses)
+        ses.sort! { |a, b| a[0] <=> b[0] }
         pair_depth = 0
         last_pos = 0
         ses.each do |pos, val|

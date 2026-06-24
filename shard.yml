@@ -13,6 +13,10 @@ dependencies:
     github: bio-cr/hts.cr
     branch: develop
 
+development_dependencies:
+  ameba:
+    github: crystal-ameba/ameba
+
 crystal: '>= 1.17.1'
 
 license: MIT

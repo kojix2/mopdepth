@@ -218,7 +218,6 @@ module Depth
                                           bed_map : Hash(String, Array(Core::Region))?, window : Int32) : Bool
       return false if region
       return false if output.f_regions && window == 0 && bed_map.nil?
-      return false if @config.has_thresholds?
       return false if @config.fragment_mode?
       return false if @config.use_median?
       true
@@ -237,7 +236,8 @@ module Depth
       end
 
       bed_regions = bed_map.try(&.[t.name]?) || [] of Core::Region
-      window_context = output.f_regions && window > 0 ? SparseWindowContext.new(t.name, window, effective_len) : nil
+      thresholds = @config.has_thresholds? ? @config.threshold_values : [] of Int32
+      window_context = output.f_regions && window > 0 ? SparseWindowContext.new(t.name, window, effective_len, thresholds.size) : nil
 
       if tid == Core::CoverageResult::NoData.value
         if output.f_perbase
@@ -245,9 +245,9 @@ module Depth
         end
         if output.f_regions
           if window_context
-            write_empty_sparse_windows(t, window_context, output, region_dist, offset)
+            write_empty_sparse_windows(t, window_context, output, region_dist, thresholds, offset)
           else
-            write_empty_bed_regions(t, bed_regions, output, offset, effective_len)
+            write_empty_bed_regions(t, bed_regions, output, thresholds, offset, effective_len)
           end
         end
         if output.f_quantized && @config.has_quantize?
@@ -263,6 +263,7 @@ module Depth
       chrom_stat = Stats::DepthStat.new
       chrom_region_stat = Stats::DepthStat.new
       region_sums = Array(UInt64).new(bed_regions.size, 0_u64)
+      region_threshold_counts = Array(Array(Int32)).new(bed_regions.size) { Array(Int32).new(thresholds.size, 0) }
       quants = @config.has_quantize? ? @config.quantize_args : [] of Int32
       quant_lookup = quants.empty? ? [] of String : Stats::Quantize.make_lookup(quants)
       quant_last = Int32::MIN
@@ -284,10 +285,11 @@ module Depth
         chrom_stat.bases += len if depth > 0
         bump_depth_count!(global_dist, depth, len)
         region_idx, chrom_region_stat = accumulate_sparse_bed_segment(
-          segment, bed_regions, region_idx, region_sums, region_dist, chrom_region_stat
+          segment, bed_regions, region_idx, region_sums, region_threshold_counts,
+          thresholds, region_dist, chrom_region_stat
         )
         if ctx = window_context
-          chrom_region_stat = accumulate_sparse_window_segment(segment, ctx, output, region_dist, chrom_region_stat, offset)
+          chrom_region_stat = accumulate_sparse_window_segment(segment, ctx, output, thresholds, region_dist, chrom_region_stat, offset)
         end
 
         if output.f_perbase
@@ -309,9 +311,9 @@ module Depth
 
       if output.f_regions
         if ctx = window_context
-          flush_sparse_window_context(t, ctx, output, region_dist, offset)
+          flush_sparse_window_context(t, ctx, output, thresholds, region_dist, offset)
         else
-          write_sparse_bed_regions(t, bed_regions, region_sums, output)
+          write_sparse_bed_regions(t, bed_regions, region_sums, region_threshold_counts, output)
         end
       end
 
@@ -350,21 +352,24 @@ module Depth
       property start : Int32
       property stop : Int32
       property sum : UInt64
+      property threshold_counts : Array(Int32)
 
-      def initialize(@chrom : String, @window : Int32, @effective_len : Int32)
+      def initialize(@chrom : String, @window : Int32, @effective_len : Int32, threshold_count : Int32)
         @start = 0
         @stop = Math.min(@window, @effective_len)
         @sum = 0_u64
+        @threshold_counts = Array(Int32).new(threshold_count, 0)
       end
     end
 
     private def accumulate_sparse_window_segment(segment : Core::DepthSegment, ctx : SparseWindowContext,
-                                                 output : FileIO::OutputManager, region_dist : Array(Int64),
+                                                 output : FileIO::OutputManager, thresholds : Array(Int32),
+                                                 region_dist : Array(Int64),
                                                  chrom_region_stat : Stats::DepthStat, offset : Int32) : Stats::DepthStat
       pos = segment.start
       while pos < segment.stop && ctx.start < ctx.effective_len
         if pos >= ctx.stop
-          finish_sparse_window(ctx, output, region_dist, offset)
+          finish_sparse_window(ctx, output, thresholds, region_dist, offset)
           next
         end
 
@@ -373,6 +378,7 @@ module Depth
         if overlap_len > 0
           depth = segment.depth
           ctx.sum += (overlap_len.to_u64 * depth.to_u64) if depth > 0
+          bump_threshold_counts!(ctx.threshold_counts, thresholds, depth, overlap_len)
           chrom_region_stat.n_bases += overlap_len
           chrom_region_stat.sum_depth += (overlap_len.to_u64 * depth.to_u64) if depth > 0
           chrom_region_stat.min_depth = depth if depth < chrom_region_stat.min_depth
@@ -385,36 +391,43 @@ module Depth
     end
 
     private def flush_sparse_window_context(t : Core::Target, ctx : SparseWindowContext,
-                                            output : FileIO::OutputManager, region_dist : Array(Int64), offset : Int32)
+                                            output : FileIO::OutputManager, thresholds : Array(Int32),
+                                            region_dist : Array(Int64), offset : Int32)
       while ctx.start < ctx.effective_len
-        finish_sparse_window(ctx, output, region_dist, offset)
+        finish_sparse_window(ctx, output, thresholds, region_dist, offset)
       end
     end
 
     private def write_empty_sparse_windows(t : Core::Target, ctx : SparseWindowContext,
-                                           output : FileIO::OutputManager, region_dist : Array(Int64), offset : Int32)
+                                           output : FileIO::OutputManager, region_dist : Array(Int64),
+                                           thresholds : Array(Int32), offset : Int32)
       while ctx.start < ctx.effective_len
         output.write_region_stat(t.name, ctx.start + offset, ctx.stop + offset, nil, 0.0)
+        output.write_threshold_counts(t.name, ctx.start + offset, ctx.stop + offset, nil, ctx.threshold_counts) unless thresholds.empty?
         ctx.start = ctx.stop
         ctx.stop = Math.min(ctx.start + ctx.window, ctx.effective_len)
       end
     end
 
     private def finish_sparse_window(ctx : SparseWindowContext, output : FileIO::OutputManager,
-                                     region_dist : Array(Int64), offset : Int32)
+                                     thresholds : Array(Int32), region_dist : Array(Int64), offset : Int32)
       return if ctx.start >= ctx.effective_len
       len = ctx.stop - ctx.start
       me = len > 0 ? ctx.sum.to_f / len : 0.0
       output.write_region_stat(ctx.chrom, ctx.start + offset, ctx.stop + offset, nil, me)
+      output.write_threshold_counts(ctx.chrom, ctx.start + offset, ctx.stop + offset, nil, ctx.threshold_counts) unless thresholds.empty?
       idx = [me.round.to_i, region_dist.size - 1].min
       region_dist[idx] += 1
       ctx.start = ctx.stop
       ctx.stop = Math.min(ctx.start + ctx.window, ctx.effective_len)
       ctx.sum = 0_u64
+      ctx.threshold_counts.fill(0)
     end
 
     private def accumulate_sparse_bed_segment(segment : Core::DepthSegment, regions : Array(Core::Region),
                                               start_idx : Int32, region_sums : Array(UInt64),
+                                              region_threshold_counts : Array(Array(Int32)),
+                                              thresholds : Array(Int32),
                                               region_dist : Array(Int64),
                                               chrom_region_stat : Stats::DepthStat) : Tuple(Int32, Stats::DepthStat)
       idx = start_idx
@@ -431,6 +444,7 @@ module Depth
           overlap_len = e - s
           depth = segment.depth
           region_sums[scan_idx] += (overlap_len.to_u64 * depth.to_u64) if depth > 0
+          bump_threshold_counts!(region_threshold_counts[scan_idx], thresholds, depth, overlap_len)
           chrom_region_stat.n_bases += overlap_len
           chrom_region_stat.sum_depth += (overlap_len.to_u64 * depth.to_u64) if depth > 0
           chrom_region_stat.min_depth = depth if depth < chrom_region_stat.min_depth
@@ -445,23 +459,37 @@ module Depth
     end
 
     private def write_empty_bed_regions(t : Core::Target, regions : Array(Core::Region),
-                                        output : FileIO::OutputManager, offset : Int32, effective_len : Int32)
+                                        output : FileIO::OutputManager, thresholds : Array(Int32),
+                                        offset : Int32, effective_len : Int32)
       region_start = offset
       region_stop = offset + effective_len
+      zero_counts = Array(Int32).new(thresholds.size, 0)
       regions.each do |r|
         s_abs = Math.max(r.start, region_start)
         e_abs = Math.min(r.stop, region_stop)
         next if e_abs <= s_abs
         output.write_region_stat(t.name, s_abs, e_abs, r.name, 0.0)
+        output.write_threshold_counts(t.name, s_abs, e_abs, r.name, zero_counts) unless thresholds.empty?
       end
     end
 
     private def write_sparse_bed_regions(t : Core::Target, regions : Array(Core::Region),
-                                         region_sums : Array(UInt64), output : FileIO::OutputManager)
+                                         region_sums : Array(UInt64),
+                                         region_threshold_counts : Array(Array(Int32)),
+                                         output : FileIO::OutputManager)
       regions.each_with_index do |r, idx|
         len = r.stop - r.start
         me = len > 0 ? region_sums[idx].to_f / len : 0.0
         output.write_region_stat(t.name, r.start, r.stop, r.name, me)
+        output.write_threshold_counts(t.name, r.start, r.stop, r.name, region_threshold_counts[idx])
+      end
+    end
+
+    private def bump_threshold_counts!(counts : Array(Int32), thresholds : Array(Int32), depth : Int32, len : Int32)
+      return if len <= 0 || thresholds.empty?
+      thresholds.each_with_index do |threshold, idx|
+        break if depth < threshold
+        counts[idx] += len
       end
     end
 

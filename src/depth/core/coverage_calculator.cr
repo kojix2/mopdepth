@@ -36,8 +36,8 @@ module Depth::Core
       return true if @options.include_flag != 0 && (rec.flag.value & @options.include_flag) == 0
 
       unless @options.read_groups.empty?
-        rg = rec.aux("RG")
-        return true unless rg.is_a?(String) && @options.read_groups.includes?(rg)
+        rg = rec.aux_string("RG")
+        return true unless rg && @options.read_groups.includes?(rg)
       end
 
       false

@@ -44,32 +44,5 @@ module Depth::Core
         yield({last_i, i, last_depth})
       end
     end
-
-    # Yield sparse depth segments [start, stop) by sweeping sorted diff events.
-    def each_sparse_segment(events : Array(Tuple(Int32, Int32)), effective_len : Int32, & : DepthSegment ->)
-      return if effective_len <= 0
-
-      events.sort! { |a, b| a[0] <=> b[0] }
-      depth = 0
-      last_pos = 0
-      i = 0
-      while i < events.size
-        pos = events[i][0].clamp(0, effective_len)
-        delta = 0
-        while i < events.size && events[i][0].clamp(0, effective_len) == pos
-          delta += events[i][1]
-          i += 1
-        end
-        next if delta == 0
-
-        if pos > last_pos
-          yield DepthSegment.new(last_pos, pos, depth)
-          last_pos = pos
-        end
-        depth += delta
-      end
-
-      yield DepthSegment.new(last_pos, effective_len, depth) if last_pos < effective_len
-    end
   end
 end

@@ -23,25 +23,6 @@ module Depth::Core
       @evbuf = [] of Tuple(Int32, Int32)
     end
 
-    def calculate_events(events : Array(Tuple(Int32, Int32)), r : Region, offset : Int32, limit : Int32) : Int32
-      tid = @bam.header.get_tid(r.chrom)
-      return CoverageResult::ChromNotFound.value if tid == CoverageResult::ChromNotFound.value
-
-      found = false
-      q_start = (r.start > 0 ? r.start : 0)
-      q_stop = (r.stop > 0 ? r.stop : @bam.header.target_len[tid].to_i32)
-
-      events.clear
-      @seen.clear
-      @bam.query(tid, q_start, q_stop) do |rec|
-        next if filtered_out?(rec)
-        found = true unless found
-        accumulate_record_events!(rec, events, offset, limit)
-      end
-
-      found ? tid : CoverageResult::NoData.value
-    end
-
     # Check if record should be filtered out
     private def filtered_out?(rec) : Bool
       return true if rec.mapq < @options.mapq
@@ -61,63 +42,6 @@ module Depth::Core
       end
 
       false
-    end
-
-    private def add_event!(events : Array(Tuple(Int32, Int32)), pos : Int32, delta : Int32, offset : Int32, limit : Int32)
-      return if limit <= 0
-      p = (pos - offset).clamp(0, limit)
-      events << {p, delta}
-    end
-
-    private def accumulate_record_events!(rec, events : Array(Tuple(Int32, Int32)), offset : Int32, limit : Int32)
-      if @options.fast_mode
-        add_event!(events, rec.pos.to_i32, 1, offset, limit)
-        add_event!(events, rec.endpos.to_i32, -1, offset, limit)
-      else
-        if rec.proper_pair? && !rec.supplementary? && rec.tid == rec.mtid && rec.mate_pos >= 0
-          rec_start = rec.pos.to_i32
-          rec_stop = rec.endpos.to_i32
-          if rec_stop > rec.mate_pos
-            qname = rec.qname
-            if rec_start < rec.mate_pos || (rec_start == rec.mate_pos && !@seen.has_key?(qname))
-              @seen[qname] = rec.clone
-            elsif mate = @seen.delete(qname)
-              if rec.cigar_size == 1 && mate.cigar_size == 1
-                s = [rec_start, mate.pos.to_i32].max
-                e = [rec_stop, mate.endpos.to_i32].min
-                if e > s
-                  add_event!(events, s, -1, offset, limit)
-                  add_event!(events, e, 1, offset, limit)
-                end
-              else
-                ses = @evbuf
-                ses.clear
-                record_cigar_append_events!(rec, rec_start, ses)
-                record_cigar_append_events!(mate, mate.pos.to_i32, ses)
-                ses.sort_by! { |(p, _)| p }
-                pair_depth = 0
-                last_pos = 0
-                ses.each do |pos, val|
-                  if val == -1 && pair_depth == 2
-                    add_event!(events, last_pos, -1, offset, limit)
-                    add_event!(events, pos, 1, offset, limit)
-                  end
-                  pair_depth += val
-                  last_pos = pos
-                end
-              end
-            end
-          else
-            if mate = @seen.delete(rec.qname)
-              correct_mate_overlap_events!(rec, mate, rec_start, rec_stop, events, offset, limit)
-            end
-          end
-        end
-
-        record_cigar_each_event(rec, rec.pos.to_i32) do |pos, val|
-          add_event!(events, pos, val, offset, limit)
-        end
-      end
     end
 
     # Calculate coverage for a single record (positions are shifted by `offset` for region queries)
@@ -162,34 +86,6 @@ module Depth::Core
         end
         # Always add coverage for this record after possible overlap correction step
         apply_record_cigar!(rec, rec.pos.to_i32, coverage, offset)
-      end
-    end
-
-    private def correct_mate_overlap_events!(rec, mate, rec_start : Int32, rec_stop : Int32,
-                                             events : Array(Tuple(Int32, Int32)), offset : Int32, limit : Int32)
-      if rec.cigar_size == 1 && mate.cigar_size == 1
-        s = [rec_start, mate.pos.to_i32].max
-        e = [rec_stop, mate.endpos.to_i32].min
-        if e > s
-          add_event!(events, s, -1, offset, limit)
-          add_event!(events, e, 1, offset, limit)
-        end
-      else
-        ses = @evbuf
-        ses.clear
-        record_cigar_append_events!(rec, rec_start, ses)
-        record_cigar_append_events!(mate, mate.pos.to_i32, ses)
-        ses.sort_by! { |(p, _)| p }
-        pair_depth = 0
-        last_pos = 0
-        ses.each do |pos, val|
-          if val == -1 && pair_depth == 2
-            add_event!(events, last_pos, -1, offset, limit)
-            add_event!(events, pos, 1, offset, limit)
-          end
-          pair_depth += val
-          last_pos = pos
-        end
       end
     end
 

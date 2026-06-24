@@ -402,7 +402,7 @@ module Depth
                                            output : FileIO::OutputManager, region_dist : Array(Int64),
                                            thresholds : Array(Int32), offset : Int32)
       while ctx.start < ctx.effective_len
-        output.write_region_stat(t.name, ctx.start + offset, ctx.stop + offset, nil, 0.0)
+        output.write_region_zero(t.name, ctx.start + offset, ctx.stop + offset, nil)
         output.write_threshold_counts(t.name, ctx.start + offset, ctx.stop + offset, nil, ctx.threshold_counts) unless thresholds.empty?
         ctx.start = ctx.stop
         ctx.stop = Math.min(ctx.start + ctx.window, ctx.effective_len)
@@ -414,7 +414,7 @@ module Depth
       return if ctx.start >= ctx.effective_len
       len = ctx.stop - ctx.start
       me = len > 0 ? ctx.sum.to_f / len : 0.0
-      output.write_region_stat(ctx.chrom, ctx.start + offset, ctx.stop + offset, nil, me)
+      output.write_region_mean(ctx.chrom, ctx.start + offset, ctx.stop + offset, nil, ctx.sum, len)
       output.write_threshold_counts(ctx.chrom, ctx.start + offset, ctx.stop + offset, nil, ctx.threshold_counts) unless thresholds.empty?
       idx = [me.round.to_i, region_dist.size - 1].min
       region_dist[idx] += 1
@@ -468,7 +468,7 @@ module Depth
         s_abs = Math.max(region.start, region_start)
         e_abs = Math.min(region.stop, region_stop)
         next if e_abs <= s_abs
-        output.write_region_stat(t.name, s_abs, e_abs, region.name, 0.0)
+        output.write_region_zero(t.name, s_abs, e_abs, region.name)
         output.write_threshold_counts(t.name, s_abs, e_abs, region.name, zero_counts) unless thresholds.empty?
       end
     end
@@ -479,9 +479,20 @@ module Depth
                                          output : FileIO::OutputManager)
       regions.each_with_index do |region, idx|
         len = region.stop - region.start
-        me = len > 0 ? region_sums[idx].to_f / len : 0.0
-        output.write_region_stat(t.name, region.start, region.stop, region.name, me)
+        output.write_region_mean(t.name, region.start, region.stop, region.name, region_sums[idx], len)
         output.write_threshold_counts(t.name, region.start, region.stop, region.name, region_threshold_counts[idx])
+      end
+    end
+
+    private def write_region_depth_value(output : FileIO::OutputManager, chrom : String,
+                                         start : Int32, stop : Int32, name : String?,
+                                         tid : Int32, value : Float64, sum : UInt64, length : Int32)
+      if tid == Core::CoverageResult::NoData.value
+        output.write_region_zero(chrom, start, stop, name)
+      elsif @config.use_median?
+        output.write_region_stat(chrom, start, stop, name, value)
+      else
+        output.write_region_mean(chrom, start, stop, name, sum, length)
       end
     end
 
@@ -534,19 +545,22 @@ module Depth
       while start < t.length
         stop = Math.min(start + window, t.length)
         me = 0.0
+        mean_sum = 0_u64
         if tid != Core::CoverageResult::NoData.value
           if @config.use_median?
             cs.clear
             (start...stop).each { |i| cs.add(coverage[i]) }
             me = cs.median.to_f
           else
-            len = (stop - start).to_f
-            sum = 0_i64
-            (start...stop).each { |i| sum += coverage[i] }
-            me = (sum.to_f / len)
+            len = stop - start
+            (start...stop).each do |i|
+              depth = coverage[i]
+              mean_sum += depth.to_u64 if depth > 0
+            end
+            me = len > 0 ? mean_sum.to_f / len : 0.0
           end
         end
-        output.write_region_stat(t.name, start, stop, nil, me)
+        write_region_depth_value(output, t.name, start, stop, nil, tid, me, mean_sum, stop - start)
         if tid != Core::CoverageResult::NoData.value
           idx = [me.to_i, region_dist.size - 1].min
           region_dist[idx] += 1
@@ -574,19 +588,22 @@ module Depth
         start_abs = offset + start_local
         stop_abs = offset + stop_local
         me = 0.0
+        mean_sum = 0_u64
         if tid != Core::CoverageResult::NoData.value
           if @config.use_median?
             cs.clear
             (start_local...stop_local).each { |i| cs.add(coverage[i]) }
             me = cs.median.to_f
           else
-            len = (stop_local - start_local).to_f
-            sum = 0_i64
-            (start_local...stop_local).each { |i| sum += coverage[i] }
-            me = (sum.to_f / len)
+            len = stop_local - start_local
+            (start_local...stop_local).each do |i|
+              depth = coverage[i]
+              mean_sum += depth.to_u64 if depth > 0
+            end
+            me = len > 0 ? mean_sum.to_f / len : 0.0
           end
         end
-        output.write_region_stat(t.name, start_abs, stop_abs, nil, me)
+        write_region_depth_value(output, t.name, start_abs, stop_abs, nil, tid, me, mean_sum, stop_local - start_local)
         if tid != Core::CoverageResult::NoData.value
           chrom_region_stat = chrom_region_stat + Stats::DepthStat.from_array(coverage, start_local, stop_local - 1)
           idx = [me.round.to_i, region_dist.size - 1].min
@@ -610,19 +627,22 @@ module Depth
       regs = bed_map.try(&.[t.name]?) || [] of Core::Region
       regs.each do |region|
         me = 0.0
+        mean_sum = 0_u64
+        mean_len = region.stop - region.start
         if tid != Core::CoverageResult::NoData.value
           if @config.use_median?
             cs.clear
             (region.start...Math.min(region.stop, coverage.size)).each { |i| cs.add(coverage[i]) }
             me = cs.median.to_f
           else
-            len = (region.stop - region.start).to_f
-            sum = 0_i64
-            (region.start...Math.min(region.stop, coverage.size)).each { |i| sum += coverage[i] }
-            me = len > 0 ? sum.to_f / len : 0.0
+            (region.start...Math.min(region.stop, coverage.size)).each do |i|
+              depth = coverage[i]
+              mean_sum += depth.to_u64 if depth > 0
+            end
+            me = mean_len > 0 ? mean_sum.to_f / mean_len : 0.0
           end
         end
-        output.write_region_stat(t.name, region.start, region.stop, region.name, me)
+        write_region_depth_value(output, t.name, region.start, region.stop, region.name, tid, me, mean_sum, mean_len)
         if tid != Core::CoverageResult::NoData.value && @config.window_size == 0
           self.class.bump_distribution!(region_dist, coverage, region.start, region.stop)
         end
@@ -652,19 +672,22 @@ module Depth
         e_local = e_abs - offset
 
         me = 0.0
+        mean_sum = 0_u64
+        mean_len = e_local - s_local
         if tid != Core::CoverageResult::NoData.value
           if @config.use_median?
             cs.clear
             (s_local...Math.min(e_local, coverage.size)).each { |i| cs.add(coverage[i]) }
             me = cs.median.to_f
           else
-            len = (e_local - s_local).to_f
-            sum = 0_i64
-            (s_local...Math.min(e_local, coverage.size)).each { |i| sum += coverage[i] }
-            me = len > 0 ? sum.to_f / len : 0.0
+            (s_local...Math.min(e_local, coverage.size)).each do |i|
+              depth = coverage[i]
+              mean_sum += depth.to_u64 if depth > 0
+            end
+            me = mean_len > 0 ? mean_sum.to_f / mean_len : 0.0
           end
         end
-        output.write_region_stat(t.name, s_abs, e_abs, region.name, me)
+        write_region_depth_value(output, t.name, s_abs, e_abs, region.name, tid, me, mean_sum, mean_len)
         if tid != Core::CoverageResult::NoData.value && @config.window_size == 0
           chrom_region_stat = chrom_region_stat + Stats::DepthStat.from_array(coverage, s_local, e_local - 1)
           self.class.bump_distribution!(region_dist, coverage, s_local, e_local)

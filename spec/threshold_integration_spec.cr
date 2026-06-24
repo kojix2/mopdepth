@@ -180,6 +180,73 @@ describe "Threshold Integration" do
         File.delete("#{prefix}.per-base.bed.gz.csi") if File.exists?("#{prefix}.per-base.bed.gz.csi")
       end
     end
+
+    it "writes zero region values with configured precision" do
+      prefix = "test_zero_precision"
+      previous_precision = ENV["MOPDEPTH_PRECISION"]?
+      ENV["MOPDEPTH_PRECISION"] = "4"
+
+      config = Depth::Config.new
+      config.prefix = prefix
+      config.path = "test.bam"
+      config.by = "100"
+
+      output = Depth::FileIO::OutputManager.new(config)
+
+      begin
+        output.write_region_stat("chr1", 0, 100, nil, 0.0)
+        output.write_region_stat("chr1", 100, 200, "region1", 0.0)
+        output.close_all
+
+        content = TestIO.read_text("#{prefix}.regions.bed.gz")
+        lines = content.split('\n')
+        lines[0].should eq("chr1\t0\t100\t0.0000")
+        lines[1].should eq("chr1\t100\t200\tregion1\t0.0000")
+      ensure
+        if previous_precision
+          ENV["MOPDEPTH_PRECISION"] = previous_precision
+        else
+          ENV.delete("MOPDEPTH_PRECISION")
+        end
+
+        File.delete("#{prefix}.mopdepth.summary.txt") if File.exists?("#{prefix}.mopdepth.summary.txt")
+        File.delete("#{prefix}.mopdepth.global.dist.txt") if File.exists?("#{prefix}.mopdepth.global.dist.txt")
+        File.delete("#{prefix}.mopdepth.region.dist.txt") if File.exists?("#{prefix}.mopdepth.region.dist.txt")
+        File.delete("#{prefix}.regions.bed.gz") if File.exists?("#{prefix}.regions.bed.gz")
+        File.delete("#{prefix}.regions.bed.gz.csi") if File.exists?("#{prefix}.regions.bed.gz.csi")
+        File.delete("#{prefix}.per-base.bed.gz") if File.exists?("#{prefix}.per-base.bed.gz")
+        File.delete("#{prefix}.per-base.bed.gz.csi") if File.exists?("#{prefix}.per-base.bed.gz.csi")
+      end
+    end
+
+    it "writes region means from sum and length" do
+      prefix = "test_region_mean"
+      config = Depth::Config.new
+      config.prefix = prefix
+      config.path = "test.bam"
+      config.by = "100"
+
+      output = Depth::FileIO::OutputManager.new(config)
+
+      begin
+        output.write_region_mean("chr1", 0, 3, nil, 2_u64, 3)
+        output.write_region_mean("chr1", 3, 5, "region1", 5_u64, 2)
+        output.close_all
+
+        content = TestIO.read_text("#{prefix}.regions.bed.gz")
+        lines = content.split('\n')
+        lines[0].should eq("chr1\t0\t3\t0.67")
+        lines[1].should eq("chr1\t3\t5\tregion1\t2.50")
+      ensure
+        File.delete("#{prefix}.mopdepth.summary.txt") if File.exists?("#{prefix}.mopdepth.summary.txt")
+        File.delete("#{prefix}.mopdepth.global.dist.txt") if File.exists?("#{prefix}.mopdepth.global.dist.txt")
+        File.delete("#{prefix}.mopdepth.region.dist.txt") if File.exists?("#{prefix}.mopdepth.region.dist.txt")
+        File.delete("#{prefix}.regions.bed.gz") if File.exists?("#{prefix}.regions.bed.gz")
+        File.delete("#{prefix}.regions.bed.gz.csi") if File.exists?("#{prefix}.regions.bed.gz.csi")
+        File.delete("#{prefix}.per-base.bed.gz") if File.exists?("#{prefix}.per-base.bed.gz")
+        File.delete("#{prefix}.per-base.bed.gz.csi") if File.exists?("#{prefix}.per-base.bed.gz.csi")
+      end
+    end
   end
 
   describe "Compatibility with original mosdepth" do

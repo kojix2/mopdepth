@@ -21,6 +21,8 @@ module Depth::FileIO
     @config : Depth::Config
     @paths_to_index : Array(String)
     @precision : Int32
+    @zero_float : String
+    @mean_scale : UInt128?
     @buffer_size : Int32
 
     # Simple aggregation buffer to reduce per-line bgzf_write overhead
@@ -36,7 +38,7 @@ module Depth::FileIO
         flush if @buf.size >= @threshold
       end
 
-      def add_line
+      def add_line(&)
         yield @buf
         @buf << '\n'
         flush if @buf.size >= @threshold
@@ -61,6 +63,8 @@ module Depth::FileIO
       label = config.mos_style? ? "mosdepth" : "mopdepth"
       @paths_to_index = [] of String
       @precision = resolve_precision
+      @zero_float = zero_float_string(@precision)
+      @mean_scale = decimal_scale(@precision)
       @buffer_size = (ENV["MOPDEPTH_BGZF_BUFFER"]? || "2097152").to_i
 
       @f_summary = File.open(path_for(label, "summary.txt"), "w")
@@ -119,30 +123,35 @@ module Depth::FileIO
     end
 
     def write_region_stat(chrom : String, start : Int32, stop : Int32, name : String?, value : Float64)
+      write_region_value(chrom, start, stop, name) do |io|
+        write_float(io, value)
+      end
+    end
+
+    def write_region_mean(chrom : String, start : Int32, stop : Int32, name : String?, sum : UInt64, length : Int32)
+      write_region_value(chrom, start, stop, name) do |io|
+        write_mean(io, sum, length)
+      end
+    end
+
+    def write_region_zero(chrom : String, start : Int32, stop : Int32, name : String?)
+      write_region_value(chrom, start, stop, name) do |io|
+        io << @zero_float
+      end
+    end
+
+    private def write_region_value(chrom : String, start : Int32, stop : Int32, name : String?, &)
       return unless regions = @f_regions
-      if name
-        if buf = @regions_buf
-          buf.add_line do |io|
-            io << chrom << '\t' << start << '\t' << stop << '\t' << name << '\t'
-            write_float(io, value)
-          end
-        else
-          write_raw_line(regions) do |io|
-            io << chrom << '\t' << start << '\t' << stop << '\t' << name << '\t'
-            write_float(io, value)
-          end
+
+      if buf = @regions_buf
+        buf.add_line do |io|
+          write_region_fields(io, chrom, start, stop, name)
+          yield io
         end
       else
-        if buf = @regions_buf
-          buf.add_line do |io|
-            io << chrom << '\t' << start << '\t' << stop << '\t'
-            write_float(io, value)
-          end
-        else
-          write_raw_line(regions) do |io|
-            io << chrom << '\t' << start << '\t' << stop << '\t'
-            write_float(io, value)
-          end
+        write_raw_line(regions) do |io|
+          write_region_fields(io, chrom, start, stop, name)
+          yield io
         end
       end
     end
@@ -248,19 +257,52 @@ module Depth::FileIO
     end
 
     private def write_float(io, value : Float64)
+      if value == 0.0
+        io << @zero_float
+        return
+      end
+
       value.format(io, decimal_places: @precision)
     end
 
-    private def write_raw_line(io : File)
+    private def write_mean(io, sum : UInt64, length : Int32)
+      if sum == 0 || length <= 0
+        io << @zero_float
+        return
+      end
+
+      unless scale = @mean_scale
+        write_float(io, sum.to_f / length)
+        return
+      end
+
+      len = length.to_u128
+      scaled = (sum.to_u128 * scale + (len // 2)) // len
+      whole = scaled // scale
+      fraction = scaled % scale
+
+      io << whole
+      return if @precision <= 0
+
+      io << '.'
+      write_padded_fraction(io, fraction, @precision)
+    end
+
+    private def write_raw_line(io : File, &)
       yield io
       io << '\n'
     end
 
-    private def write_raw_line(io : HTS::Bgzf)
+    private def write_raw_line(io : HTS::Bgzf, &)
       line = String.build do |s|
         yield s
       end
       io.puts(line)
+    end
+
+    private def write_region_fields(io, chrom : String, start : Int32, stop : Int32, name : String?)
+      io << chrom << '\t' << start << '\t' << stop << '\t'
+      io << name << '\t' if name
     end
 
     private def write_threshold_header_fields(io, thresholds : Array(Int32))
@@ -276,6 +318,36 @@ module Depth::FileIO
 
     private def resolve_precision : Int32
       (ENV["MOPDEPTH_PRECISION"]?.try &.to_i?) || (ENV["MOSDEPTH_PRECISION"]?.try &.to_i?) || 2
+    end
+
+    private def zero_float_string(precision : Int32) : String
+      return "0" if precision <= 0
+
+      String.build do |io|
+        io << "0."
+        precision.times { io << '0' }
+      end
+    end
+
+    private def decimal_scale(precision : Int32) : UInt128?
+      return 1_u128 if precision <= 0
+      return nil if precision > 18
+
+      scale = 1_u128
+      precision.times { scale *= 10_u128 }
+      scale
+    end
+
+    private def write_padded_fraction(io, fraction : UInt128, precision : Int32)
+      divisor = 1_u128
+      (precision - 1).times { divisor *= 10_u128 }
+
+      while divisor > 0
+        digit = fraction // divisor
+        io << digit.to_i
+        fraction %= divisor
+        divisor //= 10_u128
+      end
     end
   end
 end

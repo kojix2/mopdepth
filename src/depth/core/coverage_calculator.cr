@@ -4,9 +4,88 @@ require "./constants"
 require "./coverage_result"
 require "./coverage_utils"
 
+module HTS
+  class Bam < Hts
+    class Record
+      def qname_data : Pointer(UInt8)
+        LibHTS2.bam_get_qname(@bam1)
+      end
+
+      def qname_length : Int32
+        (@bam1.value.core.l_qname - 1).to_i32
+      end
+    end
+  end
+end
+
 module Depth::Core
   class CoverageCalculator
     include Cigar
+
+    private struct QnameKey
+      FNV_OFFSET = 14_695_981_039_346_656_037_u64
+      FNV_PRIME  =          1_099_511_628_211_u64
+
+      def self.view(rec) : self
+        ptr = rec.qname_data
+        len = rec.qname_length
+        new(nil, ptr, len, hash_bytes(ptr, len))
+      end
+
+      def self.copy(rec) : self
+        ptr = rec.qname_data
+        len = rec.qname_length
+        name = String.new(ptr, len)
+        new(name, name.to_unsafe, len, hash_bytes(ptr, len))
+      end
+
+      private def self.hash_bytes(ptr : Pointer(UInt8), len : Int32) : UInt64
+        hash = FNV_OFFSET
+        i = 0
+        first_stop = len > 16 ? 8 : len
+        while i < first_stop
+          hash = (hash ^ ptr[i].to_u64) &* FNV_PRIME
+          i += 1
+        end
+        if len > 16
+          i = len - 8
+          while i < len
+            hash = (hash ^ ptr[i].to_u64) &* FNV_PRIME
+            i += 1
+          end
+        end
+        hash = (hash ^ len.to_u64) &* FNV_PRIME
+        hash
+      end
+
+      def initialize(@name : String?, @ptr : Pointer(UInt8), @len : Int32, @hash : UInt64)
+      end
+
+      def ==(other : QnameKey) : Bool
+        return false unless @hash == other.@hash && @len == other.@len
+
+        left = bytes
+        right = other.bytes
+        i = 0
+        while i < @len
+          return false unless left[i] == right[i]
+          i += 1
+        end
+        true
+      end
+
+      def hash(hasher)
+        @hash.hash(hasher)
+      end
+
+      def bytes : Pointer(UInt8)
+        if name = @name
+          name.to_unsafe
+        else
+          @ptr
+        end
+      end
+    end
 
     private class SeenMate
       getter start : Int32
@@ -22,7 +101,7 @@ module Depth::Core
 
     def initialize(@bam : HTS::Bam, @options : Options)
       # store first-read of overlapping proper pairs to correct double-counting when mate arrives
-      @seen = Hash(String, SeenMate).new
+      @seen = Hash(QnameKey, SeenMate).new
       @evbuf = [] of Tuple(Int32, Int32)
     end
 
@@ -74,14 +153,18 @@ module Depth::Core
           rec_stop = rec.endpos.to_i32
           # If this read overlaps its mate and is the earlier (or equal) one, store it; otherwise, if mate was stored, correct overlap now
           if rec_stop > rec.mate_pos
-            qname = rec.qname
-            if rec_start < rec.mate_pos || (rec_start == rec.mate_pos && !@seen.has_key?(qname))
-              @seen[qname] = capture_seen_mate(rec, rec_start, rec_stop)
-            elsif mate = @seen.delete(qname)
-              correct_mate_overlap_coverage!(rec, mate, rec_start, rec_stop, coverage, offset)
+            if rec_start < rec.mate_pos
+              @seen[QnameKey.copy(rec)] = capture_seen_mate(rec, rec_start, rec_stop)
+            else
+              qname = QnameKey.view(rec)
+              if rec_start == rec.mate_pos && !@seen.has_key?(qname)
+                @seen[QnameKey.copy(rec)] = capture_seen_mate(rec, rec_start, rec_stop)
+              elsif mate = @seen.delete(qname)
+                correct_mate_overlap_coverage!(rec, mate, rec_start, rec_stop, coverage, offset)
+              end
             end
           else
-            if mate = @seen.delete(rec.qname)
+            if mate = @seen.delete(QnameKey.view(rec))
               correct_mate_overlap_coverage!(rec, mate, rec_start, rec_stop, coverage, offset)
             end
           end

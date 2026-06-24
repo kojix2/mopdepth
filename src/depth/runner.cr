@@ -249,10 +249,13 @@ module Depth
       quant_start = 0
       quant_open = false
 
-      each_sparse_segment(events, effective_len) do |start_pos, stop_pos, depth|
-        next if stop_pos <= start_pos
+      self.class.each_sparse_segment(events, effective_len) do |segment|
+        next if segment.empty?
 
-        len = stop_pos - start_pos
+        start_pos = segment.start
+        stop_pos = segment.stop
+        depth = segment.depth
+        len = segment.length
         chrom_stat.n_bases += len
         chrom_stat.sum_depth += (len.to_u64 * depth.to_u64) if depth > 0
         chrom_stat.min_depth = depth if depth < chrom_stat.min_depth
@@ -294,32 +297,6 @@ module Depth
       end
       global_dist.fill(0_i64)
       global_stat
-    end
-
-    private def each_sparse_segment(events : Array(Tuple(Int32, Int32)), effective_len : Int32, & : Int32, Int32, Int32 ->)
-      return if effective_len <= 0
-
-      events.sort_by! { |(pos, _)| pos }
-      depth = 0
-      last_pos = 0
-      i = 0
-      while i < events.size
-        pos = events[i][0].clamp(0, effective_len)
-        delta = 0
-        while i < events.size && events[i][0].clamp(0, effective_len) == pos
-          delta += events[i][1]
-          i += 1
-        end
-        next if delta == 0
-
-        if pos > last_pos
-          yield last_pos, pos, depth
-          last_pos = pos
-        end
-        depth += delta
-      end
-
-      yield last_pos, effective_len, depth if last_pos < effective_len
     end
 
     private def bump_depth_count!(dist : Array(Int64), depth : Int32, len : Int32)

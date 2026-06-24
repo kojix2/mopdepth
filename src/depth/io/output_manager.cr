@@ -248,7 +248,7 @@ module Depth::FileIO
     private def open_indexed_bgzf(basename : String)
       path = "#{@prefix}.#{basename}"
       @paths_to_index << path
-      HTS::Bgzf.open(path, "w1z")
+      HTS::Bgzf.open(path, "w1z", threads: @config.threads)
     end
 
     private def wrap(io : (File | HTS::Bgzf)?)

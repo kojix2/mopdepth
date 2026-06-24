@@ -67,6 +67,7 @@ module Depth
         region_dist = Array(Int64).new(512, 0_i64)
         total_region_dist = Array(Int64).new(512, 0_i64)
         global_stat = Stats::DepthStat.new
+        global_region_stat = Stats::DepthStat.new
         cs = Stats::IntHistogram.new(@config.use_median? ? 65_536 : 0)
 
         # Handle window/BED regions
@@ -152,8 +153,9 @@ module Depth
           end
 
           # Process regions (window or BED)
+          chrom_region_stat = Stats::DepthStat.new
           if output.f_regions
-            write_region_stats_with_offset(t, coverage, tid, window, bed_map, cs, output, region_dist, offset, effective_len)
+            chrom_region_stat = write_region_stats_with_offset(t, coverage, tid, window, bed_map, cs, output, region_dist, offset, effective_len)
           end
 
           # Process per-chromosome distributions and stats
@@ -162,6 +164,10 @@ module Depth
             chrom_stat = Stats::DepthStat.from_array(coverage, 0, target_size - 2)
             global_stat = global_stat + chrom_stat
             output.write_summary_line(t.name, chrom_stat)
+            if output.f_regions
+              global_region_stat = global_region_stat + chrom_region_stat
+              output.write_summary_line("#{t.name}_region", chrom_region_stat)
+            end
           end
 
           # Write distributions
@@ -180,6 +186,7 @@ module Depth
         end
         # Append mosdepth-like total lines
         output.write_summary_total(global_stat)
+        output.write_summary_line("total_region", global_region_stat) if output.f_regions
         if f_global = output.f_global
           self.class.write_distribution(f_global.as(::IO), "total", total_global_dist)
         end
@@ -206,7 +213,7 @@ module Depth
     private def write_region_stats_with_offset(t : Core::Target, coverage : Core::Coverage, tid : Int32,
                                                window : Int32, bed_map : Hash(String, Array(Core::Region))?,
                                                cs : Stats::IntHistogram, output : FileIO::OutputManager,
-                                               region_dist : Array(Int64), offset : Int32, effective_len : Int32)
+                                               region_dist : Array(Int64), offset : Int32, effective_len : Int32) : Stats::DepthStat
       if window > 0
         process_window_regions_with_offset(t, coverage, tid, window, cs, output, region_dist, offset, effective_len)
       else
@@ -252,7 +259,8 @@ module Depth
     private def process_window_regions_with_offset(t : Core::Target, coverage : Core::Coverage, tid : Int32,
                                                    window : Int32, cs : Stats::IntHistogram,
                                                    output : FileIO::OutputManager, region_dist : Array(Int64),
-                                                   offset : Int32, effective_len : Int32)
+                                                   offset : Int32, effective_len : Int32) : Stats::DepthStat
+      chrom_region_stat = Stats::DepthStat.new
       start_local = 0
       end_local = effective_len
       while start_local < end_local
@@ -274,7 +282,8 @@ module Depth
         end
         output.write_region_stat(t.name, start_abs, stop_abs, nil, me)
         if tid != Core::CoverageResult::NoData.value
-          idx = [me.to_i, region_dist.size - 1].min
+          chrom_region_stat = chrom_region_stat + Stats::DepthStat.from_array(coverage, start_local, stop_local - 1)
+          idx = [me.round.to_i, region_dist.size - 1].min
           region_dist[idx] += 1
         end
 
@@ -285,6 +294,7 @@ module Depth
         end
         start_local = stop_local
       end
+      chrom_region_stat
     end
 
     private def process_bed_regions(t : Core::Target, coverage : Core::Coverage, tid : Int32,
@@ -323,7 +333,8 @@ module Depth
     private def process_bed_regions_with_offset(t : Core::Target, coverage : Core::Coverage, tid : Int32,
                                                 bed_map : Hash(String, Array(Core::Region))?,
                                                 cs : Stats::IntHistogram, output : FileIO::OutputManager,
-                                                region_dist : Array(Int64), offset : Int32, effective_len : Int32)
+                                                region_dist : Array(Int64), offset : Int32, effective_len : Int32) : Stats::DepthStat
+      chrom_region_stat = Stats::DepthStat.new
       regs = bed_map.try(&.[t.name]?) || [] of Core::Region
       region_start = offset
       region_stop = offset + effective_len
@@ -349,6 +360,7 @@ module Depth
         end
         output.write_region_stat(t.name, s_abs, e_abs, r.name, me)
         if tid != Core::CoverageResult::NoData.value && @config.window_size == 0
+          chrom_region_stat = chrom_region_stat + Stats::DepthStat.from_array(coverage, s_local, e_local - 1)
           self.class.bump_distribution!(region_dist, coverage, s_local, e_local)
         end
 
@@ -358,6 +370,7 @@ module Depth
           output.write_threshold_counts(t.name, s_abs, e_abs, r.name, counts)
         end
       end
+      chrom_region_stat
     end
 
     private def write_quantized_intervals(t : Core::Target, coverage : Core::Coverage, tid : Int32, output : FileIO::OutputManager, offset : Int32, target_size : Int32)

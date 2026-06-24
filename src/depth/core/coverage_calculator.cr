@@ -87,8 +87,8 @@ module Depth::Core
                 # Build combined start/end events for rec and mate, subtract where pair_depth==2
                 ses = @evbuf
                 ses.clear
-                cigar_fill_events!(rec.cigar, rec_start, ses)
-                cigar_fill_events!(mate.cigar, mate.pos.to_i32, ses)
+                cigar_append_events!(rec.cigar, rec_start, ses)
+                cigar_append_events!(mate.cigar, mate.pos.to_i32, ses)
                 ses.sort_by! { |(p, _)| p }
                 pair_depth = 0
                 last_pos = 0

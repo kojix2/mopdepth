@@ -40,6 +40,11 @@ module Depth::Core
     # CIGAR → start/end events on reference, filling provided buffer
     def cigar_fill_events!(cigar, ipos : Int32, evbuf : Array(Tuple(Int32, Int32))) : Nil
       evbuf.clear
+      cigar_append_events!(cigar, ipos, evbuf)
+    end
+
+    # CIGAR → start/end events on reference, appending to provided buffer
+    def cigar_append_events!(cigar, ipos : Int32, evbuf : Array(Tuple(Int32, Int32))) : Nil
       cigar_each_event(cigar, ipos) do |p, v|
         evbuf << {p, v}
       end

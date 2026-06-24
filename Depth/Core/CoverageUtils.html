@@ -112,6 +112,11 @@
       
     </li>
   
+  <li class=" " data-id="mopdepth/Depth/Core/DepthSegment" data-name="depth::core::depthsegment">
+      <a href="../../Depth/Core/DepthSegment.html">DepthSegment</a>
+      
+    </li>
+  
   <li class=" " data-id="mopdepth/Depth/Core/Options" data-name="depth::core::options">
       <a href="../../Depth/Core/Options.html">Options</a>
       
@@ -261,7 +266,7 @@
   </h2>
   
     
-      <a href="https://github.com/kojix2/mopdepth/blob/c8648a09481e2cf009df75da74d0e05046cc3a65/src/depth/core/coverage_utils.cr#L2" target="_blank">
+      <a href="https://github.com/kojix2/mopdepth/blob/f658c2a3b982af4cdb9dd02a4fbfceb31f149b26/src/depth/core/coverage_utils.cr#L2" target="_blank">
         depth/core/coverage_utils.cr
       </a>
     
@@ -293,6 +298,13 @@
         <a href="#each_constant_segment%28a%3ACoverage%2Cstop_at%3AInt32%3D-1%2C%26%29-instance-method" class="signature"><strong>#each_constant_segment</strong>(a : Coverage, stop_at : Int32 = <span class="n">-1</span>, &)</a>
         
           <div class="summary"><p>Yield intervals [start, stop) with constant depth value</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#each_sparse_segment%28events%3AArray%28Tuple%28Int32%2CInt32%29%29%2Ceffective_len%3AInt32%2C%26%3ADepthSegment-%3E%29-instance-method" class="signature"><strong>#each_sparse_segment</strong>(events : Array(Tuple(Int32, Int32)), effective_len : Int32, & : DepthSegment -> )</a>
+        
+          <div class="summary"><p>Yield sparse depth segments [start, stop) by sweeping sorted diff events.</p></div>
         
       </li>
     
@@ -343,7 +355,28 @@
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/c8648a09481e2cf009df75da74d0e05046cc3a65/src/depth/core/coverage_utils.cr#L15" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/f658c2a3b982af4cdb9dd02a4fbfceb31f149b26/src/depth/core/coverage_utils.cr#L15" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="each_sparse_segment(events:Array(Tuple(Int32,Int32)),effective_len:Int32,&amp;:DepthSegment-&gt;)-instance-method">
+      <div class="signature">
+        
+        def <strong>each_sparse_segment</strong>(events : Array(Tuple(Int32, Int32)), effective_len : Int32, & : <a href="../../Depth/Core/DepthSegment.html">DepthSegment</a> -> )
+
+        <a class="method-permalink" href="#each_sparse_segment%28events%3AArray%28Tuple%28Int32%2CInt32%29%29%2Ceffective_len%3AInt32%2C%26%3ADepthSegment-%3E%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Yield sparse depth segments [start, stop) by sweeping sorted diff events.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/f658c2a3b982af4cdb9dd02a4fbfceb31f149b26/src/depth/core/coverage_utils.cr#L49" target="_blank">View source</a>]
         
       </div>
     </div>
@@ -364,7 +397,7 @@
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/c8648a09481e2cf009df75da74d0e05046cc3a65/src/depth/core/coverage_utils.cr#L4" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/f658c2a3b982af4cdb9dd02a4fbfceb31f149b26/src/depth/core/coverage_utils.cr#L4" target="_blank">View source</a>]
         
       </div>
     </div>

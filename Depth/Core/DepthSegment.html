@@ -14,7 +14,7 @@
 <script type="text/javascript" src="../../js/doc.js"></script>
 
   <meta name="repository-name" content="mopdepth">
-  <title>Depth::Core::Cigar - mopdepth main</title>
+  <title>Depth::Core::DepthSegment - mopdepth main</title>
   <script type="text/javascript">
     CrystalDocs.base_path = "../../";
   </script>
@@ -87,7 +87,7 @@
       
         <ul>
   
-  <li class=" current" data-id="mopdepth/Depth/Core/Cigar" data-name="depth::core::cigar">
+  <li class=" " data-id="mopdepth/Depth/Core/Cigar" data-name="depth::core::cigar">
       <a href="../../Depth/Core/Cigar.html">Cigar</a>
       
     </li>
@@ -112,7 +112,7 @@
       
     </li>
   
-  <li class=" " data-id="mopdepth/Depth/Core/DepthSegment" data-name="depth::core::depthsegment">
+  <li class=" current" data-id="mopdepth/Depth/Core/DepthSegment" data-name="depth::core::depthsegment">
       <a href="../../Depth/Core/DepthSegment.html">DepthSegment</a>
       
     </li>
@@ -232,12 +232,13 @@
 <h1 class="type-name">
 
   <span class="kind">
-    module
-  </span> Depth::<wbr>Core::<wbr>Cigar
+    struct
+  </span> Depth::<wbr>Core::<wbr>DepthSegment
 
 </h1>
 
 
+  <ul class="superclass-hierarchy"><li class="superclass"><a href="../../Depth/Core/DepthSegment.html">Depth::Core::DepthSegment</a></li><li class="superclass">Struct</li><li class="superclass">Value</li><li class="superclass">Object</li></ul>
 
 
 
@@ -253,19 +254,6 @@
 
 
 
-  <h2>
-    <a id="direct-including-types" class="anchor" href="#direct-including-types">
-  <svg class="octicon-link" aria-hidden="true">
-    <use href="#octicon-link"/>
-  </svg>
-</a>
-    Direct including types
-  </h2>
-  <ul class="other-types-list">
-    
-      <li class="other-type"><a href="../../Depth/Core/CoverageCalculator.html">Depth::Core::CoverageCalculator</a></li>
-    
-  </ul>
 
 
 
@@ -280,8 +268,8 @@
   </h2>
   
     
-      <a href="https://github.com/kojix2/mopdepth/blob/f658c2a3b982af4cdb9dd02a4fbfceb31f149b26/src/depth/core/cigar.cr#L2" target="_blank">
-        depth/core/cigar.cr
+      <a href="https://github.com/kojix2/mopdepth/blob/f658c2a3b982af4cdb9dd02a4fbfceb31f149b26/src/depth/core/coverage.cr#L5" target="_blank">
+        depth/core/coverage.cr
       </a>
     
     <br/>
@@ -292,6 +280,23 @@
 
 
   
+  <h2>
+    <a id="constructors" class="anchor" href="#constructors">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Constructors
+  </h2>
+  <ul class="list-summary">
+    
+      <li class="entry-summary">
+        <a href="#new%28start%3AInt32%2Cstop%3AInt32%2Cdepth%3AInt32%29-class-method" class="signature"><strong>.new</strong>(start : Int32, stop : Int32, depth : Int32)</a>
+        
+      </li>
+    
+  </ul>
+
 
   
 
@@ -309,49 +314,27 @@
   <ul class="list-summary">
     
       <li class="entry-summary">
-        <a href="#cigar_append_events%21%28cigar%2Cipos%3AInt32%2Cevbuf%3AArray%28Tuple%28Int32%2CInt32%29%29%29%3ANil-instance-method" class="signature"><strong>#cigar_append_events!</strong>(cigar, ipos : Int32, evbuf : Array(Tuple(Int32, Int32))) : Nil</a>
-        
-          <div class="summary"><p>CIGAR → start/end events on reference, appending to provided buffer</p></div>
+        <a href="#depth%3AInt32-instance-method" class="signature"><strong>#depth</strong> : Int32</a>
         
       </li>
     
       <li class="entry-summary">
-        <a href="#cigar_each_event%28cigar%2Cipos%3AInt32%2C%26%3AInt32%2CInt32-%3E%29-instance-method" class="signature"><strong>#cigar_each_event</strong>(cigar, ipos : Int32, & : Int32, Int32 -> )</a>
-        
-          <div class="summary"><p>Streaming iterator for start/end events (pos, +1/-1) without allocations</p></div>
+        <a href="#empty%3F%3ABool-instance-method" class="signature"><strong>#empty?</strong> : Bool</a>
         
       </li>
     
       <li class="entry-summary">
-        <a href="#cigar_each_segment%28cigar%2Cipos%3AInt32%2C%26%3ATuple%28Int32%2CInt32%29-%3E%29-instance-method" class="signature"><strong>#cigar_each_segment</strong>(cigar, ipos : Int32, & : Tuple(Int32, Int32) -> )</a>
-        
-          <div class="summary"><p>Stream segments without building an array</p></div>
+        <a href="#length%3AInt32-instance-method" class="signature"><strong>#length</strong> : Int32</a>
         
       </li>
     
       <li class="entry-summary">
-        <a href="#cigar_fill_events%21%28cigar%2Cipos%3AInt32%2Cevbuf%3AArray%28Tuple%28Int32%2CInt32%29%29%29%3ANil-instance-method" class="signature"><strong>#cigar_fill_events!</strong>(cigar, ipos : Int32, evbuf : Array(Tuple(Int32, Int32))) : Nil</a>
-        
-          <div class="summary"><p>CIGAR → start/end events on reference, filling provided buffer</p></div>
+        <a href="#start%3AInt32-instance-method" class="signature"><strong>#start</strong> : Int32</a>
         
       </li>
     
       <li class="entry-summary">
-        <a href="#cigar_segments%28cigar%2Cipos%3AInt32%29%3AArray%28Tuple%28Int32%2CInt32%29%29-instance-method" class="signature"><strong>#cigar_segments</strong>(cigar, ipos : Int32) : Array(Tuple(Int32, Int32))</a>
-        
-          <div class="summary"><p>Build contiguous reference-aligned segments [start, stop) for M/= /X parts.</p></div>
-        
-      </li>
-    
-      <li class="entry-summary">
-        <a href="#cigar_start_end_events%28cigar%2Cipos%3AInt32%29%3AArray%28Tuple%28Int32%2CInt32%29%29-instance-method" class="signature"><strong>#cigar_start_end_events</strong>(cigar, ipos : Int32) : Array(Tuple(Int32, Int32))</a>
-        
-          <div class="summary"><p>Back-compatible helper that allocates a new array (prefer cigar_fill_events!)</p></div>
-        
-      </li>
-    
-      <li class="entry-summary">
-        <a href="#inc_coverage%28cigar%2Cipos%3AInt32%2Ca%3ACoverage%29-instance-method" class="signature"><strong>#inc_coverage</strong>(cigar, ipos : Int32, a : Coverage)</a>
+        <a href="#stop%3AInt32-instance-method" class="signature"><strong>#stop</strong> : Int32</a>
         
       </li>
     
@@ -361,9 +344,74 @@
 
   <div class="methods-inherited">
     
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
   </div>
 
   
+  <h2>
+    <a id="constructor-detail" class="anchor" href="#constructor-detail">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Constructor Detail
+  </h2>
+  
+    <div class="entry-detail" id="new(start:Int32,stop:Int32,depth:Int32)-class-method">
+      <div class="signature">
+        
+        def self.<strong>new</strong>(start : Int32, stop : Int32, depth : Int32)
+
+        <a class="method-permalink" href="#new%28start%3AInt32%2Cstop%3AInt32%2Cdepth%3AInt32%29-class-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/f658c2a3b982af4cdb9dd02a4fbfceb31f149b26/src/depth/core/coverage.cr#L10" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+
 
   
 
@@ -379,144 +427,82 @@
     Instance Method Detail
   </h2>
   
-    <div class="entry-detail" id="cigar_append_events!(cigar,ipos:Int32,evbuf:Array(Tuple(Int32,Int32))):Nil-instance-method">
+    <div class="entry-detail" id="depth:Int32-instance-method">
       <div class="signature">
         
-        def <strong>cigar_append_events!</strong>(cigar, ipos : Int32, evbuf : Array(Tuple(Int32, Int32))) : Nil
+        def <strong>depth</strong> : Int32
 
-        <a class="method-permalink" href="#cigar_append_events%21%28cigar%2Cipos%3AInt32%2Cevbuf%3AArray%28Tuple%28Int32%2CInt32%29%29%29%3ANil-instance-method">#</a>
+        <a class="method-permalink" href="#depth%3AInt32-instance-method">#</a>
       </div>
-      
-        <div class="doc">
-          
-          <p>CIGAR → start/end events on reference, appending to provided buffer</p>
-        </div>
       
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/f658c2a3b982af4cdb9dd02a4fbfceb31f149b26/src/depth/core/cigar.cr#L47" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/f658c2a3b982af4cdb9dd02a4fbfceb31f149b26/src/depth/core/coverage.cr#L8" target="_blank">View source</a>]
         
       </div>
     </div>
   
-    <div class="entry-detail" id="cigar_each_event(cigar,ipos:Int32,&amp;:Int32,Int32-&gt;)-instance-method">
+    <div class="entry-detail" id="empty?:Bool-instance-method">
       <div class="signature">
         
-        def <strong>cigar_each_event</strong>(cigar, ipos : Int32, & : Int32, Int32 -> )
+        def <strong>empty?</strong> : Bool
 
-        <a class="method-permalink" href="#cigar_each_event%28cigar%2Cipos%3AInt32%2C%26%3AInt32%2CInt32-%3E%29-instance-method">#</a>
+        <a class="method-permalink" href="#empty%3F%3ABool-instance-method">#</a>
       </div>
-      
-        <div class="doc">
-          
-          <p>Streaming iterator for start/end events (pos, +1/-1) without allocations</p>
-        </div>
       
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/f658c2a3b982af4cdb9dd02a4fbfceb31f149b26/src/depth/core/cigar.cr#L21" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/f658c2a3b982af4cdb9dd02a4fbfceb31f149b26/src/depth/core/coverage.cr#L17" target="_blank">View source</a>]
         
       </div>
     </div>
   
-    <div class="entry-detail" id="cigar_each_segment(cigar,ipos:Int32,&amp;:Tuple(Int32,Int32)-&gt;)-instance-method">
+    <div class="entry-detail" id="length:Int32-instance-method">
       <div class="signature">
         
-        def <strong>cigar_each_segment</strong>(cigar, ipos : Int32, & : Tuple(Int32, Int32) -> )
+        def <strong>length</strong> : Int32
 
-        <a class="method-permalink" href="#cigar_each_segment%28cigar%2Cipos%3AInt32%2C%26%3ATuple%28Int32%2CInt32%29-%3E%29-instance-method">#</a>
+        <a class="method-permalink" href="#length%3AInt32-instance-method">#</a>
       </div>
-      
-        <div class="doc">
-          
-          <p>Stream segments without building an array</p>
-        </div>
       
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/f658c2a3b982af4cdb9dd02a4fbfceb31f149b26/src/depth/core/cigar.cr#L87" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/f658c2a3b982af4cdb9dd02a4fbfceb31f149b26/src/depth/core/coverage.cr#L13" target="_blank">View source</a>]
         
       </div>
     </div>
   
-    <div class="entry-detail" id="cigar_fill_events!(cigar,ipos:Int32,evbuf:Array(Tuple(Int32,Int32))):Nil-instance-method">
+    <div class="entry-detail" id="start:Int32-instance-method">
       <div class="signature">
         
-        def <strong>cigar_fill_events!</strong>(cigar, ipos : Int32, evbuf : Array(Tuple(Int32, Int32))) : Nil
+        def <strong>start</strong> : Int32
 
-        <a class="method-permalink" href="#cigar_fill_events%21%28cigar%2Cipos%3AInt32%2Cevbuf%3AArray%28Tuple%28Int32%2CInt32%29%29%29%3ANil-instance-method">#</a>
+        <a class="method-permalink" href="#start%3AInt32-instance-method">#</a>
       </div>
-      
-        <div class="doc">
-          
-          <p>CIGAR → start/end events on reference, filling provided buffer</p>
-        </div>
       
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/f658c2a3b982af4cdb9dd02a4fbfceb31f149b26/src/depth/core/cigar.cr#L41" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/f658c2a3b982af4cdb9dd02a4fbfceb31f149b26/src/depth/core/coverage.cr#L6" target="_blank">View source</a>]
         
       </div>
     </div>
   
-    <div class="entry-detail" id="cigar_segments(cigar,ipos:Int32):Array(Tuple(Int32,Int32))-instance-method">
+    <div class="entry-detail" id="stop:Int32-instance-method">
       <div class="signature">
         
-        def <strong>cigar_segments</strong>(cigar, ipos : Int32) : Array(Tuple(Int32, Int32))
+        def <strong>stop</strong> : Int32
 
-        <a class="method-permalink" href="#cigar_segments%28cigar%2Cipos%3AInt32%29%3AArray%28Tuple%28Int32%2CInt32%29%29-instance-method">#</a>
-      </div>
-      
-        <div class="doc">
-          
-          <p>Build contiguous reference-aligned segments [start, stop) for M/= /X parts.</p>
-        </div>
-      
-      <br/>
-      <div>
-        
-          [<a href="https://github.com/kojix2/mopdepth/blob/f658c2a3b982af4cdb9dd02a4fbfceb31f149b26/src/depth/core/cigar.cr#L64" target="_blank">View source</a>]
-        
-      </div>
-    </div>
-  
-    <div class="entry-detail" id="cigar_start_end_events(cigar,ipos:Int32):Array(Tuple(Int32,Int32))-instance-method">
-      <div class="signature">
-        
-        def <strong>cigar_start_end_events</strong>(cigar, ipos : Int32) : Array(Tuple(Int32, Int32))
-
-        <a class="method-permalink" href="#cigar_start_end_events%28cigar%2Cipos%3AInt32%29%3AArray%28Tuple%28Int32%2CInt32%29%29-instance-method">#</a>
-      </div>
-      
-        <div class="doc">
-          
-          <p>Back-compatible helper that allocates a new array (prefer cigar_fill_events!)</p>
-        </div>
-      
-      <br/>
-      <div>
-        
-          [<a href="https://github.com/kojix2/mopdepth/blob/f658c2a3b982af4cdb9dd02a4fbfceb31f149b26/src/depth/core/cigar.cr#L4" target="_blank">View source</a>]
-        
-      </div>
-    </div>
-  
-    <div class="entry-detail" id="inc_coverage(cigar,ipos:Int32,a:Coverage)-instance-method">
-      <div class="signature">
-        
-        def <strong>inc_coverage</strong>(cigar, ipos : Int32, a : <a href="../../Depth/Core/Coverage.html">Coverage</a>)
-
-        <a class="method-permalink" href="#inc_coverage%28cigar%2Cipos%3AInt32%2Ca%3ACoverage%29-instance-method">#</a>
+        <a class="method-permalink" href="#stop%3AInt32-instance-method">#</a>
       </div>
       
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/f658c2a3b982af4cdb9dd02a4fbfceb31f149b26/src/depth/core/cigar.cr#L54" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/f658c2a3b982af4cdb9dd02a4fbfceb31f149b26/src/depth/core/coverage.cr#L7" target="_blank">View source</a>]
         
       </div>
     </div>

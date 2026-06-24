@@ -72,7 +72,7 @@ describe "Threshold Integration" do
           "#{prefix}.mosdepth.summary.txt",
           "#{prefix}.mosdepth.global.dist.txt",
           "#{prefix}.mosdepth.region.dist.txt",
-        ].each { |f| File.delete(f) if File.exists?(f) }
+        ].each { |path| File.delete(path) if File.exists?(path) }
         File.delete("#{prefix}.regions.bed.gz") if File.exists?("#{prefix}.regions.bed.gz")
         File.delete("#{prefix}.regions.bed.gz.csi") if File.exists?("#{prefix}.regions.bed.gz.csi")
         File.delete("#{prefix}.per-base.bed.gz") if File.exists?("#{prefix}.per-base.bed.gz")
@@ -101,7 +101,7 @@ describe "Threshold Integration" do
           "#{prefix}.mosdepth.summary.txt",
           "#{prefix}.mosdepth.global.dist.txt",
           "#{prefix}.mosdepth.region.dist.txt",
-        ].each { |f| File.delete(f) if File.exists?(f) }
+        ].each { |path| File.delete(path) if File.exists?(path) }
         File.delete("#{prefix}.regions.bed.gz") if File.exists?("#{prefix}.regions.bed.gz")
         File.delete("#{prefix}.regions.bed.gz.csi") if File.exists?("#{prefix}.regions.bed.gz.csi")
         File.delete("#{prefix}.per-base.bed.gz") if File.exists?("#{prefix}.per-base.bed.gz")
@@ -136,7 +136,7 @@ describe "Threshold Integration" do
           "#{prefix}.mosdepth.summary.txt",
           "#{prefix}.mosdepth.global.dist.txt",
           "#{prefix}.mosdepth.region.dist.txt",
-        ].each { |f| File.delete(f) if File.exists?(f) }
+        ].each { |path| File.delete(path) if File.exists?(path) }
         File.delete("#{prefix}.regions.bed.gz") if File.exists?("#{prefix}.regions.bed.gz")
         File.delete("#{prefix}.regions.bed.gz.csi") if File.exists?("#{prefix}.regions.bed.gz.csi")
         File.delete("#{prefix}.per-base.bed.gz") if File.exists?("#{prefix}.per-base.bed.gz")

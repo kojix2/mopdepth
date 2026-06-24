@@ -41,8 +41,6 @@ def run_mosdepth_debug(args : Array(String), prefix : String, temp_dir : String,
 end
 
 def run_mopdepth_debug(args : Array(String), prefix : String, temp_dir : String, test_bam : String)
-  full_args = args + [prefix, test_bam]
-
   bin = TestBin.binary
   puts "Running mopdepth: #{bin} #{(args + [prefix, test_bam]).join(" ")}"
   puts "Working directory: #{Dir.current}"

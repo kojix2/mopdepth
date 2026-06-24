@@ -81,6 +81,7 @@ module Depth::Stats
     # Generate quantized depth segments
     # limit: number of elements from coverage to consider (typically target_size)
     # Yields tuples of (start, stop, label) over [0, limit-1]
+
     def self.gen_quantized(quants : Array(Int32), coverage : Array(Int32), limit : Int32, & : Tuple(Int32, Int32, String) ->)
       return if quants.empty?
       return if coverage.empty?

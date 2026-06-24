@@ -45,8 +45,8 @@ module Depth::Core
 
     # CIGAR → start/end events on reference, appending to provided buffer
     def cigar_append_events!(cigar, ipos : Int32, evbuf : Array(Tuple(Int32, Int32))) : Nil
-      cigar_each_event(cigar, ipos) do |p, v|
-        evbuf << {p, v}
+      cigar_each_event(cigar, ipos) do |pos, val|
+        evbuf << {pos, val}
       end
       nil
     end

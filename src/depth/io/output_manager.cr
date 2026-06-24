@@ -74,10 +74,10 @@ module Depth::FileIO
     end
 
     def write_summary_line(region : String, stat : Depth::Stats::DepthStat)
-      return unless @f_summary
+      return unless summary = @f_summary
 
       unless @header_written
-        @f_summary.not_nil! << ["chrom", "length", "bases", "mean", "min", "max"].join("\t") << '\n'
+        summary << ["chrom", "length", "bases", "mean", "min", "max"].join("\t") << '\n'
         @header_written = true
       end
 
@@ -85,77 +85,77 @@ module Depth::FileIO
       mean_str = sprintf("%.#{@precision}f", mean)
       minv = stat.min_depth == Int32::MAX ? 0 : stat.min_depth
       # mosdepth uses cumulative depth in the 'bases' column
-      @f_summary.not_nil! << [region, stat.n_bases, stat.sum_depth, mean_str, minv, stat.max_depth].join("\t") << '\n'
+      summary << [region, stat.n_bases, stat.sum_depth, mean_str, minv, stat.max_depth].join("\t") << '\n'
     end
 
     # Optionally call at end to add a total line like mosdepth
     def write_summary_total(total : Depth::Stats::DepthStat)
-      return unless @f_summary
+      return unless summary = @f_summary
       mean = total.n_bases > 0 ? total.sum_depth.to_f / total.n_bases : 0.0
       mean_str = sprintf("%.#{@precision}f", mean)
       minv = total.min_depth == Int32::MAX ? 0 : total.min_depth
-      @f_summary.not_nil! << ["total", total.n_bases, total.sum_depth, mean_str, minv, total.max_depth].join("\t") << "\n"
+      summary << ["total", total.n_bases, total.sum_depth, mean_str, minv, total.max_depth].join("\t") << "\n"
     end
 
     def write_per_base_interval(chrom : String, start : Int32, stop : Int32, depth : Int32)
-      return unless @f_perbase
+      return unless perbase = @f_perbase
       if buf = @perbase_buf
         buf.add_line("#{chrom}\t#{start}\t#{stop}\t#{depth}")
       else
-        @f_perbase.not_nil!.puts("#{chrom}\t#{start}\t#{stop}\t#{depth}")
+        perbase.puts("#{chrom}\t#{start}\t#{stop}\t#{depth}")
       end
     end
 
     def write_region_stat(chrom : String, start : Int32, stop : Int32, name : String?, value : Float64)
-      return unless @f_regions
+      return unless regions = @f_regions
       val_str = sprintf("%.#{@precision}f", value)
       if name
         if buf = @regions_buf
           buf.add_line("#{chrom}\t#{start}\t#{stop}\t#{name}\t#{val_str}")
         else
-          @f_regions.not_nil!.puts("#{chrom}\t#{start}\t#{stop}\t#{name}\t#{val_str}")
+          regions.puts("#{chrom}\t#{start}\t#{stop}\t#{name}\t#{val_str}")
         end
       else
         if buf = @regions_buf
           buf.add_line("#{chrom}\t#{start}\t#{stop}\t#{val_str}")
         else
-          @f_regions.not_nil!.puts("#{chrom}\t#{start}\t#{stop}\t#{val_str}")
+          regions.puts("#{chrom}\t#{start}\t#{stop}\t#{val_str}")
         end
       end
     end
 
     def write_quantized_interval(chrom : String, start : Int32, stop : Int32, label : String)
-      return unless @f_quantized
+      return unless quantized = @f_quantized
       if buf = @quantized_buf
         buf.add_line("#{chrom}\t#{start}\t#{stop}\t#{label}")
       else
-        @f_quantized.not_nil!.puts("#{chrom}\t#{start}\t#{stop}\t#{label}")
+        quantized.puts("#{chrom}\t#{start}\t#{stop}\t#{label}")
       end
     end
 
     def write_thresholds_header(thresholds : Array(Int32))
-      return unless @f_thresholds
+      return unless thresholds_io = @f_thresholds
       line = String.build do |io|
         io << "#chrom\tstart\tend\tregion"
-        thresholds.each { |t| io << "\t" << t << "X" }
+        thresholds.each { |threshold| io << "\t" << threshold << "X" }
       end
       if buf = @thresholds_buf
         buf.add_line(line)
       else
-        @f_thresholds.not_nil!.puts(line)
+        thresholds_io.puts(line)
       end
     end
 
     def write_threshold_counts(chrom : String, start : Int32, stop : Int32, name : String?, counts : Array(Int32))
-      return unless @f_thresholds
+      return unless thresholds_io = @f_thresholds
       line = String.build do |io|
         io << chrom << '\t' << start << '\t' << stop << '\t' << (name || "unknown")
-        counts.each { |c| io << '\t' << c }
+        counts.each { |count| io << '\t' << count }
       end
       if buf = @thresholds_buf
         buf.add_line(line)
       else
-        @f_thresholds.not_nil!.puts(line)
+        thresholds_io.puts(line)
       end
     end
 
@@ -168,9 +168,9 @@ module Depth::FileIO
       @thresholds_buf.try(&.close)
       # Close any BGZF streams not wrapped in a buffer (fallback)
       [@f_perbase, @f_regions, @f_quantized, @f_thresholds].each do |io|
-        io.try do |f|
+        io.try do |file|
           begin
-            f.close
+            file.close
           rescue
           end
         end
@@ -194,12 +194,12 @@ module Depth::FileIO
       bed_conf.line_skip = 0
       conf_ptr = pointerof(bed_conf)
 
-      @paths_to_index.each do |gz|
+      @paths_to_index.each do |gz_path|
         # Build explicit .csi next to gz
-        csi = "#{gz}.csi"
-        ret = HTS::LibHTS.tbx_index_build3(gz, csi, 14, @config.threads, conf_ptr)
+        csi = "#{gz_path}.csi"
+        ret = HTS::LibHTS.tbx_index_build3(gz_path, csi, 14, @config.threads, conf_ptr)
         if ret != 0
-          STDERR.puts "[mopdepth] warning: failed to build CSI for #{gz} (tbx_index_build3 ret=#{ret})"
+          STDERR.puts "[mopdepth] warning: failed to build CSI for #{gz_path} (tbx_index_build3 ret=#{ret})"
         end
       end
     end

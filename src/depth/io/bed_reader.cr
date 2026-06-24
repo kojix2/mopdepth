@@ -19,7 +19,7 @@ module Depth::FileIO
 
   # BED reader → {chrom => [Region]}
   def self.read_bed(path : String) : Hash(String, Array(Depth::Core::Region))
-    tbl = Hash(String, Array(Depth::Core::Region)).new { |h, k| h[k] = [] of Depth::Core::Region }
+    tbl = Hash(String, Array(Depth::Core::Region)).new { |hash, key| hash[key] = [] of Depth::Core::Region }
     File.each_line(path) do |line|
       next if line.starts_with?("#") || line.empty?
       next if line.starts_with?("track ")

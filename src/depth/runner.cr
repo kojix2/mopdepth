@@ -50,11 +50,11 @@ module Depth
           Core::Target.new(name, target_lengths[i].to_i32, i)
         end
 
-        sub_targets = if region
-                        selected = targets.select { |t| t.name == region.not_nil!.chrom }
+        sub_targets = if selected_region = region
+                        selected = targets.select { |target| target.name == selected_region.chrom }
                         # If a chromosome was specified but not found, fail (tests expect non-zero status)
                         if selected.empty?
-                          raise ConfigError.new("Chromosome not found: #{region.not_nil!.chrom}")
+                          raise ConfigError.new("Chromosome not found: #{selected_region.chrom}")
                         end
                         selected
                       else
@@ -86,25 +86,25 @@ module Depth
         events = [] of Tuple(Int32, Int32)
 
         # Process each target
-        sub_targets.each do |t|
+        sub_targets.each do |target|
           # Skip if no regions for this chrom and we won't write per-base
-          if @config.no_per_base? && bed_map && !bed_map.not_nil!.has_key?(t.name)
+          if @config.no_per_base? && (regions_by_chrom = bed_map) && !regions_by_chrom.has_key?(target.name)
             next
           end
 
           # Determine query region and sizing
-          query_region = if region && t.name == region.not_nil!.chrom
-                           region.not_nil!
+          query_region = if selected_region = region
+                           target.name == selected_region.chrom ? selected_region : Core::Region.new(target.name, 0, 0)
                          else
-                           Core::Region.new(t.name, 0, 0)
+                           Core::Region.new(target.name, 0, 0)
                          end
 
           # If a region is provided, shrink coverage to [start, stop); otherwise use full chromosome
           offset = 0
-          effective_len = t.length
-          if region && t.name == region.not_nil!.chrom && (query_region.start > 0 || query_region.stop > 0)
+          effective_len = target.length
+          if region && target.name == query_region.chrom && (query_region.start > 0 || query_region.stop > 0)
             offset = query_region.start
-            stop = (query_region.stop > 0 ? query_region.stop : t.length)
+            stop = (query_region.stop > 0 ? query_region.stop : target.length)
             effective_len = (stop - offset)
           end
 
@@ -112,7 +112,7 @@ module Depth
           if sparse_streaming_enabled?(region, output, bed_map, window)
             tid = calculator.calculate_events(events, query_region, offset, effective_len)
             global_stat, global_region_stat = process_sparse_target(
-              t, events, tid, output, global_dist, total_global_dist, global_stat,
+              target, events, tid, output, global_dist, total_global_dist, global_stat,
               region_dist, total_region_dist, global_region_stat, bed_map, window, offset, effective_len
             )
             next
@@ -153,25 +153,25 @@ module Depth
           # Write per-base intervals
           if output.f_perbase
             if tid == Core::CoverageResult::NoData.value
-              write_len = (region && t.name == region.not_nil!.chrom) ? effective_len : t.length
-              output.write_per_base_interval(t.name, offset, offset + write_len, 0)
+              write_len = (region && target.name == query_region.chrom) ? effective_len : target.length
+              output.write_per_base_interval(target.name, offset, offset + write_len, 0)
             else
               # restrict per-base segments to [0, effective_len]
               self.class.each_constant_segment(coverage, target_size - 1) do |(s, e, v)|
-                output.write_per_base_interval(t.name, s + offset, e + offset, v)
+                output.write_per_base_interval(target.name, s + offset, e + offset, v)
               end
             end
           end
 
           # Write quantized intervals
           if output.f_quantized && @config.has_quantize?
-            write_quantized_intervals(t, coverage, tid, output, offset, target_size)
+            write_quantized_intervals(target, coverage, tid, output, offset, target_size)
           end
 
           # Process regions (window or BED)
           chrom_region_stat = Stats::DepthStat.new
           if output.f_regions
-            chrom_region_stat = write_region_stats_with_offset(t, coverage, tid, window, bed_map, cs, output, region_dist, offset, effective_len)
+            chrom_region_stat = write_region_stats_with_offset(target, coverage, tid, window, bed_map, cs, output, region_dist, offset, effective_len)
           end
 
           # Process per-chromosome distributions and stats
@@ -179,21 +179,21 @@ module Depth
             self.class.bump_distribution!(global_dist, coverage, 0, target_size - 1)
             chrom_stat = Stats::DepthStat.from_array(coverage, 0, target_size - 2)
             global_stat = global_stat + chrom_stat
-            output.write_summary_line(t.name, chrom_stat)
+            output.write_summary_line(target.name, chrom_stat)
             if output.f_regions
               global_region_stat = global_region_stat + chrom_region_stat
-              output.write_summary_line("#{t.name}_region", chrom_region_stat)
+              output.write_summary_line("#{target.name}_region", chrom_region_stat)
             end
           end
 
           # Write distributions
           if f_global = output.f_global
-            self.class.write_distribution(f_global.as(::IO), t.name, global_dist)
+            self.class.write_distribution(f_global.as(::IO), target.name, global_dist)
             # accumulate into genome-wide total
             self.class.sum_into!(total_global_dist, global_dist)
           end
           if f_region = output.f_region
-            self.class.write_distribution(f_region.as(::IO), t.name, region_dist)
+            self.class.write_distribution(f_region.as(::IO), target.name, region_dist)
             # accumulate into genome-wide total for regions
             self.class.sum_into!(total_region_dist, region_dist)
             region_dist.fill(0_i64)
@@ -437,11 +437,11 @@ module Depth
 
       scan_idx = idx
       while scan_idx < regions.size && regions[scan_idx].start < segment.stop
-        r = regions[scan_idx]
-        s = Math.max(segment.start, r.start)
-        e = Math.min(segment.stop, r.stop)
-        if e > s
-          overlap_len = e - s
+        region = regions[scan_idx]
+        start_pos = Math.max(segment.start, region.start)
+        stop_pos = Math.min(segment.stop, region.stop)
+        if stop_pos > start_pos
+          overlap_len = stop_pos - start_pos
           depth = segment.depth
           region_sums[scan_idx] += (overlap_len.to_u64 * depth.to_u64) if depth > 0
           bump_threshold_counts!(region_threshold_counts[scan_idx], thresholds, depth, overlap_len)
@@ -464,12 +464,12 @@ module Depth
       region_start = offset
       region_stop = offset + effective_len
       zero_counts = Array(Int32).new(thresholds.size, 0)
-      regions.each do |r|
-        s_abs = Math.max(r.start, region_start)
-        e_abs = Math.min(r.stop, region_stop)
+      regions.each do |region|
+        s_abs = Math.max(region.start, region_start)
+        e_abs = Math.min(region.stop, region_stop)
         next if e_abs <= s_abs
-        output.write_region_stat(t.name, s_abs, e_abs, r.name, 0.0)
-        output.write_threshold_counts(t.name, s_abs, e_abs, r.name, zero_counts) unless thresholds.empty?
+        output.write_region_stat(t.name, s_abs, e_abs, region.name, 0.0)
+        output.write_threshold_counts(t.name, s_abs, e_abs, region.name, zero_counts) unless thresholds.empty?
       end
     end
 
@@ -477,11 +477,11 @@ module Depth
                                          region_sums : Array(UInt64),
                                          region_threshold_counts : Array(Array(Int32)),
                                          output : FileIO::OutputManager)
-      regions.each_with_index do |r, idx|
-        len = r.stop - r.start
+      regions.each_with_index do |region, idx|
+        len = region.stop - region.start
         me = len > 0 ? region_sums[idx].to_f / len : 0.0
-        output.write_region_stat(t.name, r.start, r.stop, r.name, me)
-        output.write_threshold_counts(t.name, r.start, r.stop, r.name, region_threshold_counts[idx])
+        output.write_region_stat(t.name, region.start, region.stop, region.name, me)
+        output.write_threshold_counts(t.name, region.start, region.stop, region.name, region_threshold_counts[idx])
       end
     end
 
@@ -608,30 +608,30 @@ module Depth
                                     cs : Stats::IntHistogram, output : FileIO::OutputManager,
                                     region_dist : Array(Int64))
       regs = bed_map.try(&.[t.name]?) || [] of Core::Region
-      regs.each do |r|
+      regs.each do |region|
         me = 0.0
         if tid != Core::CoverageResult::NoData.value
           if @config.use_median?
             cs.clear
-            (r.start...Math.min(r.stop, coverage.size)).each { |i| cs.add(coverage[i]) }
+            (region.start...Math.min(region.stop, coverage.size)).each { |i| cs.add(coverage[i]) }
             me = cs.median.to_f
           else
-            len = (r.stop - r.start).to_f
+            len = (region.stop - region.start).to_f
             sum = 0_i64
-            (r.start...Math.min(r.stop, coverage.size)).each { |i| sum += coverage[i] }
+            (region.start...Math.min(region.stop, coverage.size)).each { |i| sum += coverage[i] }
             me = len > 0 ? sum.to_f / len : 0.0
           end
         end
-        output.write_region_stat(t.name, r.start, r.stop, r.name, me)
+        output.write_region_stat(t.name, region.start, region.stop, region.name, me)
         if tid != Core::CoverageResult::NoData.value && @config.window_size == 0
-          self.class.bump_distribution!(region_dist, coverage, r.start, r.stop)
+          self.class.bump_distribution!(region_dist, coverage, region.start, region.stop)
         end
 
         # Process thresholds for this BED region
         if @config.has_thresholds?
           thresholds = @config.threshold_values
-          counts = count_threshold_bases(coverage, r.start, r.stop, thresholds, tid)
-          output.write_threshold_counts(t.name, r.start, r.stop, r.name, counts)
+          counts = count_threshold_bases(coverage, region.start, region.stop, thresholds, tid)
+          output.write_threshold_counts(t.name, region.start, region.stop, region.name, counts)
         end
       end
     end
@@ -644,9 +644,9 @@ module Depth
       regs = bed_map.try(&.[t.name]?) || [] of Core::Region
       region_start = offset
       region_stop = offset + effective_len
-      regs.each do |r|
-        s_abs = Math.max(r.start, region_start)
-        e_abs = Math.min(r.stop, region_stop)
+      regs.each do |region|
+        s_abs = Math.max(region.start, region_start)
+        e_abs = Math.min(region.stop, region_stop)
         next if e_abs <= s_abs
         s_local = s_abs - offset
         e_local = e_abs - offset
@@ -664,7 +664,7 @@ module Depth
             me = len > 0 ? sum.to_f / len : 0.0
           end
         end
-        output.write_region_stat(t.name, s_abs, e_abs, r.name, me)
+        output.write_region_stat(t.name, s_abs, e_abs, region.name, me)
         if tid != Core::CoverageResult::NoData.value && @config.window_size == 0
           chrom_region_stat = chrom_region_stat + Stats::DepthStat.from_array(coverage, s_local, e_local - 1)
           self.class.bump_distribution!(region_dist, coverage, s_local, e_local)
@@ -673,7 +673,7 @@ module Depth
         if @config.has_thresholds?
           thresholds = @config.threshold_values
           counts = count_threshold_bases_offset(coverage, s_abs, e_abs, thresholds, tid, offset)
-          output.write_threshold_counts(t.name, s_abs, e_abs, r.name, counts)
+          output.write_threshold_counts(t.name, s_abs, e_abs, region.name, counts)
         end
       end
       chrom_region_stat

@@ -11,7 +11,7 @@ class TestCigar
 
   def initialize(@ops : Array(Tuple(Char, Int32))); end
 
-  def each(&block : Char, Int32 ->)
+  def each(& : Char, Int32 ->)
     @ops.each { |op| yield op[0], op[1] }
   end
 end
@@ -85,12 +85,12 @@ HOST = CigarHost.new
 private def build_test_cigar(str : String)
   ops = [] of Tuple(Char, Int32)
   num = 0
-  str.each_char do |c|
-    if c.ascii_number?
-      num = num * 10 + (c.ord - 48)
+  str.each_char do |char|
+    if char.ascii_number?
+      num = num * 10 + (char.ord - 48)
     else
-      raise "length missing before op #{c}" if num == 0
-      ops << {c, num.to_i}
+      raise "length missing before op #{char}" if num == 0
+      ops << {char, num.to_i}
       num = 0
     end
   end
@@ -107,8 +107,8 @@ describe "Cigar optimization compatibility" do
       "6M1I1M1D2M1N3M",
       "1M1D1M1N1M1I1M1S1M",
     ]
-    cases.each do |c|
-      cigar = build_test_cigar(c)
+    cases.each do |cigar_case|
+      cigar = build_test_cigar(cigar_case)
       (0..3).each do |ipos|
         ref_buf = [] of Tuple(Int32, Int32)
         new_buf = [] of Tuple(Int32, Int32)
@@ -128,8 +128,8 @@ describe "Cigar optimization compatibility" do
       "6M1I1M1D2M1N3M",
       "1M1D1M1N1M1I1M1S1M",
     ]
-    cases.each do |c|
-      cigar = build_test_cigar(c)
+    cases.each do |cigar_case|
+      cigar = build_test_cigar(cigar_case)
       (0..3).each do |ipos|
         ref_segs = ReferenceCigarImpl.segments(cigar, ipos)
         new_segs = HOST.cigar_segments(cigar, ipos)
@@ -143,8 +143,8 @@ describe "Cigar optimization compatibility" do
     buf = [] of Tuple(Int32, Int32)
     HOST.cigar_fill_events!(cigar, 0, buf)
     yielded = [] of Tuple(Int32, Int32)
-    HOST.cigar_each_event(cigar, 0) do |p, v|
-      yielded << {p, v}
+    HOST.cigar_each_event(cigar, 0) do |pos, val|
+      yielded << {pos, val}
     end
     yielded.should eq buf
   end

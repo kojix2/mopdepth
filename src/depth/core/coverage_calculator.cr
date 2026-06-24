@@ -115,6 +115,7 @@ module Depth::Core
     end
 
     # Calculate coverage for a single record (positions are shifted by `offset` for region queries)
+
     private def accumulate_record!(rec, coverage : Coverage, offset : Int32)
       if @options.fast_mode
         start_pos = (rec.pos.to_i32 - offset).clamp(0, coverage.size - 1)

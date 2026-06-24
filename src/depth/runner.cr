@@ -113,7 +113,7 @@ module Depth
             tid = calculator.calculate_events(events, query_region, offset, effective_len)
             global_stat, global_region_stat = process_sparse_target(
               t, events, tid, output, global_dist, total_global_dist, global_stat,
-              region_dist, total_region_dist, global_region_stat, bed_map, offset, effective_len
+              region_dist, total_region_dist, global_region_stat, bed_map, window, offset, effective_len
             )
             next
           end
@@ -217,7 +217,7 @@ module Depth
     private def sparse_streaming_enabled?(region : Core::Region?, output : FileIO::OutputManager,
                                           bed_map : Hash(String, Array(Core::Region))?, window : Int32) : Bool
       return false if region
-      return false if output.f_regions && (window > 0 || bed_map.nil?)
+      return false if output.f_regions && window == 0 && bed_map.nil?
       return false if @config.has_thresholds?
       return false if @config.fragment_mode?
       return false if @config.use_median?
@@ -230,19 +230,25 @@ module Depth
                                       region_dist : Array(Int64), total_region_dist : Array(Int64),
                                       global_region_stat : Stats::DepthStat,
                                       bed_map : Hash(String, Array(Core::Region))?,
+                                      window : Int32,
                                       offset : Int32, effective_len : Int32) : Tuple(Stats::DepthStat, Stats::DepthStat)
       if tid == Core::CoverageResult::ChromNotFound.value
         return {global_stat, global_region_stat}
       end
 
       bed_regions = bed_map.try(&.[t.name]?) || [] of Core::Region
+      window_context = output.f_regions && window > 0 ? SparseWindowContext.new(t.name, window, effective_len) : nil
 
       if tid == Core::CoverageResult::NoData.value
         if output.f_perbase
           output.write_per_base_interval(t.name, offset, offset + effective_len, 0)
         end
         if output.f_regions
-          write_empty_bed_regions(t, bed_regions, output, offset, effective_len)
+          if window_context
+            write_empty_sparse_windows(t, window_context, output, region_dist, offset)
+          else
+            write_empty_bed_regions(t, bed_regions, output, offset, effective_len)
+          end
         end
         if output.f_quantized && @config.has_quantize?
           quants = @config.quantize_args
@@ -280,6 +286,9 @@ module Depth
         region_idx, chrom_region_stat = accumulate_sparse_bed_segment(
           segment, bed_regions, region_idx, region_sums, region_dist, chrom_region_stat
         )
+        if ctx = window_context
+          chrom_region_stat = accumulate_sparse_window_segment(segment, ctx, output, region_dist, chrom_region_stat, offset)
+        end
 
         if output.f_perbase
           output.write_per_base_interval(t.name, start_pos + offset, stop_pos + offset, depth)
@@ -299,7 +308,11 @@ module Depth
       end
 
       if output.f_regions
-        write_sparse_bed_regions(t, bed_regions, region_sums, output)
+        if ctx = window_context
+          flush_sparse_window_context(t, ctx, output, region_dist, offset)
+        else
+          write_sparse_bed_regions(t, bed_regions, region_sums, output)
+        end
       end
 
       if output.f_quantized && quant_open && quant_last >= 0 && quant_last < quant_lookup.size && quant_start < effective_len
@@ -328,6 +341,76 @@ module Depth
         region_dist.fill(0_i64)
       end
       {global_stat, global_region_stat}
+    end
+
+    private class SparseWindowContext
+      getter window : Int32
+      getter effective_len : Int32
+      getter chrom : String
+      property start : Int32
+      property stop : Int32
+      property sum : UInt64
+
+      def initialize(@chrom : String, @window : Int32, @effective_len : Int32)
+        @start = 0
+        @stop = Math.min(@window, @effective_len)
+        @sum = 0_u64
+      end
+    end
+
+    private def accumulate_sparse_window_segment(segment : Core::DepthSegment, ctx : SparseWindowContext,
+                                                 output : FileIO::OutputManager, region_dist : Array(Int64),
+                                                 chrom_region_stat : Stats::DepthStat, offset : Int32) : Stats::DepthStat
+      pos = segment.start
+      while pos < segment.stop && ctx.start < ctx.effective_len
+        if pos >= ctx.stop
+          finish_sparse_window(ctx, output, region_dist, offset)
+          next
+        end
+
+        overlap_stop = Math.min(segment.stop, ctx.stop)
+        overlap_len = overlap_stop - pos
+        if overlap_len > 0
+          depth = segment.depth
+          ctx.sum += (overlap_len.to_u64 * depth.to_u64) if depth > 0
+          chrom_region_stat.n_bases += overlap_len
+          chrom_region_stat.sum_depth += (overlap_len.to_u64 * depth.to_u64) if depth > 0
+          chrom_region_stat.min_depth = depth if depth < chrom_region_stat.min_depth
+          chrom_region_stat.max_depth = depth if depth > chrom_region_stat.max_depth
+          chrom_region_stat.bases += overlap_len if depth > 0
+        end
+        pos = overlap_stop
+      end
+      chrom_region_stat
+    end
+
+    private def flush_sparse_window_context(t : Core::Target, ctx : SparseWindowContext,
+                                            output : FileIO::OutputManager, region_dist : Array(Int64), offset : Int32)
+      while ctx.start < ctx.effective_len
+        finish_sparse_window(ctx, output, region_dist, offset)
+      end
+    end
+
+    private def write_empty_sparse_windows(t : Core::Target, ctx : SparseWindowContext,
+                                           output : FileIO::OutputManager, region_dist : Array(Int64), offset : Int32)
+      while ctx.start < ctx.effective_len
+        output.write_region_stat(t.name, ctx.start + offset, ctx.stop + offset, nil, 0.0)
+        ctx.start = ctx.stop
+        ctx.stop = Math.min(ctx.start + ctx.window, ctx.effective_len)
+      end
+    end
+
+    private def finish_sparse_window(ctx : SparseWindowContext, output : FileIO::OutputManager,
+                                     region_dist : Array(Int64), offset : Int32)
+      return if ctx.start >= ctx.effective_len
+      len = ctx.stop - ctx.start
+      me = len > 0 ? ctx.sum.to_f / len : 0.0
+      output.write_region_stat(ctx.chrom, ctx.start + offset, ctx.stop + offset, nil, me)
+      idx = [me.round.to_i, region_dist.size - 1].min
+      region_dist[idx] += 1
+      ctx.start = ctx.stop
+      ctx.stop = Math.min(ctx.start + ctx.window, ctx.effective_len)
+      ctx.sum = 0_u64
     end
 
     private def accumulate_sparse_bed_segment(segment : Core::DepthSegment, regions : Array(Core::Region),

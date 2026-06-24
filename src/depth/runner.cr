@@ -82,6 +82,7 @@ module Depth
 
         # Reusable coverage buffer (grow-only). We'll only use [0, effective_len]
         coverage = Core::Coverage.new(0)
+        coverage_dirty = false
 
         # Process each target
         sub_targets.each do |t|
@@ -111,13 +112,17 @@ module Depth
             # grow once; keep capacity for reuse
             coverage.concat(Array(Int32).new(target_size - coverage.size, 0))
           end
-          # Reset diff indices touched last target (generation-based) then unconditionally zero
-          # the working slice to avoid stale prefix-summed values corrupting next diff pass.
+          # Reset diff indices touched last target (generation-based). Only zero the
+          # working slice after a prior prefix-sum pass; no-data targets do not read
+          # coverage, so avoid scanning chromosome-sized buffers for empty contigs.
           calculator.reset_coverage!(coverage, target_size)
-          i_full = 0
-          while i_full < target_size
-            coverage[i_full] = 0
-            i_full += 1
+          if coverage_dirty
+            i_full = 0
+            while i_full < target_size
+              coverage[i_full] = 0
+              i_full += 1
+            end
+            coverage_dirty = false
           end
 
           tid = calculator.calculate(coverage, query_region, offset)
@@ -132,6 +137,7 @@ module Depth
               coverage[i] = sum
               i += 1
             end
+            coverage_dirty = true
           end
 
           # Write per-base intervals

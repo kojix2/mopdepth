@@ -109,15 +109,62 @@ module Depth::FileIO
       summary << '\t' << minv << '\t' << total.max_depth << '\n'
     end
 
+    # Lookup table of decimal digit pairs "00".."99" for two-digits-at-a-time itoa,
+    # halving the divisions vs the per-digit signed `Int#to_s`.
+    DIGIT_PAIRS = begin
+      bytes = Bytes.new(200)
+      100.times do |i|
+        bytes[i &* 2] = 48_u8 &+ (i // 10).to_u8
+        bytes[i &* 2 &+ 1] = 48_u8 &+ (i % 10).to_u8
+      end
+      bytes
+    end
+
+    # Write a non-negative Int32 in decimal straight into `io` with no sign handling
+    # and two digits per division. Used on the per-base hot path (3 ints/line, ~36M total).
+    private def write_uint(io : IO, value : Int32)
+      return io << value if value < 0 # defensive; positions/depths are never negative
+      buf = uninitialized UInt8[10]   # Int32 max (2147483647) is 10 digits
+      pos = 10
+      v = value
+      while v >= 100
+        idx = (v % 100) &* 2
+        v //= 100
+        pos &-= 2
+        buf[pos] = DIGIT_PAIRS.to_unsafe[idx]
+        buf[pos &+ 1] = DIGIT_PAIRS.to_unsafe[idx &+ 1]
+      end
+      if v >= 10
+        idx = v &* 2
+        pos &-= 2
+        buf[pos] = DIGIT_PAIRS.to_unsafe[idx]
+        buf[pos &+ 1] = DIGIT_PAIRS.to_unsafe[idx &+ 1]
+      else
+        pos &-= 1
+        buf[pos] = 48_u8 &+ v.to_u8
+      end
+      io.write(buf.to_slice[pos, 10 &- pos])
+    end
+
+    private def write_per_base_fields(io : IO, chrom : String, start : Int32, stop : Int32, depth : Int32)
+      io << chrom
+      io << '\t'
+      write_uint(io, start)
+      io << '\t'
+      write_uint(io, stop)
+      io << '\t'
+      write_uint(io, depth)
+    end
+
     def write_per_base_interval(chrom : String, start : Int32, stop : Int32, depth : Int32)
       return unless perbase = @f_perbase
       if buf = @perbase_buf
         buf.add_line do |io|
-          io << chrom << '\t' << start << '\t' << stop << '\t' << depth
+          write_per_base_fields(io, chrom, start, stop, depth)
         end
       else
         write_raw_line(perbase) do |io|
-          io << chrom << '\t' << start << '\t' << stop << '\t' << depth
+          write_per_base_fields(io, chrom, start, stop, depth)
         end
       end
     end

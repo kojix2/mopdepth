@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: crystal-lang/install-crystal@v1
       - name: Install dependencies
-        run: shards install
+        run: shards install --without-development
       - name: Generate document
         run: crystal docs
       - name: Deploy to GitHub Pages

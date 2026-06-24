@@ -90,7 +90,7 @@ jobs:
           echo "MOSDEPTH_PATH=$PWD/mosdepth" >> $GITHUB_ENV
 
       - name: Install shards (project deps)
-        run: shards install
+        run: shards install --without-development
 
       - name: Cache shards
         uses: actions/cache@v5

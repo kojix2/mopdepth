@@ -122,6 +122,7 @@ jobs:
           export LIBRARY_PATH="$(pwd)/htslib"
           export CRYSTAL_LIBRARY_PATH="$(pwd)/htslib"
           # Force load the static archive to satisfy symbols regardless of link order
+          shards install --without-development
           shards build --release --link-flags="-Wl,-force_load,$(pwd)/htslib/libhts.a -lbz2 -llzma -lz -framework CoreFoundation -framework SystemConfiguration"
           chmod +x bin/$BIN
           otool -L bin/$BIN | tee otool.txt
@@ -160,6 +161,7 @@ jobs:
           # Add local htslib to library search path and group static archives to avoid order issues
           STATIC_LIBS="-L$(pwd)/htslib -Wl,--start-group -l:libhts.a -lbz2 -llzma -lz -ldeflate -lregex -ltre -Wl,--end-group -lws2_32"
           echo "Using STATIC_LIBS=$STATIC_LIBS"
+          shards install --without-development
           shards build --release --link-flags="$STATIC_LIBS"
           file bin/$BIN.exe
           bin/$BIN --help

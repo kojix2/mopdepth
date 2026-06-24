@@ -109,9 +109,12 @@ module Depth
           end
 
           target_size = effective_len + 1
-          if sparse_streaming_enabled?(region, output)
+          if sparse_streaming_enabled?(region, output, bed_map, window)
             tid = calculator.calculate_events(events, query_region, offset, effective_len)
-            global_stat = process_sparse_target(t, events, tid, output, global_dist, total_global_dist, global_stat, offset, effective_len)
+            global_stat, global_region_stat = process_sparse_target(
+              t, events, tid, output, global_dist, total_global_dist, global_stat,
+              region_dist, total_region_dist, global_region_stat, bed_map, offset, effective_len
+            )
             next
           end
 
@@ -211,9 +214,10 @@ module Depth
       end
     end
 
-    private def sparse_streaming_enabled?(region : Core::Region?, output : FileIO::OutputManager) : Bool
+    private def sparse_streaming_enabled?(region : Core::Region?, output : FileIO::OutputManager,
+                                          bed_map : Hash(String, Array(Core::Region))?, window : Int32) : Bool
       return false if region
-      return false if output.f_regions
+      return false if output.f_regions && (window > 0 || bed_map.nil?)
       return false if @config.has_thresholds?
       return false if @config.fragment_mode?
       return false if @config.use_median?
@@ -223,14 +227,22 @@ module Depth
     private def process_sparse_target(t : Core::Target, events : Array(Tuple(Int32, Int32)), tid : Int32,
                                       output : FileIO::OutputManager, global_dist : Array(Int64),
                                       total_global_dist : Array(Int64), global_stat : Stats::DepthStat,
-                                      offset : Int32, effective_len : Int32) : Stats::DepthStat
+                                      region_dist : Array(Int64), total_region_dist : Array(Int64),
+                                      global_region_stat : Stats::DepthStat,
+                                      bed_map : Hash(String, Array(Core::Region))?,
+                                      offset : Int32, effective_len : Int32) : Tuple(Stats::DepthStat, Stats::DepthStat)
       if tid == Core::CoverageResult::ChromNotFound.value
-        return global_stat
+        return {global_stat, global_region_stat}
       end
+
+      bed_regions = bed_map.try(&.[t.name]?) || [] of Core::Region
 
       if tid == Core::CoverageResult::NoData.value
         if output.f_perbase
           output.write_per_base_interval(t.name, offset, offset + effective_len, 0)
+        end
+        if output.f_regions
+          write_empty_bed_regions(t, bed_regions, output, offset, effective_len)
         end
         if output.f_quantized && @config.has_quantize?
           quants = @config.quantize_args
@@ -239,15 +251,18 @@ module Depth
             output.write_quantized_interval(t.name, offset, offset + effective_len, lookup[0]) unless lookup.empty?
           end
         end
-        return global_stat
+        return {global_stat, global_region_stat}
       end
 
       chrom_stat = Stats::DepthStat.new
+      chrom_region_stat = Stats::DepthStat.new
+      region_sums = Array(UInt64).new(bed_regions.size, 0_u64)
       quants = @config.has_quantize? ? @config.quantize_args : [] of Int32
       quant_lookup = quants.empty? ? [] of String : Stats::Quantize.make_lookup(quants)
       quant_last = Int32::MIN
       quant_start = 0
       quant_open = false
+      region_idx = 0
 
       self.class.each_sparse_segment(events, effective_len) do |segment|
         next if segment.empty?
@@ -262,6 +277,9 @@ module Depth
         chrom_stat.max_depth = depth if depth > chrom_stat.max_depth
         chrom_stat.bases += len if depth > 0
         bump_depth_count!(global_dist, depth, len)
+        region_idx, chrom_region_stat = accumulate_sparse_bed_segment(
+          segment, bed_regions, region_idx, region_sums, region_dist, chrom_region_stat
+        )
 
         if output.f_perbase
           output.write_per_base_interval(t.name, start_pos + offset, stop_pos + offset, depth)
@@ -280,6 +298,10 @@ module Depth
         end
       end
 
+      if output.f_regions
+        write_sparse_bed_regions(t, bed_regions, region_sums, output)
+      end
+
       if output.f_quantized && quant_open && quant_last >= 0 && quant_last < quant_lookup.size && quant_start < effective_len
         output.write_quantized_interval(t.name, quant_start + offset, offset + effective_len, quant_lookup[quant_last])
       end
@@ -290,13 +312,74 @@ module Depth
       global_stat.max_depth = {global_stat.max_depth, chrom_stat.max_depth}.max
       global_stat.bases += chrom_stat.bases
       output.write_summary_line(t.name, chrom_stat)
+      if output.f_regions
+        global_region_stat = global_region_stat + chrom_region_stat
+        output.write_summary_line("#{t.name}_region", chrom_region_stat)
+      end
 
       if f_global = output.f_global
         self.class.write_distribution(f_global.as(::IO), t.name, global_dist)
         self.class.sum_into!(total_global_dist, global_dist)
       end
       global_dist.fill(0_i64)
-      global_stat
+      if f_region = output.f_region
+        self.class.write_distribution(f_region.as(::IO), t.name, region_dist)
+        self.class.sum_into!(total_region_dist, region_dist)
+        region_dist.fill(0_i64)
+      end
+      {global_stat, global_region_stat}
+    end
+
+    private def accumulate_sparse_bed_segment(segment : Core::DepthSegment, regions : Array(Core::Region),
+                                              start_idx : Int32, region_sums : Array(UInt64),
+                                              region_dist : Array(Int64),
+                                              chrom_region_stat : Stats::DepthStat) : Tuple(Int32, Stats::DepthStat)
+      idx = start_idx
+      while idx < regions.size && regions[idx].stop <= segment.start
+        idx += 1
+      end
+
+      scan_idx = idx
+      while scan_idx < regions.size && regions[scan_idx].start < segment.stop
+        r = regions[scan_idx]
+        s = Math.max(segment.start, r.start)
+        e = Math.min(segment.stop, r.stop)
+        if e > s
+          overlap_len = e - s
+          depth = segment.depth
+          region_sums[scan_idx] += (overlap_len.to_u64 * depth.to_u64) if depth > 0
+          chrom_region_stat.n_bases += overlap_len
+          chrom_region_stat.sum_depth += (overlap_len.to_u64 * depth.to_u64) if depth > 0
+          chrom_region_stat.min_depth = depth if depth < chrom_region_stat.min_depth
+          chrom_region_stat.max_depth = depth if depth > chrom_region_stat.max_depth
+          chrom_region_stat.bases += overlap_len if depth > 0
+          bump_depth_count!(region_dist, depth, overlap_len)
+        end
+        scan_idx += 1
+      end
+
+      {idx, chrom_region_stat}
+    end
+
+    private def write_empty_bed_regions(t : Core::Target, regions : Array(Core::Region),
+                                        output : FileIO::OutputManager, offset : Int32, effective_len : Int32)
+      region_start = offset
+      region_stop = offset + effective_len
+      regions.each do |r|
+        s_abs = Math.max(r.start, region_start)
+        e_abs = Math.min(r.stop, region_stop)
+        next if e_abs <= s_abs
+        output.write_region_stat(t.name, s_abs, e_abs, r.name, 0.0)
+      end
+    end
+
+    private def write_sparse_bed_regions(t : Core::Target, regions : Array(Core::Region),
+                                         region_sums : Array(UInt64), output : FileIO::OutputManager)
+      regions.each_with_index do |r, idx|
+        len = r.stop - r.start
+        me = len > 0 ? region_sums[idx].to_f / len : 0.0
+        output.write_region_stat(t.name, r.start, r.stop, r.name, me)
+      end
     end
 
     private def bump_depth_count!(dist : Array(Int64), depth : Int32, len : Int32)

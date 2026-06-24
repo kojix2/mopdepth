@@ -280,7 +280,7 @@
   </h2>
   
     
-      <a href="https://github.com/kojix2/mopdepth/blob/da883b78caa98f5efaa80669385074af43028e83/src/depth/core/cigar.cr#L2" target="_blank">
+      <a href="https://github.com/kojix2/mopdepth/blob/49a24ba9324a68cd953ad2ff2295cd8ca3bc2066/src/depth/core/cigar.cr#L2" target="_blank">
         depth/core/cigar.cr
       </a>
     
@@ -355,6 +355,20 @@
         
       </li>
     
+      <li class="entry-summary">
+        <a href="#record_cigar_append_events%21%28rec%2Cipos%3AInt32%2Cevbuf%3AArray%28Tuple%28Int32%2CInt32%29%29%29%3ANil-instance-method" class="signature"><strong>#record_cigar_append_events!</strong>(rec, ipos : Int32, evbuf : Array(Tuple(Int32, Int32))) : Nil</a>
+        
+          <div class="summary"><p>Record CIGAR → start/end events on reference, appending to provided buffer.</p></div>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#record_cigar_each_event%28rec%2Cipos%3AInt32%2C%26%3AInt32%2CInt32-%3E%29-instance-method" class="signature"><strong>#record_cigar_each_event</strong>(rec, ipos : Int32, & : Int32, Int32 -> )</a>
+        
+          <div class="summary"><p>Streaming iterator for BAM records using HTS::Bam::Record#each_cigar.</p></div>
+        
+      </li>
+    
   </ul>
 
 
@@ -395,7 +409,7 @@
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/da883b78caa98f5efaa80669385074af43028e83/src/depth/core/cigar.cr#L47" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/49a24ba9324a68cd953ad2ff2295cd8ca3bc2066/src/depth/core/cigar.cr#L68" target="_blank">View source</a>]
         
       </div>
     </div>
@@ -416,7 +430,7 @@
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/da883b78caa98f5efaa80669385074af43028e83/src/depth/core/cigar.cr#L21" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/49a24ba9324a68cd953ad2ff2295cd8ca3bc2066/src/depth/core/cigar.cr#L21" target="_blank">View source</a>]
         
       </div>
     </div>
@@ -437,7 +451,7 @@
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/da883b78caa98f5efaa80669385074af43028e83/src/depth/core/cigar.cr#L87" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/49a24ba9324a68cd953ad2ff2295cd8ca3bc2066/src/depth/core/cigar.cr#L116" target="_blank">View source</a>]
         
       </div>
     </div>
@@ -458,7 +472,7 @@
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/da883b78caa98f5efaa80669385074af43028e83/src/depth/core/cigar.cr#L41" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/49a24ba9324a68cd953ad2ff2295cd8ca3bc2066/src/depth/core/cigar.cr#L62" target="_blank">View source</a>]
         
       </div>
     </div>
@@ -479,7 +493,7 @@
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/da883b78caa98f5efaa80669385074af43028e83/src/depth/core/cigar.cr#L64" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/49a24ba9324a68cd953ad2ff2295cd8ca3bc2066/src/depth/core/cigar.cr#L93" target="_blank">View source</a>]
         
       </div>
     </div>
@@ -500,7 +514,7 @@
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/da883b78caa98f5efaa80669385074af43028e83/src/depth/core/cigar.cr#L4" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/49a24ba9324a68cd953ad2ff2295cd8ca3bc2066/src/depth/core/cigar.cr#L4" target="_blank">View source</a>]
         
       </div>
     </div>
@@ -516,7 +530,50 @@
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/da883b78caa98f5efaa80669385074af43028e83/src/depth/core/cigar.cr#L54" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/49a24ba9324a68cd953ad2ff2295cd8ca3bc2066/src/depth/core/cigar.cr#L83" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="record_cigar_append_events!(rec,ipos:Int32,evbuf:Array(Tuple(Int32,Int32))):Nil-instance-method">
+      <div class="signature">
+        
+        def <strong>record_cigar_append_events!</strong>(rec, ipos : Int32, evbuf : Array(Tuple(Int32, Int32))) : Nil
+
+        <a class="method-permalink" href="#record_cigar_append_events%21%28rec%2Cipos%3AInt32%2Cevbuf%3AArray%28Tuple%28Int32%2CInt32%29%29%29%3ANil-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Record CIGAR → start/end events on reference, appending to provided buffer.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/49a24ba9324a68cd953ad2ff2295cd8ca3bc2066/src/depth/core/cigar.cr#L76" target="_blank">View source</a>]
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="record_cigar_each_event(rec,ipos:Int32,&amp;:Int32,Int32-&gt;)-instance-method">
+      <div class="signature">
+        
+        def <strong>record_cigar_each_event</strong>(rec, ipos : Int32, & : Int32, Int32 -> )
+
+        <a class="method-permalink" href="#record_cigar_each_event%28rec%2Cipos%3AInt32%2C%26%3AInt32%2CInt32-%3E%29-instance-method">#</a>
+      </div>
+      
+        <div class="doc">
+          
+          <p>Streaming iterator for BAM records using HTS::Bam::Record#each_cigar.
+This avoids allocating HTS::Bam::Cigar and copying CIGAR words.</p>
+        </div>
+      
+      <br/>
+      <div>
+        
+          [<a href="https://github.com/kojix2/mopdepth/blob/49a24ba9324a68cd953ad2ff2295cd8ca3bc2066/src/depth/core/cigar.cr#L42" target="_blank">View source</a>]
         
       </div>
     </div>

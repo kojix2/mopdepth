@@ -83,6 +83,7 @@ module Depth
         # Reusable coverage buffer (grow-only). We'll only use [0, effective_len]
         coverage = Core::Coverage.new(0)
         coverage_dirty = false
+        events = [] of Tuple(Int32, Int32)
 
         # Process each target
         sub_targets.each do |t|
@@ -108,6 +109,12 @@ module Depth
           end
 
           target_size = effective_len + 1
+          if sparse_streaming_enabled?(region, output)
+            tid = calculator.calculate_events(events, query_region, offset, effective_len)
+            global_stat = process_sparse_target(t, events, tid, output, global_dist, total_global_dist, global_stat, offset, effective_len)
+            next
+          end
+
           if coverage.size < target_size
             # grow once; keep capacity for reuse
             coverage.concat(Array(Int32).new(target_size - coverage.size, 0))
@@ -202,6 +209,128 @@ module Depth
       ensure
         output.close_all
       end
+    end
+
+    private def sparse_streaming_enabled?(region : Core::Region?, output : FileIO::OutputManager) : Bool
+      return false if region
+      return false if output.f_regions
+      return false if @config.has_thresholds?
+      return false if @config.fragment_mode?
+      return false if @config.use_median?
+      true
+    end
+
+    private def process_sparse_target(t : Core::Target, events : Array(Tuple(Int32, Int32)), tid : Int32,
+                                      output : FileIO::OutputManager, global_dist : Array(Int64),
+                                      total_global_dist : Array(Int64), global_stat : Stats::DepthStat,
+                                      offset : Int32, effective_len : Int32) : Stats::DepthStat
+      if tid == Core::CoverageResult::ChromNotFound.value
+        return global_stat
+      end
+
+      if tid == Core::CoverageResult::NoData.value
+        if output.f_perbase
+          output.write_per_base_interval(t.name, offset, offset + effective_len, 0)
+        end
+        if output.f_quantized && @config.has_quantize?
+          quants = @config.quantize_args
+          if !quants.empty? && quants[0] == 0
+            lookup = Stats::Quantize.make_lookup(quants)
+            output.write_quantized_interval(t.name, offset, offset + effective_len, lookup[0]) unless lookup.empty?
+          end
+        end
+        return global_stat
+      end
+
+      chrom_stat = Stats::DepthStat.new
+      quants = @config.has_quantize? ? @config.quantize_args : [] of Int32
+      quant_lookup = quants.empty? ? [] of String : Stats::Quantize.make_lookup(quants)
+      quant_last = Int32::MIN
+      quant_start = 0
+      quant_open = false
+
+      each_sparse_segment(events, effective_len) do |start_pos, stop_pos, depth|
+        next if stop_pos <= start_pos
+
+        len = stop_pos - start_pos
+        chrom_stat.n_bases += len
+        chrom_stat.sum_depth += (len.to_u64 * depth.to_u64) if depth > 0
+        chrom_stat.min_depth = depth if depth < chrom_stat.min_depth
+        chrom_stat.max_depth = depth if depth > chrom_stat.max_depth
+        chrom_stat.bases += len if depth > 0
+        bump_depth_count!(global_dist, depth, len)
+
+        if output.f_perbase
+          output.write_per_base_interval(t.name, start_pos + offset, stop_pos + offset, depth)
+        end
+
+        if output.f_quantized && !quants.empty? && !quant_lookup.empty?
+          quantized = Stats::Quantize.linear_search(depth, quants)
+          if quantized != quant_last
+            if quant_open && quant_last >= 0 && quant_last < quant_lookup.size
+              output.write_quantized_interval(t.name, quant_start + offset, start_pos + offset, quant_lookup[quant_last])
+            end
+            quant_last = quantized
+            quant_start = start_pos
+            quant_open = quantized >= 0 && quantized < quant_lookup.size
+          end
+        end
+      end
+
+      if output.f_quantized && quant_open && quant_last >= 0 && quant_last < quant_lookup.size && quant_start < effective_len
+        output.write_quantized_interval(t.name, quant_start + offset, offset + effective_len, quant_lookup[quant_last])
+      end
+
+      global_stat.n_bases += chrom_stat.n_bases
+      global_stat.sum_depth += chrom_stat.sum_depth
+      global_stat.min_depth = {global_stat.min_depth, chrom_stat.min_depth}.min
+      global_stat.max_depth = {global_stat.max_depth, chrom_stat.max_depth}.max
+      global_stat.bases += chrom_stat.bases
+      output.write_summary_line(t.name, chrom_stat)
+
+      if f_global = output.f_global
+        self.class.write_distribution(f_global.as(::IO), t.name, global_dist)
+        self.class.sum_into!(total_global_dist, global_dist)
+      end
+      global_dist.fill(0_i64)
+      global_stat
+    end
+
+    private def each_sparse_segment(events : Array(Tuple(Int32, Int32)), effective_len : Int32, & : Int32, Int32, Int32 ->)
+      return if effective_len <= 0
+
+      events.sort_by! { |(pos, _)| pos }
+      depth = 0
+      last_pos = 0
+      i = 0
+      while i < events.size
+        pos = events[i][0].clamp(0, effective_len)
+        delta = 0
+        while i < events.size && events[i][0].clamp(0, effective_len) == pos
+          delta += events[i][1]
+          i += 1
+        end
+        next if delta == 0
+
+        if pos > last_pos
+          yield last_pos, pos, depth
+          last_pos = pos
+        end
+        depth += delta
+      end
+
+      yield last_pos, effective_len, depth if last_pos < effective_len
+    end
+
+    private def bump_depth_count!(dist : Array(Int64), depth : Int32, len : Int32)
+      return if depth < 0 || len <= 0
+      v = depth > Core::MAX_COVERAGE ? Core::MAX_COVERAGE - 10 : depth
+      if v >= dist.size
+        old = dist.size
+        new_size = v + 10
+        dist.concat(Array.new(new_size - old, 0_i64))
+      end
+      dist[v] += len
     end
 
     private def write_region_stats(t : Core::Target, coverage : Core::Coverage, tid : Int32,

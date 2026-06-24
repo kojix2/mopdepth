@@ -51,8 +51,9 @@ module Depth::Core
         return true if rec.isize.abs > @options.max_frag_len
       end
 
-      return true if (rec.flag.value & @options.exclude_flag) != 0
-      return true if @options.include_flag != 0 && (rec.flag.value & @options.include_flag) == 0
+      flag = rec.flag_value
+      return true if (flag & @options.exclude_flag) != 0
+      return true if @options.include_flag != 0 && (flag & @options.include_flag) == 0
 
       unless @options.read_groups.empty?
         rg = rec.aux_string("RG")
@@ -73,14 +74,15 @@ module Depth::Core
         add_event!(events, rec.pos.to_i32, 1, offset, limit)
         add_event!(events, rec.endpos.to_i32, -1, offset, limit)
       else
-        if rec.flag.proper_pair? && !rec.flag.supplementary? && rec.tid == rec.mtid && rec.mate_pos >= 0
+        if rec.proper_pair? && !rec.supplementary? && rec.tid == rec.mtid && rec.mate_pos >= 0
           rec_start = rec.pos.to_i32
           rec_stop = rec.endpos.to_i32
-          if rec_stop > rec.mate_pos && (rec_start < rec.mate_pos || (rec_start == rec.mate_pos && !@seen.has_key?(rec.qname)))
-            @seen[rec.qname] = rec.clone
-          else
-            if mate = @seen.delete(rec.qname)
-              if rec.cigar.size == 1 && mate.cigar.size == 1
+          if rec_stop > rec.mate_pos
+            qname = rec.qname
+            if rec_start < rec.mate_pos || (rec_start == rec.mate_pos && !@seen.has_key?(qname))
+              @seen[qname] = rec.clone
+            elsif mate = @seen.delete(qname)
+              if rec.cigar_size == 1 && mate.cigar_size == 1
                 s = [rec_start, mate.pos.to_i32].max
                 e = [rec_stop, mate.endpos.to_i32].min
                 if e > s
@@ -90,8 +92,8 @@ module Depth::Core
               else
                 ses = @evbuf
                 ses.clear
-                cigar_append_events!(rec.cigar, rec_start, ses)
-                cigar_append_events!(mate.cigar, mate.pos.to_i32, ses)
+                record_cigar_append_events!(rec, rec_start, ses)
+                record_cigar_append_events!(mate, mate.pos.to_i32, ses)
                 ses.sort_by! { |(p, _)| p }
                 pair_depth = 0
                 last_pos = 0
@@ -105,10 +107,14 @@ module Depth::Core
                 end
               end
             end
+          else
+            if mate = @seen.delete(rec.qname)
+              correct_mate_overlap_events!(rec, mate, rec_start, rec_stop, events, offset, limit)
+            end
           end
         end
 
-        cigar_each_event(rec.cigar, rec.pos.to_i32) do |pos, val|
+        record_cigar_each_event(rec, rec.pos.to_i32) do |pos, val|
           add_event!(events, pos, val, offset, limit)
         end
       end
@@ -125,7 +131,7 @@ module Depth::Core
         endp = 0 if endp < 0
         mark_and_add!(coverage, endp, -1)
       elsif @options.fragment_mode
-        return if rec.flag.read2? || !rec.flag.proper_pair? || rec.flag.supplementary?
+        return if rec.read2? || !rec.proper_pair? || rec.supplementary?
         frag_start = Math.min(rec.pos, rec.mate_pos).to_i32 - offset
         frag_len = rec.isize.abs
         end_pos = frag_start + frag_len
@@ -136,54 +142,90 @@ module Depth::Core
       else
         # Default (per-base) mode with mosdepth-like mate-overlap correction
         if @options.fast_mode == false && @options.fragment_mode == false &&
-           rec.flag.proper_pair? && !rec.flag.supplementary? && rec.tid == rec.mtid && rec.mate_pos >= 0
+           rec.proper_pair? && !rec.supplementary? && rec.tid == rec.mtid && rec.mate_pos >= 0
           rec_start = rec.pos.to_i32
           rec_stop = rec.endpos.to_i32
           # If this read overlaps its mate and is the earlier (or equal) one, store it; otherwise, if mate was stored, correct overlap now
-          if rec_stop > rec.mate_pos && (rec_start < rec.mate_pos || (rec_start == rec.mate_pos && !@seen.has_key?(rec.qname)))
-            # store a clone since records are reused
-            @seen[rec.qname] = rec.clone
+          if rec_stop > rec.mate_pos
+            qname = rec.qname
+            if rec_start < rec.mate_pos || (rec_start == rec.mate_pos && !@seen.has_key?(qname))
+              # store a clone since records are reused
+              @seen[qname] = rec.clone
+            elsif mate = @seen.delete(qname)
+              correct_mate_overlap_coverage!(rec, mate, rec_start, rec_stop, coverage, offset)
+            end
           else
             if mate = @seen.delete(rec.qname)
-              # Fast path: both reads have single M op
-              if rec.cigar.size == 1 && mate.cigar.size == 1
-                s = [rec_start, mate.pos.to_i32].max
-                e = [rec_stop, mate.endpos.to_i32].min
-                if e > s
-                  s = (s - offset).clamp(0, coverage.size - 1)
-                  e = (e - offset).clamp(0, coverage.size - 1)
-                  mark_and_add!(coverage, s, -1)
-                  mark_and_add!(coverage, e, 1)
-                end
-              else
-                # Build combined start/end events for rec and mate, subtract where pair_depth==2
-                ses = @evbuf
-                ses.clear
-                cigar_append_events!(rec.cigar, rec_start, ses)
-                cigar_append_events!(mate.cigar, mate.pos.to_i32, ses)
-                ses.sort_by! { |(p, _)| p }
-                pair_depth = 0
-                last_pos = 0
-                ses.each do |pos, val|
-                  if val == -1 && pair_depth == 2
-                    s = last_pos
-                    e = pos
-                    if e > s
-                      s = (s - offset).clamp(0, coverage.size - 1)
-                      e = (e - offset).clamp(0, coverage.size - 1)
-                      mark_and_add!(coverage, s, -1)
-                      mark_and_add!(coverage, e, 1)
-                    end
-                  end
-                  pair_depth += val
-                  last_pos = pos
-                end
-              end
+              correct_mate_overlap_coverage!(rec, mate, rec_start, rec_stop, coverage, offset)
             end
           end
         end
         # Always add coverage for this record after possible overlap correction step
-        apply_cigar!(rec.cigar, rec.pos.to_i32, coverage, offset)
+        apply_record_cigar!(rec, rec.pos.to_i32, coverage, offset)
+      end
+    end
+
+    private def correct_mate_overlap_events!(rec, mate, rec_start : Int32, rec_stop : Int32,
+                                             events : Array(Tuple(Int32, Int32)), offset : Int32, limit : Int32)
+      if rec.cigar_size == 1 && mate.cigar_size == 1
+        s = [rec_start, mate.pos.to_i32].max
+        e = [rec_stop, mate.endpos.to_i32].min
+        if e > s
+          add_event!(events, s, -1, offset, limit)
+          add_event!(events, e, 1, offset, limit)
+        end
+      else
+        ses = @evbuf
+        ses.clear
+        record_cigar_append_events!(rec, rec_start, ses)
+        record_cigar_append_events!(mate, mate.pos.to_i32, ses)
+        ses.sort_by! { |(p, _)| p }
+        pair_depth = 0
+        last_pos = 0
+        ses.each do |pos, val|
+          if val == -1 && pair_depth == 2
+            add_event!(events, last_pos, -1, offset, limit)
+            add_event!(events, pos, 1, offset, limit)
+          end
+          pair_depth += val
+          last_pos = pos
+        end
+      end
+    end
+
+    private def correct_mate_overlap_coverage!(rec, mate, rec_start : Int32, rec_stop : Int32,
+                                               coverage : Coverage, offset : Int32)
+      if rec.cigar_size == 1 && mate.cigar_size == 1
+        s = [rec_start, mate.pos.to_i32].max
+        e = [rec_stop, mate.endpos.to_i32].min
+        if e > s
+          s = (s - offset).clamp(0, coverage.size - 1)
+          e = (e - offset).clamp(0, coverage.size - 1)
+          mark_and_add!(coverage, s, -1)
+          mark_and_add!(coverage, e, 1)
+        end
+      else
+        ses = @evbuf
+        ses.clear
+        record_cigar_append_events!(rec, rec_start, ses)
+        record_cigar_append_events!(mate, mate.pos.to_i32, ses)
+        ses.sort_by! { |(p, _)| p }
+        pair_depth = 0
+        last_pos = 0
+        ses.each do |pos, val|
+          if val == -1 && pair_depth == 2
+            s = last_pos
+            e = pos
+            if e > s
+              s = (s - offset).clamp(0, coverage.size - 1)
+              e = (e - offset).clamp(0, coverage.size - 1)
+              mark_and_add!(coverage, s, -1)
+              mark_and_add!(coverage, e, 1)
+            end
+          end
+          pair_depth += val
+          last_pos = pos
+        end
       end
     end
 
@@ -192,6 +234,13 @@ module Depth::Core
       @evbuf.clear
       cigar_fill_events!(cigar, ipos, @evbuf)
       @evbuf.each do |pos, val|
+        p = (pos - offset).clamp(0, a.size - 1)
+        mark_and_add!(a, p, val)
+      end
+    end
+
+    private def apply_record_cigar!(rec, ipos : Int32, a : Coverage, offset : Int32)
+      record_cigar_each_event(rec, ipos) do |pos, val|
         p = (pos - offset).clamp(0, a.size - 1)
         mark_and_add!(a, p, val)
       end

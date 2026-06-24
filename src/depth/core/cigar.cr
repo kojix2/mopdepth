@@ -37,6 +37,27 @@ module Depth::Core
       yield last_stop, -1 if last_stop >= 0
     end
 
+    # Streaming iterator for BAM records using HTS::Bam::Record#each_cigar.
+    # This avoids allocating HTS::Bam::Cigar and copying CIGAR words.
+    def record_cigar_each_event(rec, ipos : Int32, & : Int32, Int32 ->)
+      pos = ipos
+      last_stop = -1
+      rec.each_cigar do |op_char, olen|
+        cls = classify_cigar(op_char)
+        next if (cls & 0b01) == 0
+        len = olen.to_i32
+        if (cls & 0b11) == 0b11
+          if pos != last_stop
+            yield pos, 1
+            yield last_stop, -1 if last_stop >= 0
+          end
+          last_stop = pos + len
+        end
+        pos += len
+      end
+      yield last_stop, -1 if last_stop >= 0
+    end
+
     # CIGAR → start/end events on reference, filling provided buffer
     def cigar_fill_events!(cigar, ipos : Int32, evbuf : Array(Tuple(Int32, Int32))) : Nil
       evbuf.clear
@@ -46,6 +67,14 @@ module Depth::Core
     # CIGAR → start/end events on reference, appending to provided buffer
     def cigar_append_events!(cigar, ipos : Int32, evbuf : Array(Tuple(Int32, Int32))) : Nil
       cigar_each_event(cigar, ipos) do |pos, val|
+        evbuf << {pos, val}
+      end
+      nil
+    end
+
+    # Record CIGAR → start/end events on reference, appending to provided buffer.
+    def record_cigar_append_events!(rec, ipos : Int32, evbuf : Array(Tuple(Int32, Int32))) : Nil
+      record_cigar_each_event(rec, ipos) do |pos, val|
         evbuf << {pos, val}
       end
       nil

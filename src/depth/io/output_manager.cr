@@ -36,11 +36,17 @@ module Depth::FileIO
         flush if @buf.size >= @threshold
       end
 
+      def add_line
+        yield @buf
+        @buf << '\n'
+        flush if @buf.size >= @threshold
+      end
+
       def flush
         return if @buf.size == 0
         slice = @buf.to_slice
         @bgzf.write(slice)
-        @buf = IO::Memory.new(@threshold)
+        @buf.clear
       end
 
       def close
@@ -77,49 +83,66 @@ module Depth::FileIO
       return unless summary = @f_summary
 
       unless @header_written
-        summary << ["chrom", "length", "bases", "mean", "min", "max"].join("\t") << '\n'
+        summary << "chrom\tlength\tbases\tmean\tmin\tmax\n"
         @header_written = true
       end
 
       mean = stat.n_bases > 0 ? stat.sum_depth.to_f / stat.n_bases : 0.0
-      mean_str = sprintf("%.#{@precision}f", mean)
       minv = stat.min_depth == Int32::MAX ? 0 : stat.min_depth
       # mosdepth uses cumulative depth in the 'bases' column
-      summary << [region, stat.n_bases, stat.sum_depth, mean_str, minv, stat.max_depth].join("\t") << '\n'
+      summary << region << '\t' << stat.n_bases << '\t' << stat.sum_depth << '\t'
+      write_float(summary, mean)
+      summary << '\t' << minv << '\t' << stat.max_depth << '\n'
     end
 
     # Optionally call at end to add a total line like mosdepth
     def write_summary_total(total : Depth::Stats::DepthStat)
       return unless summary = @f_summary
       mean = total.n_bases > 0 ? total.sum_depth.to_f / total.n_bases : 0.0
-      mean_str = sprintf("%.#{@precision}f", mean)
       minv = total.min_depth == Int32::MAX ? 0 : total.min_depth
-      summary << ["total", total.n_bases, total.sum_depth, mean_str, minv, total.max_depth].join("\t") << "\n"
+      summary << "total\t" << total.n_bases << '\t' << total.sum_depth << '\t'
+      write_float(summary, mean)
+      summary << '\t' << minv << '\t' << total.max_depth << '\n'
     end
 
     def write_per_base_interval(chrom : String, start : Int32, stop : Int32, depth : Int32)
       return unless perbase = @f_perbase
       if buf = @perbase_buf
-        buf.add_line("#{chrom}\t#{start}\t#{stop}\t#{depth}")
+        buf.add_line do |io|
+          io << chrom << '\t' << start << '\t' << stop << '\t' << depth
+        end
       else
-        perbase.puts("#{chrom}\t#{start}\t#{stop}\t#{depth}")
+        write_raw_line(perbase) do |io|
+          io << chrom << '\t' << start << '\t' << stop << '\t' << depth
+        end
       end
     end
 
     def write_region_stat(chrom : String, start : Int32, stop : Int32, name : String?, value : Float64)
       return unless regions = @f_regions
-      val_str = sprintf("%.#{@precision}f", value)
       if name
         if buf = @regions_buf
-          buf.add_line("#{chrom}\t#{start}\t#{stop}\t#{name}\t#{val_str}")
+          buf.add_line do |io|
+            io << chrom << '\t' << start << '\t' << stop << '\t' << name << '\t'
+            write_float(io, value)
+          end
         else
-          regions.puts("#{chrom}\t#{start}\t#{stop}\t#{name}\t#{val_str}")
+          write_raw_line(regions) do |io|
+            io << chrom << '\t' << start << '\t' << stop << '\t' << name << '\t'
+            write_float(io, value)
+          end
         end
       else
         if buf = @regions_buf
-          buf.add_line("#{chrom}\t#{start}\t#{stop}\t#{val_str}")
+          buf.add_line do |io|
+            io << chrom << '\t' << start << '\t' << stop << '\t'
+            write_float(io, value)
+          end
         else
-          regions.puts("#{chrom}\t#{start}\t#{stop}\t#{val_str}")
+          write_raw_line(regions) do |io|
+            io << chrom << '\t' << start << '\t' << stop << '\t'
+            write_float(io, value)
+          end
         end
       end
     end
@@ -127,35 +150,39 @@ module Depth::FileIO
     def write_quantized_interval(chrom : String, start : Int32, stop : Int32, label : String)
       return unless quantized = @f_quantized
       if buf = @quantized_buf
-        buf.add_line("#{chrom}\t#{start}\t#{stop}\t#{label}")
+        buf.add_line do |io|
+          io << chrom << '\t' << start << '\t' << stop << '\t' << label
+        end
       else
-        quantized.puts("#{chrom}\t#{start}\t#{stop}\t#{label}")
+        write_raw_line(quantized) do |io|
+          io << chrom << '\t' << start << '\t' << stop << '\t' << label
+        end
       end
     end
 
     def write_thresholds_header(thresholds : Array(Int32))
       return unless thresholds_io = @f_thresholds
-      line = String.build do |io|
-        io << "#chrom\tstart\tend\tregion"
-        thresholds.each { |threshold| io << "\t" << threshold << "X" }
-      end
       if buf = @thresholds_buf
-        buf.add_line(line)
+        buf.add_line do |io|
+          write_threshold_header_fields(io, thresholds)
+        end
       else
-        thresholds_io.puts(line)
+        write_raw_line(thresholds_io) do |io|
+          write_threshold_header_fields(io, thresholds)
+        end
       end
     end
 
     def write_threshold_counts(chrom : String, start : Int32, stop : Int32, name : String?, counts : Array(Int32))
       return unless thresholds_io = @f_thresholds
-      line = String.build do |io|
-        io << chrom << '\t' << start << '\t' << stop << '\t' << (name || "unknown")
-        counts.each { |count| io << '\t' << count }
-      end
       if buf = @thresholds_buf
-        buf.add_line(line)
+        buf.add_line do |io|
+          write_threshold_count_fields(io, chrom, start, stop, name, counts)
+        end
       else
-        thresholds_io.puts(line)
+        write_raw_line(thresholds_io) do |io|
+          write_threshold_count_fields(io, chrom, start, stop, name, counts)
+        end
       end
     end
 
@@ -218,6 +245,33 @@ module Depth::FileIO
     private def wrap(io : (File | HTS::Bgzf)?)
       return nil unless io.is_a?(HTS::Bgzf)
       BgzfLineBuffer.new(io.as(HTS::Bgzf), @buffer_size)
+    end
+
+    private def write_float(io, value : Float64)
+      value.format(io, decimal_places: @precision)
+    end
+
+    private def write_raw_line(io : File)
+      yield io
+      io << '\n'
+    end
+
+    private def write_raw_line(io : HTS::Bgzf)
+      line = String.build do |s|
+        yield s
+      end
+      io.puts(line)
+    end
+
+    private def write_threshold_header_fields(io, thresholds : Array(Int32))
+      io << "#chrom\tstart\tend\tregion"
+      thresholds.each { |threshold| io << '\t' << threshold << 'X' }
+    end
+
+    private def write_threshold_count_fields(io, chrom : String, start : Int32, stop : Int32,
+                                             name : String?, counts : Array(Int32))
+      io << chrom << '\t' << start << '\t' << stop << '\t' << (name || "unknown")
+      counts.each { |count| io << '\t' << count }
     end
 
     private def resolve_precision : Int32

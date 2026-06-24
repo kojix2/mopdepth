@@ -49,7 +49,7 @@ module Depth::Core
     def each_sparse_segment(events : Array(Tuple(Int32, Int32)), effective_len : Int32, & : DepthSegment ->)
       return if effective_len <= 0
 
-      events.sort_by! { |(pos, _)| pos }
+      events.sort! { |a, b| a[0] <=> b[0] }
       depth = 0
       last_pos = 0
       i = 0

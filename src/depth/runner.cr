@@ -218,6 +218,7 @@ module Depth
                                           bed_map : Hash(String, Array(Core::Region))?, window : Int32) : Bool
       return false if region
       return false if output.f_regions && window == 0 && bed_map.nil?
+      return false unless output.f_perbase || output.f_quantized
       return false if @config.fragment_mode?
       return false if @config.use_median?
       true

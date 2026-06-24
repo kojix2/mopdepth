@@ -8,8 +8,8 @@ module Depth::Core
   class CoverageCalculator
     include Cigar
     # touched tracking
-    @generation : UInt32
-    @marks : Array(UInt32)
+    @generation : UInt8
+    @marks : Array(UInt8)
     @touched : Array(Int32)
     @evbuf : Array(Tuple(Int32, Int32))
 
@@ -17,8 +17,8 @@ module Depth::Core
       # store first-read of overlapping proper pairs to correct double-counting when mate arrives
       @seen = Hash(String, HTS::Bam::Record).new
       # generation-based touched tracking (avoid full memset)
-      @generation = 1_u32
-      @marks = [] of UInt32  # same length as coverage capacity
+      @generation = 1_u8
+      @marks = [] of UInt8   # same length as coverage capacity
       @touched = [] of Int32 # indices touched during current generation
       @evbuf = [] of Tuple(Int32, Int32)
     end
@@ -337,17 +337,17 @@ module Depth::Core
         @touched.clear
       end
       # advance generation (lazy clear of marks)
-      @generation &+= 1_u32
-      if @generation == 0_u32
+      @generation &+= 1_u8
+      if @generation == 0_u8
         # wrapped; hard reset marks
-        @marks.fill(0_u32)
-        @generation = 1_u32
+        @marks.fill(0_u8)
+        @generation = 1_u8
       end
     end
 
     private def ensure_marks_capacity(capacity : Int32)
       if @marks.size < capacity
-        @marks.concat(Array(UInt32).new(capacity - @marks.size, 0_u32))
+        @marks.concat(Array(UInt8).new(capacity - @marks.size, 0_u8))
       end
     end
 

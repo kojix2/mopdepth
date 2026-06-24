@@ -14,7 +14,7 @@
 <script type="text/javascript" src="../../js/doc.js"></script>
 
   <meta name="repository-name" content="mopdepth">
-  <title>Depth::Stats::Quantize - mopdepth main</title>
+  <title>HTS::Bam::Record - mopdepth main</title>
   <script type="text/javascript">
     CrystalDocs.base_path = "../../";
   </script>
@@ -57,7 +57,7 @@
   <div class="types-list">
     <ul>
   
-  <li class="parent open current" data-id="mopdepth/Depth" data-name="depth">
+  <li class="parent " data-id="mopdepth/Depth" data-name="depth">
       <a href="../../Depth.html">Depth</a>
       
         <ul>
@@ -182,7 +182,7 @@
       
     </li>
   
-  <li class="parent open current" data-id="mopdepth/Depth/Stats" data-name="depth::stats">
+  <li class="parent " data-id="mopdepth/Depth/Stats" data-name="depth::stats">
       <a href="../../Depth/Stats.html">Stats</a>
       
         <ul>
@@ -202,7 +202,7 @@
       
     </li>
   
-  <li class=" current" data-id="mopdepth/Depth/Stats/Quantize" data-name="depth::stats::quantize">
+  <li class=" " data-id="mopdepth/Depth/Stats/Quantize" data-name="depth::stats::quantize">
       <a href="../../Depth/Stats/Quantize.html">Quantize</a>
       
     </li>
@@ -217,17 +217,17 @@
       
     </li>
   
-  <li class="parent " data-id="mopdepth/HTS" data-name="hts">
+  <li class="parent open current" data-id="mopdepth/HTS" data-name="hts">
       <a href="../../HTS.html">HTS</a>
       
         <ul>
   
-  <li class="parent " data-id="mopdepth/HTS/Bam" data-name="hts::bam">
+  <li class="parent open current" data-id="mopdepth/HTS/Bam" data-name="hts::bam">
       <a href="../../HTS/Bam.html">Bam</a>
       
         <ul>
   
-  <li class=" " data-id="mopdepth/HTS/Bam/Record" data-name="hts::bam::record">
+  <li class=" current" data-id="mopdepth/HTS/Bam/Record" data-name="hts::bam::record">
       <a href="../../HTS/Bam/Record.html">Record</a>
       
     </li>
@@ -252,11 +252,13 @@
 <h1 class="type-name">
 
   <span class="kind">
-    module
-  </span> Depth::<wbr>Stats::<wbr>Quantize
+    class
+  </span> HTS::<wbr>Bam::<wbr>Record
 
 </h1>
 
+
+  <ul class="superclass-hierarchy"><li class="superclass"><a href="../../HTS/Bam/Record.html">HTS::Bam::Record</a></li><li class="superclass">Reference</li><li class="superclass">Object</li></ul>
 
 
 
@@ -286,8 +288,15 @@
   </h2>
   
     
-      <a href="https://github.com/kojix2/mopdepth/blob/a88dcf5f13608c8e2fd870d228cafb15f3f92ead/src/depth/stats/quantize.cr#L2" target="_blank">
-        depth/stats/quantize.cr
+      <a href="https://github.com/kojix2/mopdepth/blob/a88dcf5f13608c8e2fd870d228cafb15f3f92ead/lib/hts/src/hts/bam/record.cr#L7" target="_blank">
+        lib/hts/src/hts/bam/record.cr
+      </a>
+    
+    <br/>
+  
+    
+      <a href="https://github.com/kojix2/mopdepth/blob/a88dcf5f13608c8e2fd870d228cafb15f3f92ead/src/depth/core/coverage_calculator.cr#L9" target="_blank">
+        depth/core/coverage_calculator.cr
       </a>
     
     <br/>
@@ -300,184 +309,113 @@
   
 
   
+
+  
+
+  
   <h2>
-    <a id="class-method-summary" class="anchor" href="#class-method-summary">
+    <a id="instance-method-summary" class="anchor" href="#instance-method-summary">
   <svg class="octicon-link" aria-hidden="true">
     <use href="#octicon-link"/>
   </svg>
 </a>
-    Class Method Summary
+    Instance Method Summary
   </h2>
   <ul class="list-summary">
     
       <li class="entry-summary">
-        <a href="#gen_quantized%28quants%3AArray%28Int32%29%2Ccoverage%3AArray%28Int32%29%2Climit%3AInt32%2C%26%3ATuple%28Int32%2CInt32%2CString%29-%3E%29-class-method" class="signature"><strong>.gen_quantized</strong>(quants : Array(Int32), coverage : Array(Int32), limit : Int32, & : Tuple(Int32, Int32, String) -> )</a>
+        <a href="#qname_data%3APointer%28UInt8%29-instance-method" class="signature"><strong>#qname_data</strong> : Pointer(UInt8)</a>
         
       </li>
     
       <li class="entry-summary">
-        <a href="#gen_quantized%28quants%3AArray%28Int32%29%2Ccoverage%3AArray%28Int32%29%2C%26block%3ATuple%28Int32%2CInt32%2CString%29-%3E%29-class-method" class="signature"><strong>.gen_quantized</strong>(quants : Array(Int32), coverage : Array(Int32), &block : Tuple(Int32, Int32, String) -> )</a>
-        
-          <div class="summary"><p>Backward-compatible overload: consume entire coverage array</p></div>
-        
-      </li>
-    
-      <li class="entry-summary">
-        <a href="#get_quantize_args%28qa%3AString%29%3AArray%28Int32%29-class-method" class="signature"><strong>.get_quantize_args</strong>(qa : String) : Array(Int32)</a>
-        
-          <div class="summary"><p>Parse quantize arguments string into array of integers Examples:   &quot;:1&quot; -&gt; [0, 1]   &quot;0:1:4:&quot; -&gt; [0, 1, 4, Int32::MAX]</p></div>
-        
-      </li>
-    
-      <li class="entry-summary">
-        <a href="#linear_search%28q%3AInt32%2Cvals%3AArray%28Int32%29%29%3AInt32-class-method" class="signature"><strong>.linear_search</strong>(q : Int32, vals : Array(Int32)) : Int32</a>
-        
-          <div class="summary"><p>Linear search to find which bin a value belongs to Returns -1 if value is outside all bins</p></div>
-        
-      </li>
-    
-      <li class="entry-summary">
-        <a href="#make_lookup%28quants%3AArray%28Int32%29%29%3AArray%28String%29-class-method" class="signature"><strong>.make_lookup</strong>(quants : Array(Int32)) : Array(String)</a>
-        
-          <div class="summary"><p>Create lookup table for quantize bins Examples:   [0, 1, 4] -&gt; [&quot;0:1&quot;, &quot;1:4&quot;, &quot;4:inf&quot;]</p></div>
+        <a href="#qname_length%3AInt32-instance-method" class="signature"><strong>#qname_length</strong> : Int32</a>
         
       </li>
     
   </ul>
 
 
-  
-
-  
-
 
   <div class="methods-inherited">
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+
     
   </div>
 
   
 
   
+
+  
+
+  
   <h2>
-    <a id="class-method-detail" class="anchor" href="#class-method-detail">
+    <a id="instance-method-detail" class="anchor" href="#instance-method-detail">
   <svg class="octicon-link" aria-hidden="true">
     <use href="#octicon-link"/>
   </svg>
 </a>
-    Class Method Detail
+    Instance Method Detail
   </h2>
   
-    <div class="entry-detail" id="gen_quantized(quants:Array(Int32),coverage:Array(Int32),limit:Int32,&amp;:Tuple(Int32,Int32,String)-&gt;)-class-method">
+    <div class="entry-detail" id="qname_data:Pointer(UInt8)-instance-method">
       <div class="signature">
         
-        def self.<strong>gen_quantized</strong>(quants : Array(Int32), coverage : Array(Int32), limit : Int32, & : Tuple(Int32, Int32, String) -> )
+        def <strong>qname_data</strong> : Pointer(UInt8)
 
-        <a class="method-permalink" href="#gen_quantized%28quants%3AArray%28Int32%29%2Ccoverage%3AArray%28Int32%29%2Climit%3AInt32%2C%26%3ATuple%28Int32%2CInt32%2CString%29-%3E%29-class-method">#</a>
+        <a class="method-permalink" href="#qname_data%3APointer%28UInt8%29-instance-method">#</a>
       </div>
       
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/a88dcf5f13608c8e2fd870d228cafb15f3f92ead/src/depth/stats/quantize.cr#L85" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/a88dcf5f13608c8e2fd870d228cafb15f3f92ead/src/depth/core/coverage_calculator.cr#L10" target="_blank">View source</a>]
         
       </div>
     </div>
   
-    <div class="entry-detail" id="gen_quantized(quants:Array(Int32),coverage:Array(Int32),&amp;block:Tuple(Int32,Int32,String)-&gt;)-class-method">
+    <div class="entry-detail" id="qname_length:Int32-instance-method">
       <div class="signature">
         
-        def self.<strong>gen_quantized</strong>(quants : Array(Int32), coverage : Array(Int32), &block : Tuple(Int32, Int32, String) -> )
+        def <strong>qname_length</strong> : Int32
 
-        <a class="method-permalink" href="#gen_quantized%28quants%3AArray%28Int32%29%2Ccoverage%3AArray%28Int32%29%2C%26block%3ATuple%28Int32%2CInt32%2CString%29-%3E%29-class-method">#</a>
+        <a class="method-permalink" href="#qname_length%3AInt32-instance-method">#</a>
       </div>
-      
-        <div class="doc">
-          
-          <p>Backward-compatible overload: consume entire coverage array</p>
-        </div>
       
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/a88dcf5f13608c8e2fd870d228cafb15f3f92ead/src/depth/stats/quantize.cr#L120" target="_blank">View source</a>]
-        
-      </div>
-    </div>
-  
-    <div class="entry-detail" id="get_quantize_args(qa:String):Array(Int32)-class-method">
-      <div class="signature">
-        
-        def self.<strong>get_quantize_args</strong>(qa : String) : Array(Int32)
-
-        <a class="method-permalink" href="#get_quantize_args%28qa%3AString%29%3AArray%28Int32%29-class-method">#</a>
-      </div>
-      
-        <div class="doc">
-          
-          <p>Parse quantize arguments string into array of integers
-Examples:
-&quot;:1&quot; -&gt; [0, 1]
-&quot;0:1:4:&quot; -&gt; [0, 1, 4, Int32::MAX]</p>
-        </div>
-      
-      <br/>
-      <div>
-        
-          [<a href="https://github.com/kojix2/mopdepth/blob/a88dcf5f13608c8e2fd870d228cafb15f3f92ead/src/depth/stats/quantize.cr#L7" target="_blank">View source</a>]
-        
-      </div>
-    </div>
-  
-    <div class="entry-detail" id="linear_search(q:Int32,vals:Array(Int32)):Int32-class-method">
-      <div class="signature">
-        
-        def self.<strong>linear_search</strong>(q : Int32, vals : Array(Int32)) : Int32
-
-        <a class="method-permalink" href="#linear_search%28q%3AInt32%2Cvals%3AArray%28Int32%29%29%3AInt32-class-method">#</a>
-      </div>
-      
-        <div class="doc">
-          
-          <p>Linear search to find which bin a value belongs to
-Returns -1 if value is outside all bins</p>
-        </div>
-      
-      <br/>
-      <div>
-        
-          [<a href="https://github.com/kojix2/mopdepth/blob/a88dcf5f13608c8e2fd870d228cafb15f3f92ead/src/depth/stats/quantize.cr#L66" target="_blank">View source</a>]
-        
-      </div>
-    </div>
-  
-    <div class="entry-detail" id="make_lookup(quants:Array(Int32)):Array(String)-class-method">
-      <div class="signature">
-        
-        def self.<strong>make_lookup</strong>(quants : Array(Int32)) : Array(String)
-
-        <a class="method-permalink" href="#make_lookup%28quants%3AArray%28Int32%29%29%3AArray%28String%29-class-method">#</a>
-      </div>
-      
-        <div class="doc">
-          
-          <p>Create lookup table for quantize bins
-Examples:
-[0, 1, 4] -&gt; [&quot;0:1&quot;, &quot;1:4&quot;, &quot;4:inf&quot;]</p>
-        </div>
-      
-      <br/>
-      <div>
-        
-          [<a href="https://github.com/kojix2/mopdepth/blob/a88dcf5f13608c8e2fd870d228cafb15f3f92ead/src/depth/stats/quantize.cr#L40" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/a88dcf5f13608c8e2fd870d228cafb15f3f92ead/src/depth/core/coverage_calculator.cr#L14" target="_blank">View source</a>]
         
       </div>
     </div>
   
 
-
-  
-
-  
 
 
 </div>

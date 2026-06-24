@@ -112,10 +112,6 @@ module Depth
             # grow once; keep capacity for reuse
             coverage.concat(Array(Int32).new(target_size - coverage.size, 0))
           end
-          # Reset diff indices touched last target (generation-based). Only zero the
-          # working slice after a prior prefix-sum pass; no-data targets do not read
-          # coverage, so avoid scanning chromosome-sized buffers for empty contigs.
-          calculator.reset_coverage!(coverage, target_size)
           if coverage_dirty
             i_full = 0
             while i_full < target_size

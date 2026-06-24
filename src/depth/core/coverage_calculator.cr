@@ -18,19 +18,11 @@ module Depth::Core
       end
     end
 
-    # touched tracking
-    @generation : UInt8
-    @marks : Array(UInt8)
-    @touched : Array(Int32)
     @evbuf : Array(Tuple(Int32, Int32))
 
     def initialize(@bam : HTS::Bam, @options : Options)
       # store first-read of overlapping proper pairs to correct double-counting when mate arrives
       @seen = Hash(String, SeenMate).new
-      # generation-based touched tracking (avoid full memset)
-      @generation = 1_u8
-      @marks = [] of UInt8   # same length as coverage capacity
-      @touched = [] of Int32 # indices touched during current generation
       @evbuf = [] of Tuple(Int32, Int32)
     end
 
@@ -180,7 +172,6 @@ module Depth::Core
       else
         coverage.clear
         coverage.concat(Array(Int32).new(target_size, 0))
-        ensure_marks_capacity(target_size)
       end
     end
 
@@ -252,39 +243,7 @@ module Depth::Core
       tid >= 0 ? tid : chrom_tid
     end
 
-    # Reset using touch marks: zero only indices written in current generation (up to limit)
-    def reset_coverage!(a : Coverage, limit : Int32)
-      if @touched.size > 0
-        lim = Math.min(limit, a.size)
-        @touched.each do |idx|
-          next if idx >= lim
-          a[idx] = 0
-        end
-        @touched.clear
-      end
-      # advance generation (lazy clear of marks)
-      @generation &+= 1_u8
-      if @generation == 0_u8
-        # wrapped; hard reset marks
-        @marks.fill(0_u8)
-        @generation = 1_u8
-      end
-    end
-
-    private def ensure_marks_capacity(capacity : Int32)
-      if @marks.size < capacity
-        @marks.concat(Array(UInt8).new(capacity - @marks.size, 0_u8))
-      end
-    end
-
     private def mark_and_add!(a : Coverage, idx : Int32, delta : Int32)
-      ensure_marks_capacity(a.size)
-      # mark once per generation
-      if @marks[idx] != @generation
-        @marks[idx] = @generation
-        @touched << idx
-        a[idx] = 0 if a[idx] != 0
-      end
       a[idx] += delta
     end
   end

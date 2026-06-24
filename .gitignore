@@ -4,6 +4,7 @@
 /.shards/
 *.dwarf
 
+*.lock
 *.gz
 *.csi
 *.tbi

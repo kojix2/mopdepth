@@ -14,11 +14,11 @@ module TestBin
   def self.ensure_built!
     return if @@built && File.exists?(binary)
     unless File.exists?(binary)
-      status = Process.run("shards", ["build", "--release"],
+      status = Process.run("crystal", ["build", "src/depth.cr", "--release", "-o", binary],
         chdir: Dir.current,
         output: Process::Redirect::Close,
         error: Process::Redirect::Close)
-      raise "Failed to build with 'shards build'" unless status.success?
+      raise "Failed to build mopdepth" unless status.success?
     end
     @@built = true
   end

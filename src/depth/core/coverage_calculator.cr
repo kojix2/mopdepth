@@ -284,7 +284,7 @@ module Depth::Core
       current_tid = Int32::MIN
 
       @seen.clear
-      @bam.each(copy: false) do |rec|
+      @bam.each do |rec|
         # Break if we encounter a different chromosome to prevent array corruption
         if current_tid != Int32::MIN && rec.tid != current_tid
           break

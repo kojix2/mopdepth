@@ -91,7 +91,7 @@ jobs:
             make && make install
             "
           docker exec alpine shards install --without-development
-          docker exec alpine shards build --release --static
+          docker exec alpine crystal build src/depth.cr --release --static -o bin/$BIN
           docker exec alpine chmod +x bin/$BIN
           ldd bin/$BIN || echo "Static binary (no dynamic dependencies)"
           file bin/$BIN
@@ -129,7 +129,7 @@ jobs:
           export CRYSTAL_LIBRARY_PATH="$(pwd)/htslib"
           # Force load the static archive to satisfy symbols regardless of link order
           shards install --without-development
-          shards build --release --link-flags="-Wl,-force_load,$(pwd)/htslib/libhts.a $DEFLATE_A -lbz2 -llzma -lz -framework CoreFoundation -framework SystemConfiguration"
+          crystal build src/depth.cr --release -o bin/$BIN --link-flags="-Wl,-force_load,$(pwd)/htslib/libhts.a $DEFLATE_A -lbz2 -llzma -lz -framework CoreFoundation -framework SystemConfiguration"
           chmod +x bin/$BIN
           otool -L bin/$BIN | tee otool.txt
           if grep -E -q "libhts.*dylib" otool.txt; then
@@ -168,7 +168,7 @@ jobs:
           STATIC_LIBS="-L$(pwd)/htslib -Wl,--start-group -l:libhts.a -lbz2 -llzma -lz -ldeflate -lregex -ltre -Wl,--end-group -lws2_32"
           echo "Using STATIC_LIBS=$STATIC_LIBS"
           shards install --without-development
-          shards build --release --link-flags="$STATIC_LIBS"
+          crystal build src/depth.cr --release -o bin/$BIN.exe --link-flags="$STATIC_LIBS"
           file bin/$BIN.exe
           bin/$BIN --help
           PKG=mopdepth-${VERSION}-${{ matrix.target }}

@@ -107,4 +107,4 @@ jobs:
           MOSDEPTH_PATH: ${{ env.MOSDEPTH_PATH }}
         run: |
           echo "Using MOSDEPTH_PATH=$MOSDEPTH_PATH"
-          crystal spec -Dpreview_mt
+          crystal spec

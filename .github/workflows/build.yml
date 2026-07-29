@@ -91,7 +91,7 @@ jobs:
             make && make install
             "
           docker exec alpine shards install --without-development
-          docker exec alpine crystal build src/depth.cr --release --static -o bin/$BIN
+          docker exec alpine crystal build src/depth.cr --release --static -o "bin/$BIN"
           docker exec alpine chmod +x bin/$BIN
           ldd bin/$BIN || echo "Static binary (no dynamic dependencies)"
           file bin/$BIN

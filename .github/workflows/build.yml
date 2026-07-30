@@ -23,11 +23,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
-        with:
-          submodules: true
 
-      - name: Install Crystal (Linux/macOS)
-        if: matrix.os != 'windows-latest'
+      - name: Install Crystal (macOS)
+        if: matrix.os == 'macos-latest'
         uses: crystal-lang/install-crystal@v1
         with:
           crystal: latest
@@ -61,15 +59,6 @@ jobs:
           fi
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "BIN=mopdepth" >> $GITHUB_ENV
-
-      - name: Install dependencies (Linux/macOS)
-        if: matrix.os != 'windows-latest'
-        run: shards install --without-development
-
-      - name: Install dependencies (MinGW64)
-        if: matrix.os == 'windows-latest'
-        shell: msys2 {0}
-        run: shards install --without-development
 
       - name: Build on Linux (musl)
         if: matrix.target == 'x86_64-unknown-linux-musl'
@@ -107,7 +96,6 @@ jobs:
         if: matrix.os == 'macos-latest'
         shell: bash
         run: |
-          brew update
           brew install pkg-config autoconf automake libtool bzip2 xz zlib libdeflate
           # Build local static htslib without libcurl (to avoid extra non-system deps)
           git clone --depth 1 --branch develop https://github.com/samtools/htslib.git htslib
@@ -119,18 +107,14 @@ jobs:
               --with-libdeflate CPPFLAGS="-I$(brew --prefix libdeflate)/include" LDFLAGS="-L$(brew --prefix libdeflate)/lib" && \
             make
           )
-          # Ensure no dylib is available to accidentally link against
-          rm -f htslib/*.dylib htslib/libhts*.dylib || true
           # Confirm Homebrew ships a static libdeflate archive to link
           DEFLATE_A="$(brew --prefix libdeflate)/lib/libdeflate.a"
           test -f "$DEFLATE_A" || { echo "Error: $DEFLATE_A not found" >&2; exit 1; }
           # Create htslib.pc for pkg-config with correct paths and version
           HTS_VER=$(grep '#define HTS_VERSION_TEXT' htslib/version.h | sed 's/.*"\(.*\)"/\1/')
-          sed -e "s#@-includedir@#$(pwd)/htslib#g" -e "s#@-libdir@#$(pwd)/htslib#g" -e "s#@.PACKAGE_VERSION@#$HTS_VER#g" htslib/htslib.pc.tmp > htslib/htslib.pc
-          # Prefer the local static libhts.a
-          export LIBRARY_PATH="$(pwd)/htslib"
-          export CRYSTAL_LIBRARY_PATH="$(pwd)/htslib"
+          sed -e "s#@-includedir@#$(pwd)/htslib#g" -e "s#@-libdir@#$(pwd)/htslib#g" -e "s#@-PACKAGE_VERSION@#$HTS_VER#g" -e "s#@.PACKAGE_VERSION@#$HTS_VER#g" htslib/htslib.pc.tmp > htslib/htslib.pc
           export PKG_CONFIG_PATH="$(pwd)/htslib:$PKG_CONFIG_PATH"
+          pkg-config --modversion htslib
           # Force load the static archive to satisfy symbols regardless of link order
           shards install --without-development
           crystal build src/depth.cr --release -o bin/$BIN --link-flags="-Wl,-force_load,$(pwd)/htslib/libhts.a $DEFLATE_A -lbz2 -llzma -lz -framework CoreFoundation -framework SystemConfiguration"
@@ -165,13 +149,11 @@ jobs:
           # remove DLL/import libs to prefer static archive when resolving -lhts
           rm -f *.dll *.dll.a *.lib || true
           cd ..
-          # Link statically against libhts and compression libs; keep system ws2_32 dynamic
-          export LIBRARY_PATH="$(pwd)/htslib"
-          export CRYSTAL_LIBRARY_PATH="$(pwd)/htslib"
           # Create htslib.pc for pkg-config with correct paths and version
           HTS_VER=$(grep '#define HTS_VERSION_TEXT' htslib/version.h | sed 's/.*"\(.*\)"/\1/')
-          sed -e "s#@-includedir@#$(pwd)/htslib#g" -e "s#@-libdir@#$(pwd)/htslib#g" -e "s#@.PACKAGE_VERSION@#$HTS_VER#g" htslib/htslib.pc.tmp > htslib/htslib.pc
+          sed -e "s#@-includedir@#$(pwd)/htslib#g" -e "s#@-libdir@#$(pwd)/htslib#g" -e "s#@-PACKAGE_VERSION@#$HTS_VER#g" -e "s#@.PACKAGE_VERSION@#$HTS_VER#g" htslib/htslib.pc.tmp > htslib/htslib.pc
           export PKG_CONFIG_PATH="$(pwd)/htslib:$PKG_CONFIG_PATH"
+          pkg-config --modversion htslib
           # Add local htslib to library search path and group static archives to avoid order issues
           STATIC_LIBS="-L$(pwd)/htslib -Wl,--start-group -l:libhts.a -lbz2 -llzma -lz -ldeflate -lregex -ltre -Wl,--end-group -lws2_32"
           echo "Using STATIC_LIBS=$STATIC_LIBS"

@@ -124,16 +124,38 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: msys2 {0}
         run: |
-          pacman -S --noconfirm --needed autoconf automake libtool make git mingw-w64-x86_64-toolchain mingw-w64-x86_64-bzip2 mingw-w64-x86_64-xz mingw-w64-x86_64-zlib mingw-w64-x86_64-libdeflate mingw-w64-x86_64-gettext
+          pacman -S --noconfirm --needed \
+            autoconf automake libtool make git \
+            mingw-w64-x86_64-toolchain \
+            mingw-w64-x86_64-bzip2 \
+            mingw-w64-x86_64-xz \
+            mingw-w64-x86_64-zlib \
+            mingw-w64-x86_64-libdeflate \
+            mingw-w64-x86_64-gettext
           ci/build-htslib-windows.sh
           export PKG_CONFIG_PATH="$(pwd)/htslib:$PKG_CONFIG_PATH"
           export PKG_CONFIG_DISABLE_UNINSTALLED=1
           HTSLIB_LIBDIR="$(cygpath -m "$(pwd)/htslib")"
           MINGW_LIBDIR="$(cygpath -m /mingw64/lib)"
-          STATIC_LIBS="-static -L$HTSLIB_LIBDIR -L$MINGW_LIBDIR -Wl,--start-group -l:libhts.a -l:libbz2.a -l:liblzma.a -l:libz.a -l:libdeflate.a -l:libregex.a -l:libtre.a -l:libintl.a -Wl,--end-group -lws2_32"
-          echo "Using STATIC_LIBS=$STATIC_LIBS"
+          STATIC_LIBS=(
+            -static
+            "-L$HTSLIB_LIBDIR"
+            "-L$MINGW_LIBDIR"
+            -Wl,--start-group
+            -l:libhts.a
+            -l:libbz2.a
+            -l:liblzma.a
+            -l:libz.a
+            -l:libdeflate.a
+            -l:libregex.a
+            -l:libtre.a
+            -l:libintl.a
+            -Wl,--end-group
+            -lws2_32
+          )
+          echo "Using STATIC_LIBS=${STATIC_LIBS[*]}"
           shards install --without-development
-          crystal build src/depth.cr --release -o bin/$BIN.exe --link-flags="$STATIC_LIBS"
+          crystal build src/depth.cr --release -o bin/$BIN.exe --link-flags="${STATIC_LIBS[*]}"
           file bin/$BIN.exe
           ci/check-portable-windows.sh bin/$BIN.exe
           bin/$BIN --help

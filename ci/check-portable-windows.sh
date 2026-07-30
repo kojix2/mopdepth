@@ -3,8 +3,9 @@ set -euo pipefail
 
 binary=${1:?binary path required}
 
-objdump -p "$binary" | sed -n '/DLL Name/p' | tee dlls.txt
-if grep -Ei "hts|deflate|bz2|lzma|zlib|libgcc|libstdc\\+\\+|libwinpthread|libpcre|libtre|libregex" dlls.txt; then
+dlls=$(objdump -p "$binary" | sed -n '/DLL Name/p')
+printf '%s\n' "$dlls"
+if printf '%s\n' "$dlls" | grep -Ei "hts|deflate|bz2|lzma|zlib|libgcc|libstdc\\+\\+|libwinpthread|libpcre|libtre|libregex"; then
   echo "Error: non-portable DLL dependency linked on Windows" >&2
   exit 1
 fi

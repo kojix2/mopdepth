@@ -11,7 +11,7 @@ git clone --depth 1 --branch "$htslib_ref" https://github.com/samtools/htslib.gi
   ./configure --disable-libcurl --disable-shared --enable-static
   make -j2
   test -f libhts.a || { echo "libhts.a not found" >&2; ls -l; exit 1; }
-  rm -f *.dll *.dll.a *.lib || true
+  rm -f *.dll *.dll.a *.lib
   git rev-parse HEAD
 )
 

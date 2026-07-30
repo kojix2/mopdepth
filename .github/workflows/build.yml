@@ -97,39 +97,16 @@ jobs:
         shell: bash
         run: |
           brew install pkg-config autoconf automake libtool bzip2 xz zlib libdeflate
-          # Build local static htslib without libcurl (to avoid extra non-system deps)
-          git clone --depth 1 --branch develop https://github.com/samtools/htslib.git htslib
-          (
-            cd htslib && \
-            git submodule update --init --recursive && \
-            autoreconf -i && \
-            ./configure --disable-libcurl --disable-shared --enable-static \
-              --with-libdeflate CPPFLAGS="-I$(brew --prefix libdeflate)/include" LDFLAGS="-L$(brew --prefix libdeflate)/lib" && \
-            make
-          )
-          # Confirm Homebrew ships static archives for non-system libraries.
+          ci/build-htslib-macos.sh
           DEFLATE_A="$(brew --prefix libdeflate)/lib/libdeflate.a"
           BZIP2_A="$(brew --prefix bzip2)/lib/libbz2.a"
           LZMA_A="$(brew --prefix xz)/lib/liblzma.a"
           ZLIB_A="$(brew --prefix zlib)/lib/libz.a"
-          for archive in "$DEFLATE_A" "$BZIP2_A" "$LZMA_A" "$ZLIB_A"; do
-            test -f "$archive" || { echo "Error: $archive not found" >&2; exit 1; }
-          done
-          # Create htslib.pc for pkg-config with correct paths and version
-          HTS_VER=$(sed -n 's/^VERSION=//p' htslib/version.sh)
-          case "$HTS_VER" in *.*.*) ;; *.*) HTS_VER="$HTS_VER.0" ;; *) HTS_VER="$HTS_VER.0.0" ;; esac
-          sed -e "s#@-includedir@#$(pwd)/htslib#g" -e "s#@-libdir@#$(pwd)/htslib#g" -e "s#@-PACKAGE_VERSION@#$HTS_VER#g" -e "s#@.PACKAGE_VERSION@#$HTS_VER#g" htslib/htslib.pc.tmp > htslib/htslib.pc
           export PKG_CONFIG_PATH="$(pwd)/htslib:$PKG_CONFIG_PATH"
-          pkg-config --modversion htslib
-          # Force load the static archive to satisfy symbols regardless of link order
           shards install --without-development
           crystal build src/depth.cr --release -o bin/$BIN --link-flags="-Wl,-force_load,$(pwd)/htslib/libhts.a $DEFLATE_A $BZIP2_A $LZMA_A $ZLIB_A -framework CoreFoundation -framework SystemConfiguration"
           chmod +x bin/$BIN
-          otool -L bin/$BIN | tee otool.txt
-          if grep -E -q "lib(hts|deflate|bz2|lzma|z).*dylib|/(opt/homebrew|usr/local)/" otool.txt; then
-            echo "Error: non-portable Homebrew or htslib dylib dependency linked on macOS" >&2
-            exit 1
-          fi
+          ci/check-portable-macos.sh bin/$BIN
           file bin/$BIN
           bin/$BIN --help
           PKG=mopdepth-${VERSION}-${{ matrix.target }}
@@ -144,37 +121,14 @@ jobs:
         shell: msys2 {0}
         run: |
           pacman -S --noconfirm --needed autoconf automake libtool make git mingw-w64-x86_64-toolchain mingw-w64-x86_64-bzip2 mingw-w64-x86_64-xz mingw-w64-x86_64-zlib mingw-w64-x86_64-libdeflate
-          git clone --depth 1 --branch develop https://github.com/samtools/htslib.git htslib
-          cd htslib
-          git submodule update --init --recursive
-          autoreconf -i
-          ./configure --disable-libcurl --disable-shared --enable-static
-          make -j2
-          # ensure static archive exists
-          test -f libhts.a || { echo "libhts.a not found" >&2; ls -l; exit 1; }
-          # remove DLL/import libs to prefer static archive when resolving -lhts
-          rm -f *.dll *.dll.a *.lib || true
-          cd ..
-          for archive in /mingw64/lib/libbz2.a /mingw64/lib/liblzma.a /mingw64/lib/libz.a /mingw64/lib/libdeflate.a /mingw64/lib/libregex.a /mingw64/lib/libtre.a; do
-            test -f "$archive" || { echo "Error: $archive not found" >&2; exit 1; }
-          done
-          # Create htslib.pc for pkg-config with correct paths and version
-          HTS_VER=$(sed -n 's/^VERSION=//p' htslib/version.sh)
-          case "$HTS_VER" in *.*.*) ;; *.*) HTS_VER="$HTS_VER.0" ;; *) HTS_VER="$HTS_VER.0.0" ;; esac
-          sed -e "s#@-includedir@#$(pwd)/htslib#g" -e "s#@-libdir@#$(pwd)/htslib#g" -e "s#@-PACKAGE_VERSION@#$HTS_VER#g" -e "s#@.PACKAGE_VERSION@#$HTS_VER#g" htslib/htslib.pc.tmp > htslib/htslib.pc
+          ci/build-htslib-windows.sh
           export PKG_CONFIG_PATH="$(pwd)/htslib:$PKG_CONFIG_PATH"
-          pkg-config --modversion htslib
-          # Add local htslib to library search path and group static archives to avoid order issues
           STATIC_LIBS="-static -L$(pwd)/htslib -L/mingw64/lib -Wl,--start-group -l:libhts.a -l:libbz2.a -l:liblzma.a -l:libz.a -l:libdeflate.a -l:libregex.a -l:libtre.a -Wl,--end-group -lws2_32"
           echo "Using STATIC_LIBS=$STATIC_LIBS"
           shards install --without-development
           crystal build src/depth.cr --release -o bin/$BIN.exe --link-flags="$STATIC_LIBS"
           file bin/$BIN.exe
-          objdump -p bin/$BIN.exe | sed -n '/DLL Name/p' | tee dlls.txt
-          if grep -Ei "hts|deflate|bz2|lzma|zlib|libgcc|libstdc\\+\\+|libwinpthread|libpcre|libtre|libregex" dlls.txt; then
-            echo "Error: non-portable DLL dependency linked on Windows" >&2
-            exit 1
-          fi
+          ci/check-portable-windows.sh bin/$BIN.exe
           bin/$BIN --help
           PKG=mopdepth-${VERSION}-${{ matrix.target }}
           mkdir -p $PKG

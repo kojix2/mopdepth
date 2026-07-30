@@ -107,21 +107,26 @@ jobs:
               --with-libdeflate CPPFLAGS="-I$(brew --prefix libdeflate)/include" LDFLAGS="-L$(brew --prefix libdeflate)/lib" && \
             make
           )
-          # Confirm Homebrew ships a static libdeflate archive to link
+          # Confirm Homebrew ships static archives for non-system libraries.
           DEFLATE_A="$(brew --prefix libdeflate)/lib/libdeflate.a"
-          test -f "$DEFLATE_A" || { echo "Error: $DEFLATE_A not found" >&2; exit 1; }
+          BZIP2_A="$(brew --prefix bzip2)/lib/libbz2.a"
+          LZMA_A="$(brew --prefix xz)/lib/liblzma.a"
+          ZLIB_A="$(brew --prefix zlib)/lib/libz.a"
+          for archive in "$DEFLATE_A" "$BZIP2_A" "$LZMA_A" "$ZLIB_A"; do
+            test -f "$archive" || { echo "Error: $archive not found" >&2; exit 1; }
+          done
           # Create htslib.pc for pkg-config with correct paths and version
-          HTS_VER=$(grep '#define HTS_VERSION_TEXT' htslib/version.h | sed 's/.*"\(.*\)"/\1/')
+          HTS_VER=$(sh htslib/version.sh numeric)
           sed -e "s#@-includedir@#$(pwd)/htslib#g" -e "s#@-libdir@#$(pwd)/htslib#g" -e "s#@-PACKAGE_VERSION@#$HTS_VER#g" -e "s#@.PACKAGE_VERSION@#$HTS_VER#g" htslib/htslib.pc.tmp > htslib/htslib.pc
           export PKG_CONFIG_PATH="$(pwd)/htslib:$PKG_CONFIG_PATH"
           pkg-config --modversion htslib
           # Force load the static archive to satisfy symbols regardless of link order
           shards install --without-development
-          crystal build src/depth.cr --release -o bin/$BIN --link-flags="-Wl,-force_load,$(pwd)/htslib/libhts.a $DEFLATE_A -lbz2 -llzma -lz -framework CoreFoundation -framework SystemConfiguration"
+          crystal build src/depth.cr --release -o bin/$BIN --link-flags="-Wl,-force_load,$(pwd)/htslib/libhts.a $DEFLATE_A $BZIP2_A $LZMA_A $ZLIB_A -framework CoreFoundation -framework SystemConfiguration"
           chmod +x bin/$BIN
           otool -L bin/$BIN | tee otool.txt
-          if grep -E -q "libhts.*dylib" otool.txt; then
-            echo "Error: dynamic libhts linked on macOS (should be static)" >&2
+          if grep -E -q "lib(hts|deflate|bz2|lzma|z).*dylib|/(opt/homebrew|usr/local)/" otool.txt; then
+            echo "Error: non-portable Homebrew or htslib dylib dependency linked on macOS" >&2
             exit 1
           fi
           file bin/$BIN
@@ -149,17 +154,25 @@ jobs:
           # remove DLL/import libs to prefer static archive when resolving -lhts
           rm -f *.dll *.dll.a *.lib || true
           cd ..
+          for archive in /mingw64/lib/libbz2.a /mingw64/lib/liblzma.a /mingw64/lib/libz.a /mingw64/lib/libdeflate.a /mingw64/lib/libregex.a /mingw64/lib/libtre.a; do
+            test -f "$archive" || { echo "Error: $archive not found" >&2; exit 1; }
+          done
           # Create htslib.pc for pkg-config with correct paths and version
-          HTS_VER=$(grep '#define HTS_VERSION_TEXT' htslib/version.h | sed 's/.*"\(.*\)"/\1/')
+          HTS_VER=$(sh htslib/version.sh numeric)
           sed -e "s#@-includedir@#$(pwd)/htslib#g" -e "s#@-libdir@#$(pwd)/htslib#g" -e "s#@-PACKAGE_VERSION@#$HTS_VER#g" -e "s#@.PACKAGE_VERSION@#$HTS_VER#g" htslib/htslib.pc.tmp > htslib/htslib.pc
           export PKG_CONFIG_PATH="$(pwd)/htslib:$PKG_CONFIG_PATH"
           pkg-config --modversion htslib
           # Add local htslib to library search path and group static archives to avoid order issues
-          STATIC_LIBS="-L$(pwd)/htslib -Wl,--start-group -l:libhts.a -lbz2 -llzma -lz -ldeflate -lregex -ltre -Wl,--end-group -lws2_32"
+          STATIC_LIBS="-static -L$(pwd)/htslib -L/mingw64/lib -Wl,--start-group -l:libhts.a -l:libbz2.a -l:liblzma.a -l:libz.a -l:libdeflate.a -l:libregex.a -l:libtre.a -Wl,--end-group -lws2_32"
           echo "Using STATIC_LIBS=$STATIC_LIBS"
           shards install --without-development
           crystal build src/depth.cr --release -o bin/$BIN.exe --link-flags="$STATIC_LIBS"
           file bin/$BIN.exe
+          objdump -p bin/$BIN.exe | sed -n '/DLL Name/p' | tee dlls.txt
+          if grep -Ei "hts|deflate|bz2|lzma|zlib|libgcc|libstdc\\+\\+|libwinpthread|libpcre|libtre|libregex" dlls.txt; then
+            echo "Error: non-portable DLL dependency linked on Windows" >&2
+            exit 1
+          fi
           bin/$BIN --help
           PKG=mopdepth-${VERSION}-${{ matrix.target }}
           mkdir -p $PKG

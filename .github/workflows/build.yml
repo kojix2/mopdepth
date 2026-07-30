@@ -60,11 +60,14 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "BIN=mopdepth" >> $GITHUB_ENV
 
+      - name: Prepare build directories
+        shell: bash
+        run: mkdir -p bin
+
       - name: Build on Linux (musl)
         if: matrix.target == 'x86_64-unknown-linux-musl'
         shell: bash
         run: |
-          mkdir -p bin
           docker run -d --name alpine -v $(pwd):/workspace -w /workspace crystallang/crystal:latest-alpine tail -f /dev/null
           docker exec alpine apk add --no-cache \
             autoconf automake libtool build-base pkgconf \

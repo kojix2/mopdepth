@@ -167,6 +167,9 @@ jobs:
           # Link statically against libhts and compression libs; keep system ws2_32 dynamic
           export LIBRARY_PATH="$(pwd)/htslib"
           export CRYSTAL_LIBRARY_PATH="$(pwd)/htslib"
+          # Ensure htslib.pc exists for pkg-config
+          cp htslib/htslib-uninstalled.pc htslib/htslib.pc
+          export PKG_CONFIG_PATH="$(pwd)/htslib:$PKG_CONFIG_PATH"
           # Add local htslib to library search path and group static archives to avoid order issues
           STATIC_LIBS="-L$(pwd)/htslib -Wl,--start-group -l:libhts.a -lbz2 -llzma -lz -ldeflate -lregex -ltre -Wl,--end-group -lws2_32"
           echo "Using STATIC_LIBS=$STATIC_LIBS"

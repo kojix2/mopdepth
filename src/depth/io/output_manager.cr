@@ -252,10 +252,8 @@ module Depth::FileIO
       # Close any BGZF streams not wrapped in a buffer (fallback)
       [@f_perbase, @f_regions, @f_quantized, @f_thresholds].each do |io|
         io.try do |file|
-          begin
-            file.close
-          rescue
-          end
+          file.close
+        rescue
         end
       end
 
@@ -299,7 +297,7 @@ module Depth::FileIO
     end
 
     private def wrap(io : (File | HTS::Bgzf)?)
-      return nil unless io.is_a?(HTS::Bgzf)
+      return unless io.is_a?(HTS::Bgzf)
       BgzfLineBuffer.new(io.as(HTS::Bgzf), @buffer_size)
     end
 
@@ -341,8 +339,8 @@ module Depth::FileIO
     end
 
     private def write_raw_line(io : HTS::Bgzf, &)
-      line = String.build do |s|
-        yield s
+      line = String.build do |builder|
+        yield builder
       end
       io.puts(line)
     end
@@ -378,7 +376,7 @@ module Depth::FileIO
 
     private def decimal_scale(precision : Int32) : UInt128?
       return 1_u128 if precision <= 0
-      return nil if precision > 18
+      return if precision > 18
 
       scale = 1_u128
       precision.times { scale *= 10_u128 }

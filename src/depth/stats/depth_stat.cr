@@ -43,11 +43,11 @@ module Depth::Stats
 
     def +(other : DepthStat) : DepthStat
       result = DepthStat.new
-      result.n_bases = self.n_bases + other.n_bases
-      result.sum_depth = self.sum_depth + other.sum_depth
-      result.min_depth = {self.min_depth, other.min_depth}.min
-      result.max_depth = {self.max_depth, other.max_depth}.max
-      result.bases = self.bases + other.bases
+      result.n_bases = n_bases + other.n_bases
+      result.sum_depth = sum_depth + other.sum_depth
+      result.min_depth = {min_depth, other.min_depth}.min
+      result.max_depth = {max_depth, other.max_depth}.max
+      result.bases = bases + other.bases
       result
     end
   end

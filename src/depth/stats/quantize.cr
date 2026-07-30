@@ -28,7 +28,7 @@ module Depth::Stats
         qs = a.split(':').map(&.to_i)
         qs.sort!
         qs
-      rescue ex
+      rescue
         STDERR.puts "[mopdepth] invalid quantize string: '#{qa}'"
         exit(2)
       end
@@ -92,7 +92,6 @@ module Depth::Stats
 
       # Bound the iteration to the requested limit (effective length + 1)
       lim = Math.min(limit, coverage.size)
-
       last_quantized = linear_search(coverage[0], quants)
       last_pos = 0
 
@@ -111,9 +110,14 @@ module Depth::Stats
       end
 
       # Handle the final segment
-      if last_quantized != -1 && last_pos < lim - 1 && last_quantized < lookup.size
-        yield({last_pos, lim - 1, lookup[last_quantized]})
-      end
+      yield_quantized_segment(last_quantized, last_pos, lim - 1, lookup) { |segment| yield segment }
+    end
+
+    private def self.yield_quantized_segment(quantized : Int32, start : Int32, stop : Int32,
+                                             lookup : Array(String), &)
+      return if quantized == -1 || start >= stop || quantized >= lookup.size
+
+      yield({start, stop, lookup[quantized]})
     end
 
     # Backward-compatible overload: consume entire coverage array

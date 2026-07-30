@@ -130,47 +130,67 @@ module Depth::Core
 
     private def accumulate_record!(rec, coverage : Coverage, offset : Int32)
       if @options.fast_mode
-        start_pos = (rec.pos.to_i32 - offset).clamp(0, coverage.size - 1)
-        mark_and_add!(coverage, start_pos, 1)
-        endp = (rec.endpos.to_i32 - offset)
-        endp = coverage.size - 1 if endp >= coverage.size
-        endp = 0 if endp < 0
-        mark_and_add!(coverage, endp, -1)
+        accumulate_fast_record!(rec, coverage, offset)
       elsif @options.fragment_mode
-        return if rec.read2? || !rec.proper_pair? || rec.supplementary?
-        frag_start = Math.min(rec.pos, rec.mate_pos).to_i32 - offset
-        frag_len = rec.isize.abs
-        end_pos = frag_start + frag_len
-        end_pos = coverage.size - 1 if end_pos >= coverage.size
-        startp = frag_start.clamp(0, coverage.size - 1)
-        mark_and_add!(coverage, startp, 1)
-        mark_and_add!(coverage, end_pos, -1)
+        accumulate_fragment_record!(rec, coverage, offset)
       else
-        # Default (per-base) mode with mosdepth-like mate-overlap correction
-        if @options.fast_mode == false && @options.fragment_mode == false &&
-           rec.proper_pair? && !rec.supplementary? && rec.tid == rec.mtid && rec.mate_pos >= 0
-          rec_start = rec.pos.to_i32
-          rec_stop = rec.endpos.to_i32
-          # If this read overlaps its mate and is the earlier (or equal) one, store it; otherwise, if mate was stored, correct overlap now
-          if rec_stop > rec.mate_pos
-            if rec_start < rec.mate_pos
-              @seen[QnameKey.copy(rec)] = capture_seen_mate(rec, rec_start, rec_stop)
-            else
-              qname = QnameKey.view(rec)
-              if rec_start == rec.mate_pos && !@seen.has_key?(qname)
-                @seen[QnameKey.copy(rec)] = capture_seen_mate(rec, rec_start, rec_stop)
-              elsif mate = @seen.delete(qname)
-                correct_mate_overlap_coverage!(rec, mate, rec_start, rec_stop, coverage, offset)
-              end
-            end
-          else
-            if mate = @seen.delete(QnameKey.view(rec))
-              correct_mate_overlap_coverage!(rec, mate, rec_start, rec_stop, coverage, offset)
-            end
-          end
-        end
-        # Always add coverage for this record after possible overlap correction step
-        apply_record_cigar!(rec, rec.pos.to_i32, coverage, offset)
+        accumulate_per_base_record!(rec, coverage, offset)
+      end
+    end
+
+    private def accumulate_fast_record!(rec, coverage : Coverage, offset : Int32)
+      start_pos = (rec.pos.to_i32 - offset).clamp(0, coverage.size - 1)
+      mark_and_add!(coverage, start_pos, 1)
+      endp = (rec.endpos.to_i32 - offset)
+      endp = coverage.size - 1 if endp >= coverage.size
+      endp = 0 if endp < 0
+      mark_and_add!(coverage, endp, -1)
+    end
+
+    private def accumulate_fragment_record!(rec, coverage : Coverage, offset : Int32)
+      return if rec.read2? || !rec.proper_pair? || rec.supplementary?
+
+      frag_start = Math.min(rec.pos, rec.mate_pos).to_i32 - offset
+      frag_len = rec.isize.abs
+      end_pos = frag_start + frag_len
+      end_pos = coverage.size - 1 if end_pos >= coverage.size
+      startp = frag_start.clamp(0, coverage.size - 1)
+      mark_and_add!(coverage, startp, 1)
+      mark_and_add!(coverage, end_pos, -1)
+    end
+
+    private def accumulate_per_base_record!(rec, coverage : Coverage, offset : Int32)
+      correct_record_mate_overlap!(rec, coverage, offset) if mate_overlap_candidate?(rec)
+      apply_record_cigar!(rec, rec.pos.to_i32, coverage, offset)
+    end
+
+    private def mate_overlap_candidate?(rec) : Bool
+      rec.proper_pair? && !rec.supplementary? && rec.tid == rec.mtid && rec.mate_pos >= 0
+    end
+
+    private def correct_record_mate_overlap!(rec, coverage : Coverage, offset : Int32)
+      rec_start = rec.pos.to_i32
+      rec_stop = rec.endpos.to_i32
+
+      if rec_stop > rec.mate_pos
+        store_or_correct_overlapping_mate!(rec, rec_start, rec_stop, coverage, offset)
+      elsif mate = @seen.delete(QnameKey.view(rec))
+        correct_mate_overlap_coverage!(rec, mate, rec_start, rec_stop, coverage, offset)
+      end
+    end
+
+    private def store_or_correct_overlapping_mate!(rec, rec_start : Int32, rec_stop : Int32,
+                                                   coverage : Coverage, offset : Int32)
+      if rec_start < rec.mate_pos
+        @seen[QnameKey.copy(rec)] = capture_seen_mate(rec, rec_start, rec_stop)
+        return
+      end
+
+      qname = QnameKey.view(rec)
+      if rec_start == rec.mate_pos && !@seen.has_key?(qname)
+        @seen[QnameKey.copy(rec)] = capture_seen_mate(rec, rec_start, rec_stop)
+      elsif mate = @seen.delete(qname)
+        correct_mate_overlap_coverage!(rec, mate, rec_start, rec_stop, coverage, offset)
       end
     end
 
@@ -210,7 +230,7 @@ module Depth::Core
         ses.clear
         record_cigar_append_events!(rec, rec_start, ses)
         append_seen_mate_events!(mate, ses)
-        ses.sort! { |a, b| a[0] <=> b[0] }
+        ses.sort! { |left, right| left[0] <=> right[0] }
         pair_depth = 0
         last_pos = 0
         ses.each do |pos, val|
@@ -306,13 +326,7 @@ module Depth::Core
     # Returns: CoverageResult enum values or tid
     def calculate(a : Coverage, r : Region?, offset : Int32 = 0) : Int32
       # Determine tid
-      tid = CoverageResult::ChromNotFound.value
-      if r
-        tid = @bam.header.get_tid(r.chrom)
-      else
-        # if no region chrom provided, process everything by iteration
-        tid = CoverageResult::AllChroms.value
-      end
+      tid = r ? @bam.header.get_tid(r.chrom) : CoverageResult::AllChroms.value
 
       return CoverageResult::ChromNotFound.value if tid == CoverageResult::ChromNotFound.value
 

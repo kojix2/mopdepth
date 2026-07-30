@@ -31,17 +31,27 @@ module Depth
       raise ArgumentError.new("Invalid MAPQ threshold") if mapq < 0
       raise ArgumentError.new("Invalid thread count") if threads < 0
 
-      if min_frag_len >= 0 && max_frag_len >= 0 && min_frag_len > max_frag_len
-        raise ArgumentError.new("min_frag_len cannot be greater than max_frag_len")
-      end
+      validate_fragment_lengths!
+      validate_mode_combination!
+      validate_region_options!
+    end
 
-      if fast_mode? && fragment_mode?
-        raise ArgumentError.new("--fast-mode and --fragment-mode cannot be used together")
-      end
+    private def validate_fragment_lengths!
+      return unless min_frag_len >= 0 && max_frag_len >= 0 && min_frag_len > max_frag_len
 
-      if has_thresholds? && !has_regions?
-        raise ArgumentError.new("--thresholds can only be used when --by is specified")
-      end
+      raise ArgumentError.new("min_frag_len cannot be greater than max_frag_len")
+    end
+
+    private def validate_mode_combination!
+      return unless fast_mode? && fragment_mode?
+
+      raise ArgumentError.new("--fast-mode and --fragment-mode cannot be used together")
+    end
+
+    private def validate_region_options!
+      return if !has_thresholds? || has_regions?
+
+      raise ArgumentError.new("--thresholds can only be used when --by is specified")
     end
 
     def to_options : Core::Options
@@ -68,8 +78,8 @@ module Depth
     end
 
     def bed_path : String?
-      return nil unless has_regions?
-      return nil if by.each_char.all?(&.ascii_number?)
+      return unless has_regions?
+      return if by.each_char.all?(&.ascii_number?)
       by
     end
 

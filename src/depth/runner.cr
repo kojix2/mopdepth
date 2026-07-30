@@ -21,182 +21,230 @@ module Depth
 
     def run
       @config.validate!
+      region = FileIO.parse_region_str(@config.chrom)
+      opts = @config.to_options
+      bam = open_bam
 
-      # Open BAM/CRAM
+      output = FileIO::OutputManager.new(@config)
+      write_threshold_header(output)
+
+      begin
+        targets = selected_targets(load_targets(bam), region)
+        bed_map = load_bed_map
+        state = ProcessingState.new(@config.use_median?)
+        process_targets(bam, opts, targets, region, bed_map, output, state)
+        write_total_outputs(output, state)
+      ensure
+        output.close_all
+      end
+    end
+
+    private class ProcessingState
+      getter global_dist : Array(Int64)
+      getter total_global_dist : Array(Int64)
+      getter region_dist : Array(Int64)
+      getter total_region_dist : Array(Int64)
+      getter cs : Stats::IntHistogram
+      property global_stat : Stats::DepthStat
+      property global_region_stat : Stats::DepthStat
+
+      def initialize(use_median : Bool)
+        @global_dist = Array(Int64).new(512, 0_i64)
+        @total_global_dist = Array(Int64).new(512, 0_i64)
+        @region_dist = Array(Int64).new(512, 0_i64)
+        @total_region_dist = Array(Int64).new(512, 0_i64)
+        @global_stat = Stats::DepthStat.new
+        @global_region_stat = Stats::DepthStat.new
+        @cs = Stats::IntHistogram.new(use_median ? 65_536 : 0)
+      end
+    end
+
+    private def open_bam : HTS::Bam
       bam = HTS::Bam.open(@config.path, threads: @config.threads)
       begin
         bam.load_index
       rescue ex
         raise "Failed to load index for #{@config.path}: #{ex.message}"
       end
+      bam
+    end
 
-      region = FileIO.parse_region_str(@config.chrom)
-      opts = @config.to_options
+    private def write_threshold_header(output : FileIO::OutputManager)
+      return unless @config.has_thresholds?
 
-      # Create output manager
-      output = FileIO::OutputManager.new(@config)
+      output.write_thresholds_header(@config.threshold_values)
+    end
 
-      # Write threshold header if needed
-      if @config.has_thresholds?
-        thresholds = @config.threshold_values
-        output.write_thresholds_header(thresholds)
+    private def load_targets(bam : HTS::Bam) : Array(Core::Target)
+      target_names = bam.header.target_names
+      target_lengths = bam.header.target_len
+      target_names.map_with_index do |name, i|
+        Core::Target.new(name, target_lengths[i].to_i32, i)
+      end
+    end
+
+    private def selected_targets(targets : Array(Core::Target), region : Core::Region?) : Array(Core::Target)
+      return targets unless selected_region = region
+
+      selected = targets.select { |target| target.name == selected_region.chrom }
+      raise ConfigError.new("Chromosome not found: #{selected_region.chrom}") if selected.empty?
+      selected
+    end
+
+    private def load_bed_map : Hash(String, Array(Core::Region))?
+      return unless bed_path = @config.bed_path
+
+      FileIO.read_bed(bed_path)
+    end
+
+    private def process_targets(bam : HTS::Bam, opts : Core::Options, targets : Array(Core::Target),
+                                region : Core::Region?, bed_map : Hash(String, Array(Core::Region))?,
+                                output : FileIO::OutputManager, state : ProcessingState)
+      calculator = Core::CoverageCalculator.new(bam, opts)
+      coverage = Core::Coverage.new(0)
+      coverage_dirty = false
+      window = @config.window_size
+
+      targets.each do |target|
+        next if skip_target?(target, bed_map)
+
+        slice = target_slice(target, region)
+        prepare_coverage!(coverage, slice[:target_size], coverage_dirty)
+        tid = calculator.calculate(coverage, slice[:query_region], slice[:offset])
+        next if tid == Core::CoverageResult::ChromNotFound.value
+
+        coverage_dirty = finalize_coverage!(coverage, tid, slice[:target_size])
+        process_target_outputs(target, coverage, tid, slice, window, bed_map, output, state)
+      end
+    end
+
+    private def skip_target?(target : Core::Target, bed_map : Hash(String, Array(Core::Region))?) : Bool
+      return false unless @config.no_per_base? && bed_map
+
+      !bed_map.has_key?(target.name)
+    end
+
+    private def target_slice(target : Core::Target, region : Core::Region?)
+      query_region = if selected_region = region
+                       target.name == selected_region.chrom ? selected_region : Core::Region.new(target.name, 0, 0)
+                     else
+                       Core::Region.new(target.name, 0, 0)
+                     end
+
+      offset = 0
+      effective_len = target.length
+      if region && target.name == query_region.chrom && (query_region.start > 0 || query_region.stop > 0)
+        offset = query_region.start
+        stop = (query_region.stop > 0 ? query_region.stop : target.length)
+        effective_len = stop - offset
       end
 
-      begin
-        # Get reference sequences from header using hts.cr API
-        target_names = bam.header.target_names
-        target_lengths = bam.header.target_len
-        targets = target_names.map_with_index do |name, i|
-          Core::Target.new(name, target_lengths[i].to_i32, i)
+      {query_region: query_region, offset: offset, effective_len: effective_len, target_size: effective_len + 1}
+    end
+
+    private def prepare_coverage!(coverage : Core::Coverage, target_size : Int32, coverage_dirty : Bool)
+      if coverage.size < target_size
+        coverage.concat(Array(Int32).new(target_size - coverage.size, 0))
+      end
+      clear_coverage!(coverage, target_size) if coverage_dirty
+    end
+
+    private def clear_coverage!(coverage : Core::Coverage, target_size : Int32)
+      i_full = 0
+      while i_full < target_size
+        coverage[i_full] = 0
+        i_full += 1
+      end
+    end
+
+    private def finalize_coverage!(coverage : Core::Coverage, tid : Int32, target_size : Int32) : Bool
+      return false if tid == Core::CoverageResult::NoData.value
+
+      i = 0
+      sum = 0
+      while i < target_size
+        sum += coverage[i]
+        coverage[i] = sum
+        i += 1
+      end
+      true
+    end
+
+    private def process_target_outputs(target : Core::Target, coverage : Core::Coverage, tid : Int32, slice,
+                                       window : Int32, bed_map : Hash(String, Array(Core::Region))?,
+                                       output : FileIO::OutputManager, state : ProcessingState)
+      write_per_base_intervals(target, coverage, tid, slice, output)
+      write_quantized_intervals(target, coverage, tid, output, slice[:offset], slice[:target_size]) if output.f_quantized && @config.has_quantize?
+
+      chrom_region_stat = write_regions_if_needed(target, coverage, tid, slice, window, bed_map, output, state)
+      write_target_stats(target, coverage, tid, slice[:target_size], chrom_region_stat, output, state)
+      write_target_distributions(target, output, state)
+    end
+
+    private def write_per_base_intervals(target : Core::Target, coverage : Core::Coverage, tid : Int32,
+                                         slice, output : FileIO::OutputManager)
+      return unless output.f_perbase
+
+      if tid == Core::CoverageResult::NoData.value
+        write_len = @config.chrom.empty? ? target.length : slice[:effective_len]
+        output.write_per_base_interval(target.name, slice[:offset], slice[:offset] + write_len, 0)
+      else
+        self.class.each_constant_segment(coverage, slice[:target_size] - 1) do |(s, e, v)|
+          output.write_per_base_interval(target.name, s + slice[:offset], e + slice[:offset], v)
         end
+      end
+    end
 
-        sub_targets = if selected_region = region
-                        selected = targets.select { |target| target.name == selected_region.chrom }
-                        # If a chromosome was specified but not found, fail (tests expect non-zero status)
-                        if selected.empty?
-                          raise ConfigError.new("Chromosome not found: #{selected_region.chrom}")
-                        end
-                        selected
-                      else
-                        targets
-                      end
+    private def write_regions_if_needed(target : Core::Target, coverage : Core::Coverage, tid : Int32, slice,
+                                        window : Int32, bed_map : Hash(String, Array(Core::Region))?,
+                                        output : FileIO::OutputManager, state : ProcessingState) : Stats::DepthStat
+      return Stats::DepthStat.new unless output.f_regions
 
-        # Initialize statistics
-        global_dist = Array(Int64).new(512, 0_i64)
-        total_global_dist = Array(Int64).new(512, 0_i64)
-        region_dist = Array(Int64).new(512, 0_i64)
-        total_region_dist = Array(Int64).new(512, 0_i64)
-        global_stat = Stats::DepthStat.new
-        global_region_stat = Stats::DepthStat.new
-        cs = Stats::IntHistogram.new(@config.use_median? ? 65_536 : 0)
+      write_region_stats_with_offset(target, coverage, tid, window, bed_map, state.cs, output,
+        state.region_dist, slice[:offset], slice[:effective_len])
+    end
 
-        # Handle window/BED regions
-        bed_map : Hash(String, Array(Core::Region))? = nil
-        window = @config.window_size
-        if bed_path = @config.bed_path
-          bed_map = FileIO.read_bed(bed_path)
-        end
+    private def write_target_stats(target : Core::Target, coverage : Core::Coverage, tid : Int32, target_size : Int32,
+                                   chrom_region_stat : Stats::DepthStat, output : FileIO::OutputManager,
+                                   state : ProcessingState)
+      return if tid == Core::CoverageResult::NoData.value
 
-        # Create coverage calculator
-        calculator = Core::CoverageCalculator.new(bam, opts)
+      self.class.bump_distribution!(state.global_dist, coverage, 0, target_size - 1)
+      chrom_stat = Stats::DepthStat.from_array(coverage, 0, target_size - 2)
+      state.global_stat = state.global_stat + chrom_stat
+      output.write_summary_line(target.name, chrom_stat)
+      write_target_region_stat(target, chrom_region_stat, output, state)
+    end
 
-        # Reusable coverage buffer (grow-only). We'll only use [0, effective_len]
-        coverage = Core::Coverage.new(0)
-        coverage_dirty = false
+    private def write_target_region_stat(target : Core::Target, chrom_region_stat : Stats::DepthStat,
+                                         output : FileIO::OutputManager, state : ProcessingState)
+      return unless output.f_regions
 
-        # Process each target
-        sub_targets.each do |target|
-          # Skip if no regions for this chrom and we won't write per-base
-          if @config.no_per_base? && (regions_by_chrom = bed_map) && !regions_by_chrom.has_key?(target.name)
-            next
-          end
+      state.global_region_stat = state.global_region_stat + chrom_region_stat
+      output.write_summary_line("#{target.name}_region", chrom_region_stat)
+    end
 
-          # Determine query region and sizing
-          query_region = if selected_region = region
-                           target.name == selected_region.chrom ? selected_region : Core::Region.new(target.name, 0, 0)
-                         else
-                           Core::Region.new(target.name, 0, 0)
-                         end
+    private def write_target_distributions(target : Core::Target, output : FileIO::OutputManager, state : ProcessingState)
+      if f_global = output.f_global
+        self.class.write_distribution(f_global.as(::IO), target.name, state.global_dist)
+        self.class.sum_into!(state.total_global_dist, state.global_dist)
+      end
+      if f_region = output.f_region
+        self.class.write_distribution(f_region.as(::IO), target.name, state.region_dist)
+        self.class.sum_into!(state.total_region_dist, state.region_dist)
+        state.region_dist.fill(0_i64)
+      end
+      state.global_dist.fill(0_i64)
+    end
 
-          # If a region is provided, shrink coverage to [start, stop); otherwise use full chromosome
-          offset = 0
-          effective_len = target.length
-          if region && target.name == query_region.chrom && (query_region.start > 0 || query_region.stop > 0)
-            offset = query_region.start
-            stop = (query_region.stop > 0 ? query_region.stop : target.length)
-            effective_len = (stop - offset)
-          end
-
-          target_size = effective_len + 1
-          if coverage.size < target_size
-            # grow once; keep capacity for reuse
-            coverage.concat(Array(Int32).new(target_size - coverage.size, 0))
-          end
-          if coverage_dirty
-            i_full = 0
-            while i_full < target_size
-              coverage[i_full] = 0
-              i_full += 1
-            end
-            coverage_dirty = false
-          end
-
-          tid = calculator.calculate(coverage, query_region, offset)
-          next if tid == Core::CoverageResult::ChromNotFound.value
-
-          # Build final coverage from diff-array for [0, effective_len]
-          if tid != Core::CoverageResult::NoData.value
-            i = 0
-            sum = 0
-            while i < target_size
-              sum += coverage[i]
-              coverage[i] = sum
-              i += 1
-            end
-            coverage_dirty = true
-          end
-
-          # Write per-base intervals
-          if output.f_perbase
-            if tid == Core::CoverageResult::NoData.value
-              write_len = (region && target.name == query_region.chrom) ? effective_len : target.length
-              output.write_per_base_interval(target.name, offset, offset + write_len, 0)
-            else
-              # restrict per-base segments to [0, effective_len]
-              self.class.each_constant_segment(coverage, target_size - 1) do |(s, e, v)|
-                output.write_per_base_interval(target.name, s + offset, e + offset, v)
-              end
-            end
-          end
-
-          # Write quantized intervals
-          if output.f_quantized && @config.has_quantize?
-            write_quantized_intervals(target, coverage, tid, output, offset, target_size)
-          end
-
-          # Process regions (window or BED)
-          chrom_region_stat = Stats::DepthStat.new
-          if output.f_regions
-            chrom_region_stat = write_region_stats_with_offset(target, coverage, tid, window, bed_map, cs, output, region_dist, offset, effective_len)
-          end
-
-          # Process per-chromosome distributions and stats
-          if tid != Core::CoverageResult::NoData.value
-            self.class.bump_distribution!(global_dist, coverage, 0, target_size - 1)
-            chrom_stat = Stats::DepthStat.from_array(coverage, 0, target_size - 2)
-            global_stat = global_stat + chrom_stat
-            output.write_summary_line(target.name, chrom_stat)
-            if output.f_regions
-              global_region_stat = global_region_stat + chrom_region_stat
-              output.write_summary_line("#{target.name}_region", chrom_region_stat)
-            end
-          end
-
-          # Write distributions
-          if f_global = output.f_global
-            self.class.write_distribution(f_global.as(::IO), target.name, global_dist)
-            # accumulate into genome-wide total
-            self.class.sum_into!(total_global_dist, global_dist)
-          end
-          if f_region = output.f_region
-            self.class.write_distribution(f_region.as(::IO), target.name, region_dist)
-            # accumulate into genome-wide total for regions
-            self.class.sum_into!(total_region_dist, region_dist)
-            region_dist.fill(0_i64)
-          end
-          global_dist.fill(0_i64)
-        end
-        # Append mosdepth-like total lines
-        output.write_summary_total(global_stat)
-        output.write_summary_line("total_region", global_region_stat) if output.f_regions
-        if f_global = output.f_global
-          self.class.write_distribution(f_global.as(::IO), "total", total_global_dist)
-        end
-        if f_region = output.f_region
-          self.class.write_distribution(f_region.as(::IO), "total", total_region_dist)
-        end
-      ensure
-        output.close_all
+    private def write_total_outputs(output : FileIO::OutputManager, state : ProcessingState)
+      output.write_summary_total(state.global_stat)
+      output.write_summary_line("total_region", state.global_region_stat) if output.f_regions
+      if f_global = output.f_global
+        self.class.write_distribution(f_global.as(::IO), "total", state.total_global_dist)
+      end
+      if f_region = output.f_region
+        self.class.write_distribution(f_region.as(::IO), "total", state.total_region_dist)
       end
     end
 

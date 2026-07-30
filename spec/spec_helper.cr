@@ -16,9 +16,9 @@ module TestBin
     unless File.exists?(binary)
       status = Process.run("crystal", ["build", "src/depth.cr", "--release", "-o", binary],
         chdir: Dir.current,
-        output: Process::Redirect::Close,
-        error: Process::Redirect::Close)
-      raise "Failed to build mopdepth" unless status.success?
+        output: Process::Redirect::Inherit,
+        error: Process::Redirect::Inherit)
+      raise "Failed to build mopdepth: exit code #{status.exit_code}" unless status.success?
     end
     @@built = true
   end

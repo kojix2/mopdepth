@@ -5,6 +5,15 @@ on:
     branches: ["*"]
     tags: ["v*"]
   pull_request:
+  workflow_dispatch:
+    inputs:
+      htslib_ref:
+        description: htslib branch or tag to build
+        default: develop
+        required: false
+
+env:
+  HTSLIB_REF: ${{ github.event.inputs.htslib_ref || 'develop' }}
 
 jobs:
   build:
@@ -76,7 +85,7 @@ jobs:
             bzip2-dev bzip2-static \
             xz-dev xz-static
           docker exec alpine sh -c "
-            git clone --depth 1 --branch develop https://github.com/samtools/htslib.git htslib &&
+            git clone --depth 1 --branch \"$HTSLIB_REF\" https://github.com/samtools/htslib.git htslib &&
             cd htslib &&
             git submodule update --init --recursive &&
             autoreconf -i && ./configure --disable-libcurl --with-libdeflate &&

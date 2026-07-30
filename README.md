@@ -30,7 +30,7 @@ A fast BAM/CRAM depth calculation tool written in Crystal, inspired by [mosdepth
 git clone https://github.com/kojix2/mopdepth
 cd mopdepth
 shards install
-shares build --release
+shards build --release
 ```
 
 ## Usage
@@ -57,7 +57,12 @@ shares build --release
 - `-x, --fast-mode`: Fast mode (read start/end positions only)
 - `-a, --fragment-mode`: Count full fragment (proper pairs only)
 - `-m, --use-median`: Use median for region stats instead of mean
-- `-M, --mos`: Use mosdepth-compatible filenames (mosdepth.*); default is depth.*
+- `-q, --quantize QUANTIZE`: Write quantized output (for example, `0:1:4:`)
+- `-T, --thresholds THRESHOLDS`: Comma-separated thresholds for region coverage
+- `-F, --flag FLAG`: Exclude reads with FLAG bits set
+- `-i, --include-flag FLAG`: Include only reads with FLAG bits set
+- `-R, --read-groups GROUPS`: Comma-separated read group IDs
+- `-M, --mos`: Use mosdepth-compatible filenames (mosdepth.*); default is mopdepth.*
 - `-v, --version`: Show version
 - `-h, --help`: Show help message
 
@@ -72,10 +77,12 @@ shares build --release
 ### Output files
 
 - Summary: `<prefix>.(mopdepth|mosdepth).summary.txt`
-- Per-base: `<prefix>.per-base.bed` (unless `-n`)
+- Per-base: `<prefix>.per-base.bed.gz` (unless `-n`)
 - Global dist: `<prefix>.(mopdepth|mosdepth).global.dist.txt`
-- Regions: `<prefix>.regions.bed` (when `--by`)
+- Regions: `<prefix>.regions.bed.gz` (when `--by`)
 - Region dist: `<prefix>.(mopdepth|mosdepth).region.dist.txt` (when `--by`)
+- Quantized: `<prefix>.quantized.bed.gz` (when `--quantize`)
+- Thresholds: `<prefix>.thresholds.bed.gz` (when `--thresholds` and `--by`)
 
 By default, files are named with the `mopdepth.*` label. Use `-M/--mos` to switch to `mosdepth.*`.
 
@@ -85,7 +92,7 @@ The summary file contains the following columns:
 
 - `chrom`: Chromosome name
 - `length`: Chromosome length
-- `sum_depth`: Total depth (sum of all depths)
+- `bases`: Total depth (sum of all depths)
 - `mean`: Mean depth
 - `min`: Minimum depth
 - `max`: Maximum depth

@@ -14,6 +14,7 @@ module TestBin
   def self.ensure_built!
     return if @@built && File.exists?(binary)
     unless File.exists?(binary)
+      FileUtils.mkdir_p(File.dirname(binary))
       status = Process.run("crystal", ["build", "src/depth.cr", "--release", "-o", binary],
         chdir: Dir.current,
         output: Process::Redirect::Inherit,

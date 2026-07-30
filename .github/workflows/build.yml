@@ -116,7 +116,8 @@ jobs:
             test -f "$archive" || { echo "Error: $archive not found" >&2; exit 1; }
           done
           # Create htslib.pc for pkg-config with correct paths and version
-          HTS_VER=$(sh htslib/version.sh numeric)
+          HTS_VER=$(sed -n 's/^VERSION=//p' htslib/version.sh)
+          case "$HTS_VER" in *.*.*) ;; *.*) HTS_VER="$HTS_VER.0" ;; *) HTS_VER="$HTS_VER.0.0" ;; esac
           sed -e "s#@-includedir@#$(pwd)/htslib#g" -e "s#@-libdir@#$(pwd)/htslib#g" -e "s#@-PACKAGE_VERSION@#$HTS_VER#g" -e "s#@.PACKAGE_VERSION@#$HTS_VER#g" htslib/htslib.pc.tmp > htslib/htslib.pc
           export PKG_CONFIG_PATH="$(pwd)/htslib:$PKG_CONFIG_PATH"
           pkg-config --modversion htslib
@@ -158,7 +159,8 @@ jobs:
             test -f "$archive" || { echo "Error: $archive not found" >&2; exit 1; }
           done
           # Create htslib.pc for pkg-config with correct paths and version
-          HTS_VER=$(sh htslib/version.sh numeric)
+          HTS_VER=$(sed -n 's/^VERSION=//p' htslib/version.sh)
+          case "$HTS_VER" in *.*.*) ;; *.*) HTS_VER="$HTS_VER.0" ;; *) HTS_VER="$HTS_VER.0.0" ;; esac
           sed -e "s#@-includedir@#$(pwd)/htslib#g" -e "s#@-libdir@#$(pwd)/htslib#g" -e "s#@-PACKAGE_VERSION@#$HTS_VER#g" -e "s#@.PACKAGE_VERSION@#$HTS_VER#g" htslib/htslib.pc.tmp > htslib/htslib.pc
           export PKG_CONFIG_PATH="$(pwd)/htslib:$PKG_CONFIG_PATH"
           pkg-config --modversion htslib

@@ -21,7 +21,8 @@ for archive in \
   /mingw64/lib/libz.a \
   /mingw64/lib/libdeflate.a \
   /mingw64/lib/libregex.a \
-  /mingw64/lib/libtre.a; do
+  /mingw64/lib/libtre.a \
+  /mingw64/lib/libintl.a; do
   test -f "$archive" || { echo "Error: $archive not found" >&2; exit 1; }
 done
 

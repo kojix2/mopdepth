@@ -124,8 +124,9 @@ jobs:
           # Confirm Homebrew ships a static libdeflate archive to link
           DEFLATE_A="$(brew --prefix libdeflate)/lib/libdeflate.a"
           test -f "$DEFLATE_A" || { echo "Error: $DEFLATE_A not found" >&2; exit 1; }
-          # Ensure htslib.pc exists for pkg-config (uninstalled version uses local paths)
-          cp htslib/htslib-uninstalled.pc htslib/htslib.pc
+          # Create htslib.pc for pkg-config with correct paths and version
+          HTS_VER=$(grep '#define HTS_VERSION_TEXT' htslib/version.h | sed 's/.*"\(.*\)"/\1/')
+          sed -e "s#@-includedir@#$(pwd)/htslib#g" -e "s#@-libdir@#$(pwd)/htslib#g" -e "s#@.PACKAGE_VERSION@#$HTS_VER#g" htslib/htslib.pc.tmp > htslib/htslib.pc
           # Prefer the local static libhts.a
           export LIBRARY_PATH="$(pwd)/htslib"
           export CRYSTAL_LIBRARY_PATH="$(pwd)/htslib"
@@ -167,8 +168,9 @@ jobs:
           # Link statically against libhts and compression libs; keep system ws2_32 dynamic
           export LIBRARY_PATH="$(pwd)/htslib"
           export CRYSTAL_LIBRARY_PATH="$(pwd)/htslib"
-          # Ensure htslib.pc exists for pkg-config
-          cp htslib/htslib-uninstalled.pc htslib/htslib.pc
+          # Create htslib.pc for pkg-config with correct paths and version
+          HTS_VER=$(grep '#define HTS_VERSION_TEXT' htslib/version.h | sed 's/.*"\(.*\)"/\1/')
+          sed -e "s#@-includedir@#$(pwd)/htslib#g" -e "s#@-libdir@#$(pwd)/htslib#g" -e "s#@.PACKAGE_VERSION@#$HTS_VER#g" htslib/htslib.pc.tmp > htslib/htslib.pc
           export PKG_CONFIG_PATH="$(pwd)/htslib:$PKG_CONFIG_PATH"
           # Add local htslib to library search path and group static archives to avoid order issues
           STATIC_LIBS="-L$(pwd)/htslib -Wl,--start-group -l:libhts.a -lbz2 -llzma -lz -ldeflate -lregex -ltre -Wl,--end-group -lws2_32"

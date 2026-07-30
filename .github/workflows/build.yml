@@ -124,9 +124,12 @@ jobs:
           # Confirm Homebrew ships a static libdeflate archive to link
           DEFLATE_A="$(brew --prefix libdeflate)/lib/libdeflate.a"
           test -f "$DEFLATE_A" || { echo "Error: $DEFLATE_A not found" >&2; exit 1; }
+          # Ensure htslib.pc exists for pkg-config (uninstalled version uses local paths)
+          cp htslib/htslib-uninstalled.pc htslib/htslib.pc
           # Prefer the local static libhts.a
           export LIBRARY_PATH="$(pwd)/htslib"
           export CRYSTAL_LIBRARY_PATH="$(pwd)/htslib"
+          export PKG_CONFIG_PATH="$(pwd)/htslib:$PKG_CONFIG_PATH"
           # Force load the static archive to satisfy symbols regardless of link order
           shards install --without-development
           crystal build src/depth.cr --release -o bin/$BIN --link-flags="-Wl,-force_load,$(pwd)/htslib/libhts.a $DEFLATE_A -lbz2 -llzma -lz -framework CoreFoundation -framework SystemConfiguration"

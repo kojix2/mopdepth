@@ -103,6 +103,7 @@ jobs:
           LZMA_A="$(brew --prefix xz)/lib/liblzma.a"
           ZLIB_A="$(brew --prefix zlib)/lib/libz.a"
           export PKG_CONFIG_PATH="$(pwd)/htslib:$PKG_CONFIG_PATH"
+          export PKG_CONFIG_DISABLE_UNINSTALLED=1
           shards install --without-development
           crystal build src/depth.cr --release -o bin/$BIN --link-flags="-Wl,-force_load,$(pwd)/htslib/libhts.a $DEFLATE_A $BZIP2_A $LZMA_A $ZLIB_A -framework CoreFoundation -framework SystemConfiguration"
           chmod +x bin/$BIN
@@ -123,6 +124,7 @@ jobs:
           pacman -S --noconfirm --needed autoconf automake libtool make git mingw-w64-x86_64-toolchain mingw-w64-x86_64-bzip2 mingw-w64-x86_64-xz mingw-w64-x86_64-zlib mingw-w64-x86_64-libdeflate
           ci/build-htslib-windows.sh
           export PKG_CONFIG_PATH="$(pwd)/htslib:$PKG_CONFIG_PATH"
+          export PKG_CONFIG_DISABLE_UNINSTALLED=1
           STATIC_LIBS="-static -L$(pwd)/htslib -L/mingw64/lib -Wl,--start-group -l:libhts.a -l:libbz2.a -l:liblzma.a -l:libz.a -l:libdeflate.a -l:libregex.a -l:libtre.a -Wl,--end-group -lws2_32"
           echo "Using STATIC_LIBS=$STATIC_LIBS"
           shards install --without-development

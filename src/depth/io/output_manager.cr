@@ -243,22 +243,44 @@ module Depth::FileIO
     end
 
     def close_all
-      [@f_summary, @f_global, @f_region].each(&.try(&.close))
+      close_stream(@f_summary, "summary")
+      close_stream(@f_global, "global distribution")
+      close_stream(@f_region, "region distribution")
+
       # Flush and close buffered BGZF streams
-      @perbase_buf.try(&.close)
-      @regions_buf.try(&.close)
-      @quantized_buf.try(&.close)
-      @thresholds_buf.try(&.close)
+      close_buffer(@perbase_buf, "per-base")
+      close_buffer(@regions_buf, "regions")
+      close_buffer(@quantized_buf, "quantized")
+      close_buffer(@thresholds_buf, "thresholds")
+
       # Close any BGZF streams not wrapped in a buffer (fallback)
-      [@f_perbase, @f_regions, @f_quantized, @f_thresholds].each do |io|
-        io.try do |file|
-          file.close
-        rescue
-        end
-      end
+      close_stream(@f_perbase, "per-base") unless @perbase_buf
+      close_stream(@f_regions, "regions") unless @regions_buf
+      close_stream(@f_quantized, "quantized") unless @quantized_buf
+      close_stream(@f_thresholds, "thresholds") unless @thresholds_buf
 
       # Always build CSI indices for BGZF interval outputs
       build_csi_indices
+    end
+
+    private def close_buffer(buffer : BgzfLineBuffer?, label : String)
+      return unless buffer
+
+      buffer.close
+    rescue ex
+      warn_close_failure(label, ex)
+    end
+
+    private def close_stream(io : (File | HTS::Bgzf)?, label : String)
+      return unless io
+
+      io.close
+    rescue ex
+      warn_close_failure(label, ex)
+    end
+
+    private def warn_close_failure(label : String, ex : Exception)
+      STDERR.puts "[mopdepth] warning: failed to close #{label} output: #{ex.message}"
     end
 
     private def build_csi_indices

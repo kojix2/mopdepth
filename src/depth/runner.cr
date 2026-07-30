@@ -59,6 +59,17 @@ module Depth
       end
     end
 
+    private struct TargetSlice
+      getter query_region : Core::Region
+      getter offset : Int32
+      getter effective_len : Int32
+      getter target_size : Int32
+
+      def initialize(@query_region : Core::Region, @offset : Int32, @effective_len : Int32)
+        @target_size = effective_len + 1
+      end
+    end
+
     private def open_bam : HTS::Bam
       bam = HTS::Bam.open(@config.path, threads: @config.threads)
       begin
@@ -109,11 +120,11 @@ module Depth
         next if skip_target?(target, bed_map)
 
         slice = target_slice(target, region)
-        prepare_coverage!(coverage, slice[:target_size], coverage_dirty)
-        tid = calculator.calculate(coverage, slice[:query_region], slice[:offset])
+        prepare_coverage!(coverage, slice.target_size, coverage_dirty)
+        tid = calculator.calculate(coverage, slice.query_region, slice.offset)
         next if tid == Core::CoverageResult::ChromNotFound.value
 
-        coverage_dirty = finalize_coverage!(coverage, tid, slice[:target_size])
+        coverage_dirty = finalize_coverage!(coverage, tid, slice.target_size)
         process_target_outputs(target, coverage, tid, slice, window, bed_map, output, state)
       end
     end
@@ -124,7 +135,7 @@ module Depth
       !bed_map.has_key?(target.name)
     end
 
-    private def target_slice(target : Core::Target, region : Core::Region?)
+    private def target_slice(target : Core::Target, region : Core::Region?) : TargetSlice
       query_region = if selected_region = region
                        target.name == selected_region.chrom ? selected_region : Core::Region.new(target.name, 0, 0)
                      else
@@ -139,7 +150,7 @@ module Depth
         effective_len = stop - offset
       end
 
-      {query_region: query_region, offset: offset, effective_len: effective_len, target_size: effective_len + 1}
+      TargetSlice.new(query_region, offset, effective_len)
     end
 
     private def prepare_coverage!(coverage : Core::Coverage, target_size : Int32, coverage_dirty : Bool)
@@ -170,38 +181,40 @@ module Depth
       true
     end
 
-    private def process_target_outputs(target : Core::Target, coverage : Core::Coverage, tid : Int32, slice,
+    private def process_target_outputs(target : Core::Target, coverage : Core::Coverage, tid : Int32,
+                                       slice : TargetSlice,
                                        window : Int32, bed_map : Hash(String, Array(Core::Region))?,
                                        output : FileIO::OutputManager, state : ProcessingState)
       write_per_base_intervals(target, coverage, tid, slice, output)
-      write_quantized_intervals(target, coverage, tid, output, slice[:offset], slice[:target_size]) if output.f_quantized && @config.has_quantize?
+      write_quantized_intervals(target, coverage, tid, output, slice.offset, slice.target_size) if output.f_quantized && @config.has_quantize?
 
       chrom_region_stat = write_regions_if_needed(target, coverage, tid, slice, window, bed_map, output, state)
-      write_target_stats(target, coverage, tid, slice[:target_size], chrom_region_stat, output, state)
+      write_target_stats(target, coverage, tid, slice.target_size, chrom_region_stat, output, state)
       write_target_distributions(target, output, state)
     end
 
     private def write_per_base_intervals(target : Core::Target, coverage : Core::Coverage, tid : Int32,
-                                         slice, output : FileIO::OutputManager)
+                                         slice : TargetSlice, output : FileIO::OutputManager)
       return unless output.f_perbase
 
       if tid == Core::CoverageResult::NoData.value
-        write_len = @config.chrom.empty? ? target.length : slice[:effective_len]
-        output.write_per_base_interval(target.name, slice[:offset], slice[:offset] + write_len, 0)
+        write_len = @config.chrom.empty? ? target.length : slice.effective_len
+        output.write_per_base_interval(target.name, slice.offset, slice.offset + write_len, 0)
       else
-        self.class.each_constant_segment(coverage, slice[:target_size] - 1) do |(s, e, v)|
-          output.write_per_base_interval(target.name, s + slice[:offset], e + slice[:offset], v)
+        self.class.each_constant_segment(coverage, slice.target_size - 1) do |(s, e, v)|
+          output.write_per_base_interval(target.name, s + slice.offset, e + slice.offset, v)
         end
       end
     end
 
-    private def write_regions_if_needed(target : Core::Target, coverage : Core::Coverage, tid : Int32, slice,
+    private def write_regions_if_needed(target : Core::Target, coverage : Core::Coverage, tid : Int32,
+                                        slice : TargetSlice,
                                         window : Int32, bed_map : Hash(String, Array(Core::Region))?,
                                         output : FileIO::OutputManager, state : ProcessingState) : Stats::DepthStat
       return Stats::DepthStat.new unless output.f_regions
 
       write_region_stats_with_offset(target, coverage, tid, window, bed_map, state.cs, output,
-        state.region_dist, slice[:offset], slice[:effective_len])
+        state.region_dist, slice.offset, slice.effective_len)
     end
 
     private def write_target_stats(target : Core::Target, coverage : Core::Coverage, tid : Int32, target_size : Int32,

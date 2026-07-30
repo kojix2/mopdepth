@@ -293,7 +293,7 @@
 <pre><code class="language-bash">git clone https://github.com/kojix2/mopdepth
 cd mopdepth
 shards install
-shares build --release</code></pre>
+shards build --release</code></pre>
 <h2><a id="usage" class="anchor" href="#usage">
   <svg class="octicon-link" aria-hidden="true">
     <use href="#octicon-link"/>
@@ -322,7 +322,12 @@ shares build --release</code></pre>
 <li><code>-x, --fast-mode</code>: Fast mode (read start/end positions only)</li>
 <li><code>-a, --fragment-mode</code>: Count full fragment (proper pairs only)</li>
 <li><code>-m, --use-median</code>: Use median for region stats instead of mean</li>
-<li><code>-M, --mos</code>: Use mosdepth-compatible filenames (mosdepth.<em>); default is depth.</em></li>
+<li><code>-q, --quantize QUANTIZE</code>: Write quantized output (for example, <code>0:1:4:</code>)</li>
+<li><code>-T, --thresholds THRESHOLDS</code>: Comma-separated thresholds for region coverage</li>
+<li><code>-F, --flag FLAG</code>: Exclude reads with FLAG bits set</li>
+<li><code>-i, --include-flag FLAG</code>: Include only reads with FLAG bits set</li>
+<li><code>-R, --read-groups GROUPS</code>: Comma-separated read group IDs</li>
+<li><code>-M, --mos</code>: Use mosdepth-compatible filenames (mosdepth.<em>); default is mopdepth.</em></li>
 <li><code>-v, --version</code>: Show version</li>
 <li><code>-h, --help</code>: Show help message</li>
 </ul>
@@ -344,10 +349,12 @@ shares build --release</code></pre>
 </a>Output files</h3>
 <ul>
 <li>Summary: <code>&lt;prefix&gt;.(mopdepth|mosdepth).summary.txt</code></li>
-<li>Per-base: <code>&lt;prefix&gt;.per-base.bed</code> (unless <code>-n</code>)</li>
+<li>Per-base: <code>&lt;prefix&gt;.per-base.bed.gz</code> (unless <code>-n</code>)</li>
 <li>Global dist: <code>&lt;prefix&gt;.(mopdepth|mosdepth).global.dist.txt</code></li>
-<li>Regions: <code>&lt;prefix&gt;.regions.bed</code> (when <code>--by</code>)</li>
+<li>Regions: <code>&lt;prefix&gt;.regions.bed.gz</code> (when <code>--by</code>)</li>
 <li>Region dist: <code>&lt;prefix&gt;.(mopdepth|mosdepth).region.dist.txt</code> (when <code>--by</code>)</li>
+<li>Quantized: <code>&lt;prefix&gt;.quantized.bed.gz</code> (when <code>--quantize</code>)</li>
+<li>Thresholds: <code>&lt;prefix&gt;.thresholds.bed.gz</code> (when <code>--thresholds</code> and <code>--by</code>)</li>
 </ul>
 <p>By default, files are named with the <code>mopdepth.*</code> label. Use <code>-M/--mos</code> to switch to <code>mosdepth.*</code>.</p>
 <h3><a id="summary-file-format" class="anchor" href="#summary-file-format">
@@ -359,7 +366,7 @@ shares build --release</code></pre>
 <ul>
 <li><code>chrom</code>: Chromosome name</li>
 <li><code>length</code>: Chromosome length</li>
-<li><code>sum_depth</code>: Total depth (sum of all depths)</li>
+<li><code>bases</code>: Total depth (sum of all depths)</li>
 <li><code>mean</code>: Mean depth</li>
 <li><code>min</code>: Minimum depth</li>
 <li><code>max</code>: Maximum depth</li>

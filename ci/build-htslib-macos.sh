@@ -13,6 +13,7 @@ git clone --depth 1 --branch "$htslib_ref" https://github.com/samtools/htslib.gi
     CPPFLAGS="-I$(brew --prefix libdeflate)/include" \
     LDFLAGS="-L$(brew --prefix libdeflate)/lib"
   make
+  rm -f ./*.dylib ./libhts*.dylib
   git rev-parse HEAD
 )
 

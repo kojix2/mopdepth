@@ -16,9 +16,14 @@ normalize_path() {
 
 rm -f "$htslib_abs/htslib-uninstalled.pc"
 
+pc_abs=$htslib_abs
+if command -v cygpath >/dev/null 2>&1; then
+  pc_abs=$(cygpath -m "$htslib_abs")
+fi
+
 cat > "$htslib_abs/htslib.pc" <<EOF
-includedir=$htslib_abs
-libdir=$htslib_abs
+includedir=$pc_abs
+libdir=$pc_abs
 
 Name: htslib
 Description: C library for high-throughput sequencing data formats

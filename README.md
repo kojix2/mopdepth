@@ -16,6 +16,7 @@ A fast BAM/CRAM depth calculation tool written in Crystal, inspired by [mosdepth
 - BED file support for custom regions
 - Plain, gzip, and BGZF BED input
 - Explicit FASTA references for CRAM input
+- Optional D4 per-base output
 - Window-based analysis
 - Comprehensive filtering options (MAPQ, fragment length, flags)
 
@@ -25,15 +26,30 @@ A fast BAM/CRAM depth calculation tool written in Crystal, inspired by [mosdepth
 
 - Crystal
 - hts-lib (for BAM/CRAM support)
+- Make
 
 ### Build from source
 
 ```bash
 git clone https://github.com/kojix2/mopdepth
 cd mopdepth
-shards install
-shards build --release
+make
 ```
+
+The default target always builds an optimized release binary at `bin/mopdepth`.
+Use `make debug` only when a non-optimized development binary is needed.
+
+To build with D4 support, install Rust/Cargo and run:
+
+```bash
+make d4
+```
+
+This downloads the pinned D4 source, builds `libd4binding.a`, and links that
+archive into the optimized mopdepth binary. The D4 binding is therefore not a
+runtime shared-library dependency. Other platform libraries, including HTSlib,
+follow the normal Crystal and system linker configuration. Run `make test-d4`
+to execute the D4 write/read-back integration tests.
 
 ## Usage
 
@@ -54,6 +70,7 @@ shards build --release
 - `-b, --by BY`: BED file or numeric window size
 - `-f, --fasta FASTA`: FASTA reference for CRAM input (defaults to `REF_PATH`)
 - `-n, --no-per-base`: Skip per-base output
+- `--d4`: Write per-base depth as D4 (requires a `make d4` build)
 - `-Q, --mapq MAPQ`: MAPQ threshold
 - `-l, --min-frag-len MIN`: Minimum fragment length
 - `-u, --max-frag-len MAX`: Maximum fragment length
@@ -91,6 +108,7 @@ range are not missed.
 
 - Summary: `<prefix>.(mopdepth|mosdepth).summary.txt`
 - Per-base: `<prefix>.per-base.bed.gz` (unless `-n`)
+- D4 per-base: `<prefix>.per-base.d4` (`--d4`, replacing per-base BED.gz)
 - Global dist: `<prefix>.(mopdepth|mosdepth).global.dist.txt`
 - Regions: `<prefix>.regions.bed.gz` (when `--by`)
 - Region dist: `<prefix>.(mopdepth|mosdepth).region.dist.txt` (when `--by`)
@@ -111,8 +129,9 @@ read pairs use the true intersection when removing mate overlap, and quantizatio
 examines the final real base of every reference. Region means are accumulated as
 integer depth sums before formatting to avoid floating-point accumulation drift.
 
-D4 output is not currently supported. `-M/--mos` changes compatible output names;
-it does not enable bug-for-bug compatibility.
+D4-enabled builds support mosdepth-style `--d4` per-base output and create an
+embedded secondary frame index after successfully closing the file. `-M/--mos`
+changes compatible output names; it does not enable bug-for-bug compatibility.
 
 ### Summary file format
 

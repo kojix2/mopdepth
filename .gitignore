@@ -2,9 +2,11 @@
 /lib/
 /bin/
 /.shards/
+/.build/
 *.dwarf
 
 *.lock
+!shard.lock
 *.gz
 *.csi
 *.tbi

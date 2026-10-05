@@ -14,6 +14,8 @@ A fast BAM/CRAM depth calculation tool written in Crystal, inspired by [mosdepth
 - Multiple processing modes (fast mode, fragment mode, CIGAR-based)
 - Per-base and region-based depth analysis
 - BED file support for custom regions
+- Plain, gzip, and BGZF BED input
+- Explicit FASTA references for CRAM input
 - Window-based analysis
 - Comprehensive filtering options (MAPQ, fragment length, flags)
 
@@ -50,6 +52,7 @@ shards build --release
 - `-t, --threads THREADS`: BAM decompression threads
 - `-c, --chrom CHROM`: Restrict to chromosome
 - `-b, --by BY`: BED file or numeric window size
+- `-f, --fasta FASTA`: FASTA reference for CRAM input (defaults to `REF_PATH`)
 - `-n, --no-per-base`: Skip per-base output
 - `-Q, --mapq MAPQ`: MAPQ threshold
 - `-l, --min-frag-len MIN`: Minimum fragment length
@@ -74,6 +77,16 @@ shards build --release
 
 **Note**: Fast mode and fragment mode cannot be used together.
 
+Window sizes must be positive. BED intervals are validated against the alignment
+header: coordinates must be 0-based half-open, non-empty, non-negative, and
+contained in the named reference. References absent from the alignment header are
+reported and ignored. Overlapping BED intervals remain independent observations.
+
+`--chrom` also accepts a 1-based inclusive range such as `chr1:100-200`. Unlike
+mosdepth 0.3.x, mopdepth applies that range to calculation and output. In fragment
+mode it still examines the complete chromosome so fragments spanning the selected
+range are not missed.
+
 ### Output files
 
 - Summary: `<prefix>.(mopdepth|mosdepth).summary.txt`
@@ -85,6 +98,21 @@ shards build --release
 - Thresholds: `<prefix>.thresholds.bed.gz` (when `--thresholds` and `--by`)
 
 By default, files are named with the `mopdepth.*` label. Use `-M/--mos` to switch to `mosdepth.*`.
+
+### mosdepth compatibility
+
+mopdepth follows mosdepth's coverage, filtering, NoData, threshold, quantization,
+and window-distribution conventions where those conventions are well-defined.
+Compressed output and CSI files are compared by decoded content and query results,
+not by their binary bytes.
+
+Two known mosdepth edge-case errors are intentionally not reproduced: contained
+read pairs use the true intersection when removing mate overlap, and quantization
+examines the final real base of every reference. Region means are accumulated as
+integer depth sums before formatting to avoid floating-point accumulation drift.
+
+D4 output is not currently supported. `-M/--mos` changes compatible output names;
+it does not enable bug-for-bug compatibility.
 
 ### Summary file format
 

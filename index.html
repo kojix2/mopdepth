@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Crystal Docs 1.20.3">
-<meta name="crystal_docs.project_version" content="main">
+<meta name="crystal_docs.project_version" content="main-dev">
 <meta name="crystal_docs.project_name" content="mopdepth">
 
 
@@ -14,7 +14,7 @@
 <script type="text/javascript" src="js/doc.js"></script>
 
   <meta name="repository-name" content="mopdepth">
-  <title>mopdepth main</title>
+  <title>mopdepth main-dev</title>
   <script type="text/javascript">
   CrystalDocs.base_path = "";
   </script>
@@ -45,7 +45,7 @@
       </h1>
 
       <span class="project-version">
-        main
+        main-dev
       </span>
     </div>
   </div>
@@ -146,6 +146,11 @@
       <a href="Depth/FileIO.html">FileIO</a>
       
         <ul>
+  
+  <li class=" " data-id="mopdepth/Depth/FileIO/D4Output" data-name="depth::fileio::d4output">
+      <a href="Depth/FileIO/D4Output.html">D4Output</a>
+      
+    </li>
   
   <li class="parent " data-id="mopdepth/Depth/FileIO/OutputManager" data-name="depth::fileio::outputmanager">
       <a href="Depth/FileIO/OutputManager.html">OutputManager</a>
@@ -280,6 +285,7 @@
 <li>BED file support for custom regions</li>
 <li>Plain, gzip, and BGZF BED input</li>
 <li>Explicit FASTA references for CRAM input</li>
+<li>Optional D4 per-base output</li>
 <li>Window-based analysis</li>
 <li>Comprehensive filtering options (MAPQ, fragment length, flags)</li>
 </ul>
@@ -296,6 +302,7 @@
 <ul>
 <li>Crystal</li>
 <li>hts-lib (for BAM/CRAM support)</li>
+<li>Make</li>
 </ul>
 <h3><a id="build-from-source" class="anchor" href="#build-from-source">
   <svg class="octicon-link" aria-hidden="true">
@@ -304,8 +311,16 @@
 </a>Build from source</h3>
 <pre><code class="language-bash">git clone https://github.com/kojix2/mopdepth
 cd mopdepth
-shards install
-shards build --release</code></pre>
+make</code></pre>
+<p>The default target always builds an optimized release binary at <code>bin/mopdepth</code>.
+Use <code>make debug</code> only when a non-optimized development binary is needed.</p>
+<p>To build with D4 support, install Rust/Cargo and run:</p>
+<pre><code class="language-bash">make d4</code></pre>
+<p>This downloads the pinned D4 source, builds <code>libd4binding.a</code>, and links that
+archive into the optimized mopdepth binary. The D4 binding is therefore not a
+runtime shared-library dependency. Other platform libraries, including HTSlib,
+follow the normal Crystal and system linker configuration. Run <code>make test-d4</code>
+to execute the D4 write/read-back integration tests.</p>
 <h2><a id="usage" class="anchor" href="#usage">
   <svg class="octicon-link" aria-hidden="true">
     <use href="#octicon-link"/>
@@ -329,6 +344,7 @@ shards build --release</code></pre>
 <li><code>-b, --by BY</code>: BED file or numeric window size</li>
 <li><code>-f, --fasta FASTA</code>: FASTA reference for CRAM input (defaults to <code>REF_PATH</code>)</li>
 <li><code>-n, --no-per-base</code>: Skip per-base output</li>
+<li><code>--d4</code>: Write per-base depth as D4 (requires a <code>make d4</code> build)</li>
 <li><code>-Q, --mapq MAPQ</code>: MAPQ threshold</li>
 <li><code>-l, --min-frag-len MIN</code>: Minimum fragment length</li>
 <li><code>-u, --max-frag-len MAX</code>: Maximum fragment length</li>
@@ -371,6 +387,7 @@ range are not missed.</p>
 <ul>
 <li>Summary: <code>&lt;prefix&gt;.(mopdepth|mosdepth).summary.txt</code></li>
 <li>Per-base: <code>&lt;prefix&gt;.per-base.bed.gz</code> (unless <code>-n</code>)</li>
+<li>D4 per-base: <code>&lt;prefix&gt;.per-base.d4</code> (<code>--d4</code>, replacing per-base BED.gz)</li>
 <li>Global dist: <code>&lt;prefix&gt;.(mopdepth|mosdepth).global.dist.txt</code></li>
 <li>Regions: <code>&lt;prefix&gt;.regions.bed.gz</code> (when <code>--by</code>)</li>
 <li>Region dist: <code>&lt;prefix&gt;.(mopdepth|mosdepth).region.dist.txt</code> (when <code>--by</code>)</li>
@@ -391,8 +408,9 @@ not by their binary bytes.</p>
 read pairs use the true intersection when removing mate overlap, and quantization
 examines the final real base of every reference. Region means are accumulated as
 integer depth sums before formatting to avoid floating-point accumulation drift.</p>
-<p>D4 output is not currently supported. <code>-M/--mos</code> changes compatible output names;
-it does not enable bug-for-bug compatibility.</p>
+<p>D4-enabled builds support mosdepth-style <code>--d4</code> per-base output and create an
+embedded secondary frame index after successfully closing the file. <code>-M/--mos</code>
+changes compatible output names; it does not enable bug-for-bug compatibility.</p>
 <h3><a id="summary-file-format" class="anchor" href="#summary-file-format">
   <svg class="octicon-link" aria-hidden="true">
     <use href="#octicon-link"/>

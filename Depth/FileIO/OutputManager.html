@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Crystal Docs 1.20.3">
-<meta name="crystal_docs.project_version" content="main">
+<meta name="crystal_docs.project_version" content="main-dev">
 <meta name="crystal_docs.project_name" content="mopdepth">
 
 
@@ -14,7 +14,7 @@
 <script type="text/javascript" src="../../js/doc.js"></script>
 
   <meta name="repository-name" content="mopdepth">
-  <title>Depth::FileIO::OutputManager - mopdepth main</title>
+  <title>Depth::FileIO::OutputManager - mopdepth main-dev</title>
   <script type="text/javascript">
     CrystalDocs.base_path = "../../";
   </script>
@@ -45,7 +45,7 @@
       </h1>
 
       <span class="project-version">
-        main
+        main-dev
       </span>
     </div>
   </div>
@@ -146,6 +146,11 @@
       <a href="../../Depth/FileIO.html">FileIO</a>
       
         <ul>
+  
+  <li class=" " data-id="mopdepth/Depth/FileIO/D4Output" data-name="depth::fileio::d4output">
+      <a href="../../Depth/FileIO/D4Output.html">D4Output</a>
+      
+    </li>
   
   <li class="parent open current" data-id="mopdepth/Depth/FileIO/OutputManager" data-name="depth::fileio::outputmanager">
       <a href="../../Depth/FileIO/OutputManager.html">OutputManager</a>
@@ -298,9 +303,7 @@
   </h2>
   
     
-      <a href="https://github.com/kojix2/mopdepth/blob/616f21c2f70dd648e6ad14da014f5cbd581bb3ba/src/depth/io/output_manager.cr#L7" target="_blank">
-        depth/io/output_manager.cr
-      </a>
+      depth/io/output_manager.cr
     
     <br/>
   
@@ -352,7 +355,7 @@ halving the divisions vs the per-digit signed <code>Int#to_s</code>.</p>
   <ul class="list-summary">
     
       <li class="entry-summary">
-        <a href="#new%28config%3AConfig%29-class-method" class="signature"><strong>.new</strong>(config : Config)</a>
+        <a href="#new%28config%3AConfig%2Ctargets%3AArray%28Core%3A%3ATarget%29%3D%5B%5DofCore%3A%3ATarget%29-class-method" class="signature"><strong>.new</strong>(config : Config, targets : Array(Core::Target) = <span class="o">[]</span> <span class="k">of</span> <span class="t">Core</span><span class="t">::</span><span class="t">Target</span>)</a>
         
       </li>
     
@@ -376,6 +379,11 @@ halving the divisions vs the per-digit signed <code>Int#to_s</code>.</p>
     
       <li class="entry-summary">
         <a href="#close_all%28%2A%2Cbuild_indices%3ABool%3Dtrue%29-instance-method" class="signature"><strong>#close_all</strong>(*, build_indices : Bool = <span class="n">true</span>)</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#d4_output%3AD4Output%7CNil-instance-method" class="signature"><strong>#d4_output</strong> : D4Output | Nil</a>
         
       </li>
     
@@ -411,6 +419,11 @@ halving the divisions vs the per-digit signed <code>Int#to_s</code>.</p>
     
       <li class="entry-summary">
         <a href="#f_thresholds%3AFile%7CHTS%3A%3ABgzf%7CNil-instance-method" class="signature"><strong>#f_thresholds</strong> : File | HTS::Bgzf | Nil</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#per_base_enabled%3F%3ABool-instance-method" class="signature"><strong>#per_base_enabled?</strong> : Bool</a>
         
       </li>
     
@@ -505,18 +518,16 @@ halving the divisions vs the per-digit signed <code>Int#to_s</code>.</p>
     Constructor Detail
   </h2>
   
-    <div class="entry-detail" id="new(config:Config)-class-method">
+    <div class="entry-detail" id="new(config:Config,targets:Array(Core::Target)=[]ofCore::Target)-class-method">
       <div class="signature">
         
-        def self.<strong>new</strong>(config : <a href="../../Depth/Config.html">Config</a>)
+        def self.<strong>new</strong>(config : <a href="../../Depth/Config.html">Config</a>, targets : Array(<a href="../../Depth/Core/Target.html">Core::Target</a>) = <span class="o">[]</span> <span class="k">of</span> <span class="t">Core</span><span class="t">::</span><span class="t">Target</span>)
 
-        <a class="method-permalink" href="#new%28config%3AConfig%29-class-method">#</a>
+        <a class="method-permalink" href="#new%28config%3AConfig%2Ctargets%3AArray%28Core%3A%3ATarget%29%3D%5B%5DofCore%3A%3ATarget%29-class-method">#</a>
       </div>
       
       <br/>
       <div>
-        
-          [<a href="https://github.com/kojix2/mopdepth/blob/616f21c2f70dd648e6ad14da014f5cbd581bb3ba/src/depth/io/output_manager.cr#L72" target="_blank">View source</a>]
         
       </div>
     </div>
@@ -548,7 +559,19 @@ halving the divisions vs the per-digit signed <code>Int#to_s</code>.</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/616f21c2f70dd648e6ad14da014f5cbd581bb3ba/src/depth/io/output_manager.cr#L267" target="_blank">View source</a>]
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="d4_output:D4Output|Nil-instance-method">
+      <div class="signature">
+        
+        def <strong>d4_output</strong> : <a href="../../Depth/FileIO/D4Output.html">D4Output</a> | Nil
+
+        <a class="method-permalink" href="#d4_output%3AD4Output%7CNil-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
         
       </div>
     </div>
@@ -564,8 +587,6 @@ halving the divisions vs the per-digit signed <code>Int#to_s</code>.</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/616f21c2f70dd648e6ad14da014f5cbd581bb3ba/src/depth/io/output_manager.cr#L9" target="_blank">View source</a>]
-        
       </div>
     </div>
   
@@ -579,8 +600,6 @@ halving the divisions vs the per-digit signed <code>Int#to_s</code>.</p>
       
       <br/>
       <div>
-        
-          [<a href="https://github.com/kojix2/mopdepth/blob/616f21c2f70dd648e6ad14da014f5cbd581bb3ba/src/depth/io/output_manager.cr#L11" target="_blank">View source</a>]
         
       </div>
     </div>
@@ -596,8 +615,6 @@ halving the divisions vs the per-digit signed <code>Int#to_s</code>.</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/616f21c2f70dd648e6ad14da014f5cbd581bb3ba/src/depth/io/output_manager.cr#L13" target="_blank">View source</a>]
-        
       </div>
     </div>
   
@@ -611,8 +628,6 @@ halving the divisions vs the per-digit signed <code>Int#to_s</code>.</p>
       
       <br/>
       <div>
-        
-          [<a href="https://github.com/kojix2/mopdepth/blob/616f21c2f70dd648e6ad14da014f5cbd581bb3ba/src/depth/io/output_manager.cr#L10" target="_blank">View source</a>]
         
       </div>
     </div>
@@ -628,8 +643,6 @@ halving the divisions vs the per-digit signed <code>Int#to_s</code>.</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/616f21c2f70dd648e6ad14da014f5cbd581bb3ba/src/depth/io/output_manager.cr#L12" target="_blank">View source</a>]
-        
       </div>
     </div>
   
@@ -643,8 +656,6 @@ halving the divisions vs the per-digit signed <code>Int#to_s</code>.</p>
       
       <br/>
       <div>
-        
-          [<a href="https://github.com/kojix2/mopdepth/blob/616f21c2f70dd648e6ad14da014f5cbd581bb3ba/src/depth/io/output_manager.cr#L8" target="_blank">View source</a>]
         
       </div>
     </div>
@@ -660,7 +671,19 @@ halving the divisions vs the per-digit signed <code>Int#to_s</code>.</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/616f21c2f70dd648e6ad14da014f5cbd581bb3ba/src/depth/io/output_manager.cr#L14" target="_blank">View source</a>]
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="per_base_enabled?:Bool-instance-method">
+      <div class="signature">
+        
+        def <strong>per_base_enabled?</strong> : Bool
+
+        <a class="method-permalink" href="#per_base_enabled%3F%3ABool-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
         
       </div>
     </div>
@@ -676,8 +699,6 @@ halving the divisions vs the per-digit signed <code>Int#to_s</code>.</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/616f21c2f70dd648e6ad14da014f5cbd581bb3ba/src/depth/io/output_manager.cr#L181" target="_blank">View source</a>]
-        
       </div>
     </div>
   
@@ -691,8 +712,6 @@ halving the divisions vs the per-digit signed <code>Int#to_s</code>.</p>
       
       <br/>
       <div>
-        
-          [<a href="https://github.com/kojix2/mopdepth/blob/616f21c2f70dd648e6ad14da014f5cbd581bb3ba/src/depth/io/output_manager.cr#L228" target="_blank">View source</a>]
         
       </div>
     </div>
@@ -708,8 +727,6 @@ halving the divisions vs the per-digit signed <code>Int#to_s</code>.</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/616f21c2f70dd648e6ad14da014f5cbd581bb3ba/src/depth/io/output_manager.cr#L200" target="_blank">View source</a>]
-        
       </div>
     </div>
   
@@ -723,8 +740,6 @@ halving the divisions vs the per-digit signed <code>Int#to_s</code>.</p>
       
       <br/>
       <div>
-        
-          [<a href="https://github.com/kojix2/mopdepth/blob/616f21c2f70dd648e6ad14da014f5cbd581bb3ba/src/depth/io/output_manager.cr#L194" target="_blank">View source</a>]
         
       </div>
     </div>
@@ -740,8 +755,6 @@ halving the divisions vs the per-digit signed <code>Int#to_s</code>.</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/616f21c2f70dd648e6ad14da014f5cbd581bb3ba/src/depth/io/output_manager.cr#L206" target="_blank">View source</a>]
-        
       </div>
     </div>
   
@@ -755,8 +768,6 @@ halving the divisions vs the per-digit signed <code>Int#to_s</code>.</p>
       
       <br/>
       <div>
-        
-          [<a href="https://github.com/kojix2/mopdepth/blob/616f21c2f70dd648e6ad14da014f5cbd581bb3ba/src/depth/io/output_manager.cr#L113" target="_blank">View source</a>]
         
       </div>
     </div>
@@ -777,8 +788,6 @@ halving the divisions vs the per-digit signed <code>Int#to_s</code>.</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/616f21c2f70dd648e6ad14da014f5cbd581bb3ba/src/depth/io/output_manager.cr#L130" target="_blank">View source</a>]
-        
       </div>
     </div>
   
@@ -793,8 +802,6 @@ halving the divisions vs the per-digit signed <code>Int#to_s</code>.</p>
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/616f21c2f70dd648e6ad14da014f5cbd581bb3ba/src/depth/io/output_manager.cr#L254" target="_blank">View source</a>]
-        
       </div>
     </div>
   
@@ -808,8 +815,6 @@ halving the divisions vs the per-digit signed <code>Int#to_s</code>.</p>
       
       <br/>
       <div>
-        
-          [<a href="https://github.com/kojix2/mopdepth/blob/616f21c2f70dd648e6ad14da014f5cbd581bb3ba/src/depth/io/output_manager.cr#L241" target="_blank">View source</a>]
         
       </div>
     </div>

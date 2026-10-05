@@ -14,7 +14,7 @@
 <script type="text/javascript" src="../../js/doc.js"></script>
 
   <meta name="repository-name" content="mopdepth">
-  <title>Depth::Core::Coverage - mopdepth main-dev</title>
+  <title>Depth::FileIO::D4Output - mopdepth main-dev</title>
   <script type="text/javascript">
     CrystalDocs.base_path = "../../";
   </script>
@@ -82,7 +82,7 @@
       
     </li>
   
-  <li class="parent open current" data-id="mopdepth/Depth/Core" data-name="depth::core">
+  <li class="parent " data-id="mopdepth/Depth/Core" data-name="depth::core">
       <a href="../../Depth/Core.html">Core</a>
       
         <ul>
@@ -92,7 +92,7 @@
       
     </li>
   
-  <li class=" current" data-id="mopdepth/Depth/Core/Coverage" data-name="depth::core::coverage">
+  <li class=" " data-id="mopdepth/Depth/Core/Coverage" data-name="depth::core::coverage">
       <a href="../../Depth/Core/Coverage.html">Coverage</a>
       
     </li>
@@ -142,12 +142,12 @@
       
     </li>
   
-  <li class="parent " data-id="mopdepth/Depth/FileIO" data-name="depth::fileio">
+  <li class="parent open current" data-id="mopdepth/Depth/FileIO" data-name="depth::fileio">
       <a href="../../Depth/FileIO.html">FileIO</a>
       
         <ul>
   
-  <li class=" " data-id="mopdepth/Depth/FileIO/D4Output" data-name="depth::fileio::d4output">
+  <li class=" current" data-id="mopdepth/Depth/FileIO/D4Output" data-name="depth::fileio::d4output">
       <a href="../../Depth/FileIO/D4Output.html">D4Output</a>
       
     </li>
@@ -267,37 +267,18 @@
 <h1 class="type-name">
 
   <span class="kind">
-    alias
-  </span> Depth::<wbr>Core::<wbr>Coverage
+    class
+  </span> Depth::<wbr>FileIO::<wbr>D4Output
 
 </h1>
 
 
+  <ul class="superclass-hierarchy"><li class="superclass"><a href="../../Depth/FileIO/D4Output.html">Depth::FileIO::D4Output</a></li><li class="superclass">Reference</li><li class="superclass">Object</li></ul>
 
 
 
-  <h2>
-    <a id="overview" class="anchor" href="#overview">
-  <svg class="octicon-link" aria-hidden="true">
-    <use href="#octicon-link"/>
-  </svg>
-</a>
-    Overview
-  </h2>
-
-  <p>coverage array diff representation and cumulative coverage alias</p>
 
 
-
-  <h2>
-    <a id="alias-definition" class="anchor" href="#alias-definition">
-  <svg class="octicon-link" aria-hidden="true">
-    <use href="#octicon-link"/>
-  </svg>
-</a>
-    Alias Definition
-  </h2>
-  <code>Array(Int32)</code>
 
 
 
@@ -322,7 +303,7 @@
   </h2>
   
     
-      depth/core/coverage.cr
+      depth/io/d4_output.cr
     
     <br/>
   
@@ -332,25 +313,190 @@
 
 
   
+  <h2>
+    <a id="constructors" class="anchor" href="#constructors">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Constructors
+  </h2>
+  <ul class="list-summary">
+    
+      <li class="entry-summary">
+        <a href="#new%28path%3AString%2Ctargets%3AArray%28Core%3A%3ATarget%29%2Cbuffer_size%3AInt32%3D0%29-class-method" class="signature"><strong>.new</strong>(path : String, targets : Array(Core::Target), buffer_size : Int32 = <span class="n">0</span>)</a>
+        
+      </li>
+    
+  </ul>
+
 
   
 
   
 
   
+  <h2>
+    <a id="instance-method-summary" class="anchor" href="#instance-method-summary">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Instance Method Summary
+  </h2>
+  <ul class="list-summary">
+    
+      <li class="entry-summary">
+        <a href="#build_index-instance-method" class="signature"><strong>#build_index</strong></a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#close-instance-method" class="signature"><strong>#close</strong></a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#path%3AString-instance-method" class="signature"><strong>#path</strong> : String</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#write_interval%28chromosome%3AString%2Cstart%3AInt32%2Cstop%3AInt32%2Cvalue%3AInt32%29-instance-method" class="signature"><strong>#write_interval</strong>(chromosome : String, start : Int32, stop : Int32, value : Int32)</a>
+        
+      </li>
+    
+  </ul>
+
 
 
   <div class="methods-inherited">
     
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
+      
+
+
+      
+
+
+      
+
+
+      
+
+
+    
   </div>
 
   
+  <h2>
+    <a id="constructor-detail" class="anchor" href="#constructor-detail">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Constructor Detail
+  </h2>
+  
+    <div class="entry-detail" id="new(path:String,targets:Array(Core::Target),buffer_size:Int32=0)-class-method">
+      <div class="signature">
+        
+        def self.<strong>new</strong>(path : String, targets : Array(<a href="../../Depth/Core/Target.html">Core::Target</a>), buffer_size : Int32 = <span class="n">0</span>)
+
+        <a class="method-permalink" href="#new%28path%3AString%2Ctargets%3AArray%28Core%3A%3ATarget%29%2Cbuffer_size%3AInt32%3D0%29-class-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+
 
   
 
   
 
   
+  <h2>
+    <a id="instance-method-detail" class="anchor" href="#instance-method-detail">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>
+    Instance Method Detail
+  </h2>
+  
+    <div class="entry-detail" id="build_index-instance-method">
+      <div class="signature">
+        
+        def <strong>build_index</strong>
+
+        <a class="method-permalink" href="#build_index-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="close-instance-method">
+      <div class="signature">
+        
+        def <strong>close</strong>
+
+        <a class="method-permalink" href="#close-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="path:String-instance-method">
+      <div class="signature">
+        
+        def <strong>path</strong> : String
+
+        <a class="method-permalink" href="#path%3AString-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="write_interval(chromosome:String,start:Int32,stop:Int32,value:Int32)-instance-method">
+      <div class="signature">
+        
+        def <strong>write_interval</strong>(chromosome : String, start : Int32, stop : Int32, value : Int32)
+
+        <a class="method-permalink" href="#write_interval%28chromosome%3AString%2Cstart%3AInt32%2Cstop%3AInt32%2Cvalue%3AInt32%29-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+
 
 
 </div>

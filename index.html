@@ -177,6 +177,16 @@
       
     </li>
   
+  <li class=" " data-id="mopdepth/Depth/OutputError" data-name="depth::outputerror">
+      <a href="Depth/OutputError.html">OutputError</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/RunError" data-name="depth::runerror">
+      <a href="Depth/RunError.html">RunError</a>
+      
+    </li>
+  
   <li class=" " data-id="mopdepth/Depth/Runner" data-name="depth::runner">
       <a href="Depth/Runner.html">Runner</a>
       
@@ -268,6 +278,8 @@
 <li>Multiple processing modes (fast mode, fragment mode, CIGAR-based)</li>
 <li>Per-base and region-based depth analysis</li>
 <li>BED file support for custom regions</li>
+<li>Plain, gzip, and BGZF BED input</li>
+<li>Explicit FASTA references for CRAM input</li>
 <li>Window-based analysis</li>
 <li>Comprehensive filtering options (MAPQ, fragment length, flags)</li>
 </ul>
@@ -315,6 +327,7 @@ shards build --release</code></pre>
 <li><code>-t, --threads THREADS</code>: BAM decompression threads</li>
 <li><code>-c, --chrom CHROM</code>: Restrict to chromosome</li>
 <li><code>-b, --by BY</code>: BED file or numeric window size</li>
+<li><code>-f, --fasta FASTA</code>: FASTA reference for CRAM input (defaults to <code>REF_PATH</code>)</li>
 <li><code>-n, --no-per-base</code>: Skip per-base output</li>
 <li><code>-Q, --mapq MAPQ</code>: MAPQ threshold</li>
 <li><code>-l, --min-frag-len MIN</code>: Minimum fragment length</li>
@@ -342,6 +355,14 @@ shards build --release</code></pre>
 <li><strong>Fragment mode</strong> (<code>-a</code>): Counts full fragments for paired-end reads</li>
 </ul>
 <p><strong>Note</strong>: Fast mode and fragment mode cannot be used together.</p>
+<p>Window sizes must be positive. BED intervals are validated against the alignment
+header: coordinates must be 0-based half-open, non-empty, non-negative, and
+contained in the named reference. References absent from the alignment header are
+reported and ignored. Overlapping BED intervals remain independent observations.</p>
+<p><code>--chrom</code> also accepts a 1-based inclusive range such as <code>chr1:100-200</code>. Unlike
+mosdepth 0.3.x, mopdepth applies that range to calculation and output. In fragment
+mode it still examines the complete chromosome so fragments spanning the selected
+range are not missed.</p>
 <h3><a id="output-files" class="anchor" href="#output-files">
   <svg class="octicon-link" aria-hidden="true">
     <use href="#octicon-link"/>
@@ -357,6 +378,21 @@ shards build --release</code></pre>
 <li>Thresholds: <code>&lt;prefix&gt;.thresholds.bed.gz</code> (when <code>--thresholds</code> and <code>--by</code>)</li>
 </ul>
 <p>By default, files are named with the <code>mopdepth.*</code> label. Use <code>-M/--mos</code> to switch to <code>mosdepth.*</code>.</p>
+<h3><a id="mosdepth-compatibility" class="anchor" href="#mosdepth-compatibility">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>mosdepth compatibility</h3>
+<p>mopdepth follows mosdepth's coverage, filtering, NoData, threshold, quantization,
+and window-distribution conventions where those conventions are well-defined.
+Compressed output and CSI files are compared by decoded content and query results,
+not by their binary bytes.</p>
+<p>Two known mosdepth edge-case errors are intentionally not reproduced: contained
+read pairs use the true intersection when removing mate overlap, and quantization
+examines the final real base of every reference. Region means are accumulated as
+integer depth sums before formatting to avoid floating-point accumulation drift.</p>
+<p>D4 output is not currently supported. <code>-M/--mos</code> changes compatible output names;
+it does not enable bug-for-bug compatibility.</p>
 <h3><a id="summary-file-format" class="anchor" href="#summary-file-format">
   <svg class="octicon-link" aria-hidden="true">
     <use href="#octicon-link"/>

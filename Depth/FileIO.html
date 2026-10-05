@@ -177,6 +177,16 @@
       
     </li>
   
+  <li class=" " data-id="mopdepth/Depth/OutputError" data-name="depth::outputerror">
+      <a href="../Depth/OutputError.html">OutputError</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Depth/RunError" data-name="depth::runerror">
+      <a href="../Depth/RunError.html">RunError</a>
+      
+    </li>
+  
   <li class=" " data-id="mopdepth/Depth/Runner" data-name="depth::runner">
       <a href="../Depth/Runner.html">Runner</a>
       
@@ -286,14 +296,14 @@
   </h2>
   
     
-      <a href="https://github.com/kojix2/mopdepth/blob/03d94f4d48c0f0ea4089d5d8735260a24540fb51/src/depth/io/bed_reader.cr#L3" target="_blank">
+      <a href="https://github.com/kojix2/mopdepth/blob/dae8051e13da0a80631987bf3f1f8a4bddee984c/src/depth/io/bed_reader.cr#L7" target="_blank">
         depth/io/bed_reader.cr
       </a>
     
     <br/>
   
     
-      <a href="https://github.com/kojix2/mopdepth/blob/03d94f4d48c0f0ea4089d5d8735260a24540fb51/src/depth/io/output_manager.cr#L5" target="_blank">
+      <a href="https://github.com/kojix2/mopdepth/blob/dae8051e13da0a80631987bf3f1f8a4bddee984c/src/depth/io/output_manager.cr#L6" target="_blank">
         depth/io/output_manager.cr
       </a>
     
@@ -318,14 +328,14 @@
   <ul class="list-summary">
     
       <li class="entry-summary">
-        <a href="#parse_region_str%28s%3AString%29%3ADepth%3A%3ACore%3A%3ARegion%7CNil-class-method" class="signature"><strong>.parse_region_str</strong>(s : String) : Depth::Core::Region | Nil</a>
+        <a href="#parse_region_str%28s%3AString%2Ctargets%3AArray%28Depth%3A%3ACore%3A%3ATarget%29%29%3ADepth%3A%3ACore%3A%3ARegion%7CNil-class-method" class="signature"><strong>.parse_region_str</strong>(s : String, targets : Array(Depth::Core::Target)) : Depth::Core::Region | Nil</a>
         
           <div class="summary"><p>Parse region like: chr1, chr1:100-200, or BED line</p></div>
         
       </li>
     
       <li class="entry-summary">
-        <a href="#read_bed%28path%3AString%29%3AHash%28String%2CArray%28Depth%3A%3ACore%3A%3ARegion%29%29-class-method" class="signature"><strong>.read_bed</strong>(path : String) : Hash(String, Array(Depth::Core::Region))</a>
+        <a href="#read_bed%28path%3AString%2Ctargets%3AArray%28Depth%3A%3ACore%3A%3ATarget%29%29%3AHash%28String%2CArray%28Depth%3A%3ACore%3A%3ARegion%29%29-class-method" class="signature"><strong>.read_bed</strong>(path : String, targets : Array(Depth::Core::Target)) : Hash(String, Array(Depth::Core::Region))</a>
         
           <div class="summary"><p>BED reader → {chrom =&gt; [Region]}</p></div>
         
@@ -355,12 +365,12 @@
     Class Method Detail
   </h2>
   
-    <div class="entry-detail" id="parse_region_str(s:String):Depth::Core::Region|Nil-class-method">
+    <div class="entry-detail" id="parse_region_str(s:String,targets:Array(Depth::Core::Target)):Depth::Core::Region|Nil-class-method">
       <div class="signature">
         
-        def self.<strong>parse_region_str</strong>(s : String) : <a href="../Depth/Core/Region.html">Depth::Core::Region</a> | Nil
+        def self.<strong>parse_region_str</strong>(s : String, targets : Array(<a href="../Depth/Core/Target.html">Depth::Core::Target</a>)) : <a href="../Depth/Core/Region.html">Depth::Core::Region</a> | Nil
 
-        <a class="method-permalink" href="#parse_region_str%28s%3AString%29%3ADepth%3A%3ACore%3A%3ARegion%7CNil-class-method">#</a>
+        <a class="method-permalink" href="#parse_region_str%28s%3AString%2Ctargets%3AArray%28Depth%3A%3ACore%3A%3ATarget%29%29%3ADepth%3A%3ACore%3A%3ARegion%7CNil-class-method">#</a>
       </div>
       
         <div class="doc">
@@ -371,17 +381,17 @@
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/03d94f4d48c0f0ea4089d5d8735260a24540fb51/src/depth/io/bed_reader.cr#L5" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/dae8051e13da0a80631987bf3f1f8a4bddee984c/src/depth/io/bed_reader.cr#L9" target="_blank">View source</a>]
         
       </div>
     </div>
   
-    <div class="entry-detail" id="read_bed(path:String):Hash(String,Array(Depth::Core::Region))-class-method">
+    <div class="entry-detail" id="read_bed(path:String,targets:Array(Depth::Core::Target)):Hash(String,Array(Depth::Core::Region))-class-method">
       <div class="signature">
         
-        def self.<strong>read_bed</strong>(path : String) : Hash(String, Array(<a href="../Depth/Core/Region.html">Depth::Core::Region</a>))
+        def self.<strong>read_bed</strong>(path : String, targets : Array(<a href="../Depth/Core/Target.html">Depth::Core::Target</a>)) : Hash(String, Array(<a href="../Depth/Core/Region.html">Depth::Core::Region</a>))
 
-        <a class="method-permalink" href="#read_bed%28path%3AString%29%3AHash%28String%2CArray%28Depth%3A%3ACore%3A%3ARegion%29%29-class-method">#</a>
+        <a class="method-permalink" href="#read_bed%28path%3AString%2Ctargets%3AArray%28Depth%3A%3ACore%3A%3ATarget%29%29%3AHash%28String%2CArray%28Depth%3A%3ACore%3A%3ARegion%29%29-class-method">#</a>
       </div>
       
         <div class="doc">
@@ -392,7 +402,7 @@
       <br/>
       <div>
         
-          [<a href="https://github.com/kojix2/mopdepth/blob/03d94f4d48c0f0ea4089d5d8735260a24540fb51/src/depth/io/bed_reader.cr#L21" target="_blank">View source</a>]
+          [<a href="https://github.com/kojix2/mopdepth/blob/dae8051e13da0a80631987bf3f1f8a4bddee984c/src/depth/io/bed_reader.cr#L33" target="_blank">View source</a>]
         
       </div>
     </div>

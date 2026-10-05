@@ -22,7 +22,8 @@ module Depth::Stats
       # cumulative from high → low so line is: depth \t cumulative_fraction
       rev = dist.dup.reverse
       cum = 0.0
-      pr = (ENV["MOSDEPTH_PRECISION"]?.try &.to_i?) || 2
+      pr = (ENV["MOPDEPTH_PRECISION"]?.try &.to_i?) ||
+           (ENV["MOSDEPTH_PRECISION"]?.try &.to_i?) || 2
       rev.each_with_index do |v, i|
         irev = dist.size - i - 1
         next if irev > 300 && v == 0

@@ -90,10 +90,11 @@ module Depth::Core
     private class SeenMate
       getter start : Int32
       getter stop : Int32
-      getter cigar_size : UInt32
+      getter? single_coverage_cigar : Bool
       getter events : Array(Tuple(Int32, Int32))?
 
-      def initialize(@start : Int32, @stop : Int32, @cigar_size : UInt32, @events : Array(Tuple(Int32, Int32))?)
+      def initialize(@start : Int32, @stop : Int32, @single_coverage_cigar : Bool,
+                     @events : Array(Tuple(Int32, Int32))?)
       end
     end
 
@@ -109,10 +110,9 @@ module Depth::Core
     private def filtered_out?(rec) : Bool
       return true if rec.mapq < @options.mapq
 
-      if @options.fragment_mode
-        return true if @options.min_frag_len >= 0 && rec.isize.abs < @options.min_frag_len
-        return true if rec.isize.abs > @options.max_frag_len
-      end
+      template_length = rec.isize.to_i128.abs
+      return true if @options.min_frag_len >= 0 && template_length < @options.min_frag_len
+      return true if template_length > @options.max_frag_len
 
       flag = rec.flag_value
       return true if (flag & @options.exclude_flag) != 0
@@ -150,11 +150,11 @@ module Depth::Core
     private def accumulate_fragment_record!(rec, coverage : Coverage, offset : Int32)
       return if rec.read2? || !rec.proper_pair? || rec.supplementary?
 
-      frag_start = Math.min(rec.pos, rec.mate_pos).to_i32 - offset
-      frag_len = rec.isize.abs
-      end_pos = frag_start + frag_len
-      end_pos = coverage.size - 1 if end_pos >= coverage.size
-      startp = frag_start.clamp(0, coverage.size - 1)
+      frag_start = Math.min(rec.pos, rec.mate_pos).to_i128 - offset
+      frag_len = rec.isize.to_i128.abs
+      last_index = (coverage.size - 1).to_i128
+      end_pos = (frag_start + frag_len).clamp(0_i128, last_index).to_i32
+      startp = frag_start.clamp(0_i128, last_index).to_i32
       mark_and_add!(coverage, startp, 1)
       mark_and_add!(coverage, end_pos, -1)
     end
@@ -195,14 +195,14 @@ module Depth::Core
     end
 
     private def capture_seen_mate(rec, rec_start : Int32, rec_stop : Int32) : SeenMate
-      cigar_size = rec.cigar_size
+      single_coverage_cigar = single_coverage_cigar?(rec)
       events = nil
-      if cigar_size != 1
+      unless single_coverage_cigar
         ev = [] of Tuple(Int32, Int32)
         record_cigar_append_events!(rec, rec_start, ev)
         events = ev
       end
-      SeenMate.new(rec_start, rec_stop, cigar_size, events)
+      SeenMate.new(rec_start, rec_stop, single_coverage_cigar, events)
     end
 
     private def append_seen_mate_events!(mate : SeenMate, events : Array(Tuple(Int32, Int32)))
@@ -216,7 +216,7 @@ module Depth::Core
 
     private def correct_mate_overlap_coverage!(rec, mate : SeenMate, rec_start : Int32, rec_stop : Int32,
                                                coverage : Coverage, offset : Int32)
-      if rec.cigar_size == 1 && mate.cigar_size == 1
+      if single_coverage_cigar?(rec) && mate.single_coverage_cigar?
         s = [rec_start, mate.start].max
         e = [rec_stop, mate.stop].min
         if e > s
@@ -248,6 +248,16 @@ module Depth::Core
           last_pos = pos
         end
       end
+    end
+
+    private def single_coverage_cigar?(rec) : Bool
+      return false unless rec.cigar_size == 1
+
+      matched = false
+      rec.each_cigar do |op_char, length|
+        matched = (op_char == 'M' || op_char == '=' || op_char == 'X') && length > 0
+      end
+      matched
     end
 
     # Apply cigar events into diff-array
@@ -289,8 +299,8 @@ module Depth::Core
       # Assume Runner already sized/zeroed the coverage buffer; avoid duplicate initialization here
       @seen.clear
       @bam.query(tid, q_start, q_stop) do |rec|
+        found = true
         next if filtered_out?(rec)
-        found = true unless found
         accumulate_record!(rec, a, offset)
       end
 

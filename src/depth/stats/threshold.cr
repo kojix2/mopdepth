@@ -4,7 +4,9 @@ module Depth::Stats
     return [] of Int32 if ts.empty? || ts == "nil"
 
     begin
-      result = ts.split(',').map(&.to_i)
+      result = ts.split(',').map do |value|
+        value.to_i32? || raise ArgumentError.new("Invalid threshold string: '#{ts}'")
+      end
       result.sort!
       result
     rescue ArgumentError

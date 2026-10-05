@@ -3,9 +3,9 @@ module Depth::Stats
     # Parse quantize arguments string into array of integers
     # Examples:
     #   ":1" -> [0, 1]
-    #   "0:1:4:" -> [0, 1, 4, Int32::MAX]
-    def self.get_quantize_args(qa : String) : Array(Int32)
-      return [] of Int32 if qa == "nil" || qa.empty?
+    #   "0:1:4:" -> [0, 1, 4, Int64::MAX] (the final value represents infinity)
+    def self.get_quantize_args(qa : String) : Array(Int64)
+      return [] of Int64 if qa == "nil" || qa.empty?
 
       a = qa
 
@@ -21,23 +21,20 @@ module Depth::Stats
 
       # If ends with :, append high value
       if a[-1] == ':'
-        a = a + Int32::MAX.to_s
+        a = a + Int64::MAX.to_s
       end
 
-      begin
-        qs = a.split(':').map(&.to_i)
-        qs.sort!
-        qs
-      rescue
-        STDERR.puts "[mopdepth] invalid quantize string: '#{qa}'"
-        exit(2)
+      qs = a.split(':').map do |value|
+        value.to_i64? || raise ArgumentError.new("Invalid quantize string: '#{qa}'")
       end
+      qs.sort!
+      qs
     end
 
     # Create lookup table for quantize bins
     # Examples:
     #   [0, 1, 4] -> ["0:1", "1:4", "4:inf"]
-    def self.make_lookup(quants : Array(Int32)) : Array(String)
+    def self.make_lookup(quants : Array(Int64)) : Array(String)
       return [] of String if quants.size <= 1
 
       lookup = [] of String
@@ -47,10 +44,10 @@ module Depth::Stats
         env_var = "MOSDEPTH_Q#{i}"
         custom_label = ENV[env_var]?
 
-        if custom_label
+        if custom_label && !custom_label.empty?
           lookup << custom_label
         else
-          if quants[i + 1] == Int32::MAX
+          if quants[i + 1] == Int64::MAX
             lookup << "#{quants[i]}:inf"
           else
             lookup << "#{quants[i]}:#{quants[i + 1]}"
@@ -63,7 +60,7 @@ module Depth::Stats
 
     # Linear search to find which bin a value belongs to
     # Returns -1 if value is outside all bins
-    def self.linear_search(q : Int32, vals : Array(Int32)) : Int32
+    def self.linear_search(q : Int32 | Int64, vals : Array(Int64)) : Int32
       return -1 if vals.empty?
       return -1 if q < vals[0] || q > vals[-1]
 
@@ -82,7 +79,7 @@ module Depth::Stats
     # limit: number of elements from coverage to consider (typically target_size)
     # Yields tuples of (start, stop, label) over [0, limit-1]
 
-    def self.gen_quantized(quants : Array(Int32), coverage : Array(Int32), limit : Int32, & : Tuple(Int32, Int32, String) ->)
+    def self.gen_quantized(quants : Array(Int64), coverage : Array(Int32), limit : Int32, & : Tuple(Int32, Int32, String) ->)
       return if quants.empty?
       return if coverage.empty?
       return if limit <= 1
@@ -121,7 +118,7 @@ module Depth::Stats
     end
 
     # Backward-compatible overload: consume entire coverage array
-    def self.gen_quantized(quants : Array(Int32), coverage : Array(Int32), &block : Tuple(Int32, Int32, String) ->)
+    def self.gen_quantized(quants : Array(Int64), coverage : Array(Int32), &block : Tuple(Int32, Int32, String) ->)
       gen_quantized(quants, coverage, coverage.size, &block)
     end
   end

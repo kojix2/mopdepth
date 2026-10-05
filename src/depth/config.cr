@@ -6,6 +6,7 @@ module Depth
   class Config
     property prefix : String = ""
     property path : String = ""
+    property fasta : String = ENV["REF_PATH"]? || ""
     property threads : Int32 = 0
     property chrom : String = ""
     property by : String = "" # numeric window or BED path
@@ -34,6 +35,9 @@ module Depth
       validate_fragment_lengths!
       validate_mode_combination!
       validate_region_options!
+      validate_window_size!
+      quantize_args if has_quantize?
+      threshold_values if has_thresholds?
     end
 
     private def validate_fragment_lengths!
@@ -52,6 +56,14 @@ module Depth
       return if !has_thresholds? || has_regions?
 
       raise ArgumentError.new("--thresholds can only be used when --by is specified")
+    end
+
+    private def validate_window_size!
+      return unless has_regions? && numeric_by?
+
+      size = by.to_i32?
+      raise ArgumentError.new("--by window size is outside the supported range") unless size
+      raise ArgumentError.new("--by window size must be greater than zero") if size <= 0
     end
 
     def to_options : Core::Options
@@ -73,13 +85,13 @@ module Depth
 
     def window_size : Int32
       return 0 unless has_regions?
-      return 0 unless by.each_char.all?(&.ascii_number?)
-      by.to_i
+      return 0 unless numeric_by?
+      by.to_i32? || raise ArgumentError.new("--by window size is outside the supported range")
     end
 
     def bed_path : String?
       return unless has_regions?
-      return if by.each_char.all?(&.ascii_number?)
+      return if numeric_by?
       by
     end
 
@@ -87,8 +99,8 @@ module Depth
       !quantize.empty? && quantize != "nil"
     end
 
-    def quantize_args : Array(Int32)
-      return [] of Int32 unless has_quantize?
+    def quantize_args : Array(Int64)
+      return [] of Int64 unless has_quantize?
       Stats::Quantize.get_quantize_args(quantize)
     end
 
@@ -104,6 +116,10 @@ module Depth
     private def parse_read_groups : Array(String)
       return [] of String if read_groups_str.empty? || read_groups_str == "nil"
       read_groups_str.split(',').map(&.strip)
+    end
+
+    private def numeric_by? : Bool
+      !by.empty? && by.each_char.all?(&.ascii_number?)
     end
   end
 end

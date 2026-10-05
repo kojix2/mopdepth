@@ -1,5 +1,6 @@
 require "../stats/depth_stat"
 require "../config"
+require "../errors"
 require "hts"
 
 module Depth::FileIO
@@ -24,6 +25,7 @@ module Depth::FileIO
     @zero_float : String
     @mean_scale : UInt128?
     @buffer_size : Int32
+    @closed = false
 
     # Simple aggregation buffer to reduce per-line bgzf_write overhead
     class BgzfLineBuffer
@@ -52,8 +54,18 @@ module Depth::FileIO
       end
 
       def close
-        flush
-        @bgzf.close
+        failures = [] of String
+        begin
+          flush
+        rescue ex
+          failures << "flush failed: #{ex.message}"
+        end
+        begin
+          @bgzf.close
+        rescue ex
+          failures << "close failed: #{ex.message}"
+        end
+        raise Depth::OutputError.new(failures.join("; ")) unless failures.empty?
       end
     end
 
@@ -66,21 +78,36 @@ module Depth::FileIO
       @zero_float = zero_float_string(@precision)
       @mean_scale = decimal_scale(@precision)
       @buffer_size = (ENV["MOPDEPTH_BGZF_BUFFER"]? || "2097152").to_i
+      @f_summary = nil
+      @f_global = nil
+      @f_region = nil
+      @f_perbase = nil
+      @f_regions = nil
+      @f_quantized = nil
+      @f_thresholds = nil
+      @perbase_buf = nil
+      @regions_buf = nil
+      @quantized_buf = nil
+      @thresholds_buf = nil
 
-      @f_summary = File.open(path_for(label, "summary.txt"), "w")
-      @f_global = File.open(path_for(label, "global.dist.txt"), "w")
-      @f_region = config.has_regions? ? File.open(path_for(label, "region.dist.txt"), "w") : nil
+      begin
+        @f_summary = File.open(path_for(label, "summary.txt"), "w")
+        @f_global = File.open(path_for(label, "global.dist.txt"), "w")
+        @f_region = config.has_regions? ? File.open(path_for(label, "region.dist.txt"), "w") : nil
 
-      @f_perbase = config.no_per_base? ? nil : open_indexed_bgzf("per-base.bed.gz")
-      @f_regions = config.has_regions? ? open_indexed_bgzf("regions.bed.gz") : nil
-      @f_quantized = config.has_quantize? ? open_indexed_bgzf("quantized.bed.gz") : nil
-      @f_thresholds = config.has_thresholds? ? open_indexed_bgzf("thresholds.bed.gz") : nil
+        @f_perbase = config.no_per_base? ? nil : open_indexed_bgzf("per-base.bed.gz")
+        @f_regions = config.has_regions? ? open_indexed_bgzf("regions.bed.gz") : nil
+        @f_quantized = config.has_quantize? ? open_indexed_bgzf("quantized.bed.gz") : nil
+        @f_thresholds = config.has_thresholds? ? open_indexed_bgzf("thresholds.bed.gz") : nil
 
-      # Attach buffers
-      @perbase_buf = wrap(@f_perbase)
-      @regions_buf = wrap(@f_regions)
-      @quantized_buf = wrap(@f_quantized)
-      @thresholds_buf = wrap(@f_thresholds)
+        @perbase_buf = wrap(@f_perbase)
+        @regions_buf = wrap(@f_regions)
+        @quantized_buf = wrap(@f_quantized)
+        @thresholds_buf = wrap(@f_thresholds)
+      rescue ex
+        close_all(build_indices: false) rescue nil
+        raise ex
+      end
     end
 
     def write_summary_line(region : String, stat : Depth::Stats::DepthStat)
@@ -101,12 +128,7 @@ module Depth::FileIO
 
     # Optionally call at end to add a total line like mosdepth
     def write_summary_total(total : Depth::Stats::DepthStat)
-      return unless summary = @f_summary
-      mean = total.n_bases > 0 ? total.sum_depth.to_f / total.n_bases : 0.0
-      minv = total.min_depth == Int32::MAX ? 0 : total.min_depth
-      summary << "total\t" << total.n_bases << '\t' << total.sum_depth << '\t'
-      write_float(summary, mean)
-      summary << '\t' << minv << '\t' << total.max_depth << '\n'
+      write_summary_line("total", total)
     end
 
     # Lookup table of decimal digit pairs "00".."99" for two-digits-at-a-time itoa,
@@ -242,48 +264,59 @@ module Depth::FileIO
       end
     end
 
-    def close_all
-      close_stream(@f_summary, "summary")
-      close_stream(@f_global, "global distribution")
-      close_stream(@f_region, "region distribution")
+    def close_all(*, build_indices : Bool = true)
+      return if @closed
+      @closed = true
+      failures = [] of String
+
+      close_stream(@f_summary, "summary", failures)
+      close_stream(@f_global, "global distribution", failures)
+      close_stream(@f_region, "region distribution", failures)
 
       # Flush and close buffered BGZF streams
-      close_buffer(@perbase_buf, "per-base")
-      close_buffer(@regions_buf, "regions")
-      close_buffer(@quantized_buf, "quantized")
-      close_buffer(@thresholds_buf, "thresholds")
+      close_buffer(@perbase_buf, "per-base", failures)
+      close_buffer(@regions_buf, "regions", failures)
+      close_buffer(@quantized_buf, "quantized", failures)
+      close_buffer(@thresholds_buf, "thresholds", failures)
 
       # Close any BGZF streams not wrapped in a buffer (fallback)
-      close_stream(@f_perbase, "per-base") unless @perbase_buf
-      close_stream(@f_regions, "regions") unless @regions_buf
-      close_stream(@f_quantized, "quantized") unless @quantized_buf
-      close_stream(@f_thresholds, "thresholds") unless @thresholds_buf
+      close_stream(@f_perbase, "per-base", failures) unless @perbase_buf
+      close_stream(@f_regions, "regions", failures) unless @regions_buf
+      close_stream(@f_quantized, "quantized", failures) unless @quantized_buf
+      close_stream(@f_thresholds, "thresholds", failures) unless @thresholds_buf
 
-      # Always build CSI indices for BGZF interval outputs
-      build_csi_indices
+      build_csi_indices(failures) if build_indices && failures.empty?
+      raise Depth::OutputError.new(failures.join("; ")) unless failures.empty?
     end
 
-    private def close_buffer(buffer : BgzfLineBuffer?, label : String)
+    private def close_buffer(buffer : BgzfLineBuffer?, label : String, failures : Array(String))
       return unless buffer
 
       buffer.close
     rescue ex
-      warn_close_failure(label, ex)
+      failures << "failed to close #{label} output: #{ex.message}"
     end
 
-    private def close_stream(io : (File | HTS::Bgzf)?, label : String)
+    private def close_stream(io : (File | HTS::Bgzf)?, label : String, failures : Array(String))
       return unless io
 
       io.close
     rescue ex
-      warn_close_failure(label, ex)
+      failures << "failed to close #{label} output: #{ex.message}"
     end
 
-    private def warn_close_failure(label : String, ex : Exception)
-      STDERR.puts "[mopdepth] warning: failed to close #{label} output: #{ex.message}"
+    private def build_csi_indices(failures : Array(String))
+      @paths_to_index.each do |gz_path|
+        csi = "#{gz_path}.csi"
+        ret = build_csi_index(gz_path, csi)
+        if ret != 0
+          failures << "failed to build CSI for #{gz_path} (tbx_index_build3 ret=#{ret})"
+        end
+      end
     end
 
-    private def build_csi_indices
+    # Protected seam for deterministic fault-injection tests.
+    protected def build_csi_index(gz_path : String, csi : String) : Int32
       # Use htslib's tbx_index_build3 with a BED preset configuration.
       # To avoid the issue where references to $tbx_conf_bed become __imp_* with MinGW static linking,
       # construct TbxConfT locally and pass it instead of using a global variable.
@@ -296,15 +329,7 @@ module Depth::FileIO
       bed_conf.meta_char = '#'.ord # comment/meta line start
       bed_conf.line_skip = 0
       conf_ptr = pointerof(bed_conf)
-
-      @paths_to_index.each do |gz_path|
-        # Build explicit .csi next to gz
-        csi = "#{gz_path}.csi"
-        ret = HTS::LibHTS.tbx_index_build3(gz_path, csi, 14, @config.threads, conf_ptr)
-        if ret != 0
-          STDERR.puts "[mopdepth] warning: failed to build CSI for #{gz_path} (tbx_index_build3 ret=#{ret})"
-        end
-      end
+      HTS::LibHTS.tbx_index_build3(gz_path, csi, 14, @config.threads, conf_ptr)
     end
 
     # Helper methods

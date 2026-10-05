@@ -10,4 +10,8 @@ module Depth
   class ConfigError < Error; end
 
   class BamIndexError < Error; end
+
+  class OutputError < Error; end
+
+  class RunError < Error; end
 end

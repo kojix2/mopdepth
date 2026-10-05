@@ -7,6 +7,7 @@ describe Depth::Config do
       config = Depth::Config.new
       config.prefix.should eq("")
       config.path.should eq("")
+      config.fasta.should eq(ENV["REF_PATH"]? || "")
       config.threads.should eq(0)
       config.chrom.should eq("")
       config.by.should eq("")
@@ -98,6 +99,17 @@ describe Depth::Config do
 
       config.validate! # Should not raise
     end
+
+    it "rejects a zero window size" do
+      config = Depth::Config.new
+      config.prefix = "test"
+      config.path = "test.bam"
+      config.by = "0"
+
+      expect_raises(ArgumentError, "--by window size must be greater than zero") do
+        config.validate!
+      end
+    end
   end
 
   describe "#has_regions?" do
@@ -173,19 +185,19 @@ describe Depth::Config do
   describe "#quantize_args" do
     it "returns empty array for no quantize" do
       config = Depth::Config.new
-      config.quantize_args.should eq([] of Int32)
+      config.quantize_args.should eq([] of Int64)
     end
 
     it "returns parsed quantize args" do
       config = Depth::Config.new
       config.quantize = "0:1:4:"
-      config.quantize_args.should eq([0, 1, 4, Int32::MAX])
+      config.quantize_args.should eq([0_i64, 1_i64, 4_i64, Int64::MAX])
     end
 
     it "handles simple quantize string" do
       config = Depth::Config.new
       config.quantize = ":10"
-      config.quantize_args.should eq([0, 10])
+      config.quantize_args.should eq([0_i64, 10_i64])
     end
   end
 
@@ -222,7 +234,7 @@ describe Depth::Config do
 
       config.has_quantize?.should be_true
       args = config.quantize_args
-      args.should eq([0, 1, 4, Int32::MAX])
+      args.should eq([0_i64, 1_i64, 4_i64, Int64::MAX])
 
       # Test that it can create lookup table
       lookup = Depth::Stats::Quantize.make_lookup(args)

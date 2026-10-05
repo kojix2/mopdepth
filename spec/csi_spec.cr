@@ -1,5 +1,6 @@
 require "./spec_helper"
 require "file_utils"
+require "hts"
 
 describe "CSI index generation" do
   temp_dir = "/tmp/mopdepth_csi_test"
@@ -29,5 +30,13 @@ describe "CSI index generation" do
         File.exists?(path).should be_true
       end
     end
+
+    rows = [] of Array(String)
+    bed_gz = "#{temp_dir}/csi_out.per-base.bed.gz"
+    HTS::Tabix.open(bed_gz, index: "#{bed_gz}.csi") do |tabix|
+      tabix.query("MT", 0, 16_569) { |fields| rows << fields }
+    end
+    rows.should_not be_empty
+    rows.each(&.size.should(eq(4)))
   end
 end

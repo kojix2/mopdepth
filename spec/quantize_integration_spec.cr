@@ -88,7 +88,7 @@ describe "Quantize Integration" do
       config.quantize = "0:1:4:"
 
       config.has_quantize?.should be_true
-      config.quantize_args.should eq([0, 1, 4, Int32::MAX])
+      config.quantize_args.should eq([0_i64, 1_i64, 4_i64, Int64::MAX])
     end
 
     it "correctly identifies when quantize is disabled" do
@@ -96,7 +96,7 @@ describe "Quantize Integration" do
       config.quantize = ""
 
       config.has_quantize?.should be_false
-      config.quantize_args.should eq([] of Int32)
+      config.quantize_args.should eq([] of Int64)
     end
   end
 
@@ -108,7 +108,7 @@ describe "Quantize Integration" do
 
       # Get quantize args
       quants = config.quantize_args
-      quants.should eq([0, 1, 4, Int32::MAX])
+      quants.should eq([0_i64, 1_i64, 4_i64, Int64::MAX])
 
       # Create lookup table
       lookup = Depth::Stats::Quantize.make_lookup(quants)
@@ -156,7 +156,7 @@ describe "Quantize Integration" do
       ENV["MOSDEPTH_Q2"] = "HIGH"
 
       begin
-        quants = [0, 1, 4, Int32::MAX]
+        quants = [0_i64, 1_i64, 4_i64, Int64::MAX]
         lookup = Depth::Stats::Quantize.make_lookup(quants)
 
         lookup[0].should eq("LOW")
@@ -179,7 +179,7 @@ describe "Quantize Integration" do
       config = Depth::Config.new
       config.quantize = "0:1:1000"
       args = config.quantize_args
-      args.should eq([0, 1, 1000])
+      args.should eq([0_i64, 1_i64, 1000_i64])
 
       lookup = Depth::Stats::Quantize.make_lookup(args)
       lookup.should eq(["0:1", "1:1000"])
@@ -190,7 +190,7 @@ describe "Quantize Integration" do
       config = Depth::Config.new
       config.quantize = "60"
       args = config.quantize_args
-      args.should eq([0, 60, Int32::MAX])
+      args.should eq([0_i64, 60_i64, Int64::MAX])
 
       lookup = Depth::Stats::Quantize.make_lookup(args)
       lookup.should eq(["0:60", "60:inf"])

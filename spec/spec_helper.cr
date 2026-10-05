@@ -12,8 +12,11 @@ module TestBin
   end
 
   def self.ensure_built!
-    return if @@built && File.exists?(binary)
-    unless File.exists?(binary)
+    source_is_newer = Dir.glob(File.expand_path("../src/**/*.cr", __DIR__)).any? do |source|
+      !File.exists?(binary) || File.info(source).modification_time > File.info(binary).modification_time
+    end
+    return if @@built && File.exists?(binary) && !source_is_newer
+    if !File.exists?(binary) || source_is_newer
       FileUtils.mkdir_p(File.dirname(binary))
       status = Process.run("crystal", ["build", "src/depth.cr", "--release", "-o", binary],
         chdir: Dir.current,

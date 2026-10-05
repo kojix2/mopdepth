@@ -4,6 +4,10 @@ shards:
     git: https://github.com/crystal-ameba/ameba.git
     version: 1.7.1-dev+git.commit.69ff46f0de0fc80cea6c1d63130f609935c5616a
 
+  d4:
+    git: https://github.com/kojix2/d4.cr.git
+    version: 0.1.0+git.commit.612e806cb8c63c775b3d6ce0942ff5be82f42c5e
+
   hts:
     git: https://github.com/bio-cr/hts.cr.git
     version: 0.4.0+git.commit.c16aa4c82929212b159d5e755a8d60817d68932d

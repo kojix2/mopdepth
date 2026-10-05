@@ -37,6 +37,7 @@ module Depth
         psr.on("-b", "--by BY", "BED file or positive numeric window size") { |v| config.by = v }
         psr.on("-f", "--fasta FASTA", "FASTA reference for CRAM input [default: $REF_PATH]") { |v| config.fasta = v }
         psr.on("-n", "--no-per-base", "Skip per-base output") { config.no_per_base = true }
+        psr.on("--d4", "Write per-base depth in D4 format") { config.d4 = true }
         psr.on("-Q", "--mapq MAPQ", "MAPQ threshold") { |v| config.mapq = parse_i32(v, "--mapq") }
         psr.on("-l", "--min-frag-len MIN", "Minimum fragment length") { |v| config.min_frag_len = parse_i32(v, "--min-frag-len") }
         psr.on("-u", "--max-frag-len MAX", "Maximum fragment length") { |v| config.max_frag_len = parse_i32(v, "--max-frag-len") }

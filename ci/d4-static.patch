@@ -1,0 +1,54 @@
+diff --git a/d4/src/d4file/writer.rs b/d4/src/d4file/writer.rs
+index cb4a587..6bffad2 100644
+--- a/d4/src/d4file/writer.rs
++++ b/d4/src/d4file/writer.rs
+@@ -1,0 +2 @@ use d4_framefile::Directory;
++#[cfg(feature = "depth_profiler")]
+@@ -111,0 +113 @@ impl D4FileBuilder {
++    #[cfg(feature = "depth_profiler")]
+diff --git a/d4binding/Cargo.toml b/d4binding/Cargo.toml
+index 9b312bd..ee674bd 100644
+--- a/d4binding/Cargo.toml
++++ b/d4binding/Cargo.toml
+@@ -10 +10 @@ edition = "2021"
+-d4 = { path = "../d4"}
++d4 = { path = "../d4", default-features = false, features = ["task", "writer", "http_reader"] }
+diff --git a/d4binding/src/api.rs b/d4binding/src/api.rs
+index 4e73969..674880d 100644
+--- a/d4binding/src/api.rs
++++ b/d4binding/src/api.rs
+@@ -251,6 +251,3 @@ pub extern "C" fn d4_file_load_metadata(
+-                    extern "C" {
+-                        fn memcpy(dst: *mut c_char, src: *const c_char, size: usize);
+-                    }
+-                    memcpy(
+-                        buf,
+-                        &name_bytes[0] as *const _ as *const _,
++                    std::ptr::copy_nonoverlapping(
++                        name_bytes.as_ptr(),
++                        buf.cast::<u8>(),
+@@ -647,0 +645,24 @@ pub extern "C" fn d4_task_read_values(
++#[no_mangle]
++pub extern "C" fn d4_index_build_sfi(path: *const c_char) -> i32 {
++    if path.is_null() {
++        return set_einval(-1);
++    }
++    let path = unsafe { CStr::from_ptr(path) };
++    let path = match path.to_str() {
++        Ok(path) => path,
++        Err(error) => {
++            set_last_error(error);
++            return -1;
++        }
++    };
++    match D4IndexCollection::open_for_write(path)
++        .and_then(|mut index| index.create_secondary_frame_index())
++    {
++        Ok(()) => 0,
++        Err(error) => {
++            set_last_error(error);
++            -1
++        }
++    }
++}
++

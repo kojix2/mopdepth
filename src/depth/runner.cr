@@ -32,7 +32,7 @@ module Depth
         region = FileIO.parse_region_str(@config.chrom, all_targets)
         targets = selected_targets(all_targets, region)
         bed_map = load_bed_map(all_targets)
-        output = FileIO::OutputManager.new(@config)
+        output = FileIO::OutputManager.new(@config, all_targets)
         write_threshold_header(output)
         state = ProcessingState.new(@config.use_median?)
         process_targets(bam, opts, targets, region, bed_map, output, state)
@@ -225,7 +225,7 @@ module Depth
 
     private def write_per_base_intervals(target : Core::Target, coverage : Core::Coverage, tid : Int32,
                                          slice : TargetSlice, output : FileIO::OutputManager)
-      return unless output.f_perbase
+      return unless output.per_base_enabled?
 
       if tid == Core::CoverageResult::NoData.value
         output.write_per_base_interval(target.name, slice.offset, slice.offset + slice.effective_len, 0)

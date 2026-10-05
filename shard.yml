@@ -12,6 +12,9 @@ dependencies:
   hts:
     github: bio-cr/hts.cr
     branch: develop
+  d4:
+    github: kojix2/d4.cr
+    commit: 612e806cb8c63c775b3d6ce0942ff5be82f42c5e
 
 development_dependencies:
   ameba:

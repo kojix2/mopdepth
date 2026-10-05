@@ -23,6 +23,7 @@ module Depth
     property exclude_flag : UInt16 = 1796_u16
     property include_flag : UInt16 = 0_u16
     property read_groups_str : String = ""
+    property? d4 : Bool = false
     # When true, use mosdepth-compatible names (mosdepth.*); otherwise mopdepth.*
     property? mos_style : Bool = false
 
@@ -36,8 +37,21 @@ module Depth
       validate_mode_combination!
       validate_region_options!
       validate_window_size!
+      validate_d4_support!
       quantize_args if has_quantize?
       threshold_values if has_thresholds?
+    end
+
+    def use_d4? : Bool
+      d4? && !no_per_base?
+    end
+
+    def d4_supported? : Bool
+      {% if flag?(:d4) %}
+        true
+      {% else %}
+        false
+      {% end %}
     end
 
     private def validate_fragment_lengths!
@@ -64,6 +78,12 @@ module Depth
       size = by.to_i32?
       raise ArgumentError.new("--by window size is outside the supported range") unless size
       raise ArgumentError.new("--by window size must be greater than zero") if size <= 0
+    end
+
+    private def validate_d4_support!
+      return if !use_d4? || d4_supported?
+
+      raise ArgumentError.new("D4 output is not available in this build; rebuild with `make d4`")
     end
 
     def to_options : Core::Options

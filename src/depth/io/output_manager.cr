@@ -1,6 +1,8 @@
 require "../stats/depth_stat"
 require "../config"
 require "../errors"
+require "../core/target"
+require "./d4_output"
 require "hts"
 
 module Depth::FileIO
@@ -12,6 +14,7 @@ module Depth::FileIO
     getter f_regions : (File | HTS::Bgzf)?
     getter f_quantized : (File | HTS::Bgzf)?
     getter f_thresholds : (File | HTS::Bgzf)?
+    getter d4_output : D4Output?
     # Internal line buffers for BGZF outputs
     @perbase_buf : BgzfLineBuffer?
     @regions_buf : BgzfLineBuffer?
@@ -69,7 +72,7 @@ module Depth::FileIO
       end
     end
 
-    def initialize(config : Config)
+    def initialize(config : Config, targets : Array(Core::Target) = [] of Core::Target)
       @config = config
       @prefix = config.prefix
       label = config.mos_style? ? "mosdepth" : "mopdepth"
@@ -85,6 +88,7 @@ module Depth::FileIO
       @f_regions = nil
       @f_quantized = nil
       @f_thresholds = nil
+      @d4_output = nil
       @perbase_buf = nil
       @regions_buf = nil
       @quantized_buf = nil
@@ -95,7 +99,7 @@ module Depth::FileIO
         @f_global = File.open(path_for(label, "global.dist.txt"), "w")
         @f_region = config.has_regions? ? File.open(path_for(label, "region.dist.txt"), "w") : nil
 
-        @f_perbase = config.no_per_base? ? nil : open_indexed_bgzf("per-base.bed.gz")
+        open_per_base_output(config, targets)
         @f_regions = config.has_regions? ? open_indexed_bgzf("regions.bed.gz") : nil
         @f_quantized = config.has_quantize? ? open_indexed_bgzf("quantized.bed.gz") : nil
         @f_thresholds = config.has_thresholds? ? open_indexed_bgzf("thresholds.bed.gz") : nil
@@ -107,6 +111,15 @@ module Depth::FileIO
       rescue ex
         close_all(build_indices: false) rescue nil
         raise ex
+      end
+    end
+
+    private def open_per_base_output(config : Config, targets : Array(Core::Target))
+      if config.use_d4?
+        raise Depth::OutputError.new("D4 output requires alignment reference metadata") if targets.empty?
+        @d4_output = D4Output.new("#{@prefix}.per-base.d4", targets)
+      else
+        @f_perbase = config.no_per_base? ? nil : open_indexed_bgzf("per-base.bed.gz")
       end
     end
 
@@ -179,6 +192,10 @@ module Depth::FileIO
     end
 
     def write_per_base_interval(chrom : String, start : Int32, stop : Int32, depth : Int32)
+      if d4 = @d4_output
+        d4.write_interval(chrom, start, stop, depth)
+        return
+      end
       return unless perbase = @f_perbase
       if buf = @perbase_buf
         buf.add_line do |io|
@@ -189,6 +206,10 @@ module Depth::FileIO
           write_per_base_fields(io, chrom, start, stop, depth)
         end
       end
+    end
+
+    def per_base_enabled? : Bool
+      !@f_perbase.nil? || !@d4_output.nil?
     end
 
     def write_region_stat(chrom : String, start : Int32, stop : Int32, name : String?, value : Float64)
@@ -279,14 +300,37 @@ module Depth::FileIO
       close_buffer(@quantized_buf, "quantized", failures)
       close_buffer(@thresholds_buf, "thresholds", failures)
 
+      d4_closed = close_d4_output(failures)
+
       # Close any BGZF streams not wrapped in a buffer (fallback)
       close_stream(@f_perbase, "per-base", failures) unless @perbase_buf
       close_stream(@f_regions, "regions", failures) unless @regions_buf
       close_stream(@f_quantized, "quantized", failures) unless @quantized_buf
       close_stream(@f_thresholds, "thresholds", failures) unless @thresholds_buf
 
-      build_csi_indices(failures) if build_indices && failures.empty?
+      if build_indices
+        build_csi_indices(failures) if failures.empty?
+        build_d4_index(failures) if d4_closed
+      end
       raise Depth::OutputError.new(failures.join("; ")) unless failures.empty?
+    end
+
+    private def close_d4_output(failures : Array(String)) : Bool
+      return false unless d4 = @d4_output
+
+      d4.close
+      true
+    rescue ex
+      failures << "failed to close D4 output: #{ex.message}"
+      false
+    end
+
+    private def build_d4_index(failures : Array(String))
+      return unless d4 = @d4_output
+
+      d4.build_index
+    rescue ex
+      failures << "failed to build D4 SFI index: #{ex.message}"
     end
 
     private def close_buffer(buffer : BgzfLineBuffer?, label : String, failures : Array(String))

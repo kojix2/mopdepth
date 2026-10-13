@@ -100,7 +100,7 @@ module Depth::Core
 
     @evbuf : Array(Tuple(Int32, Int32))
 
-    def initialize(@bam : HTS::Bam, @options : Options)
+    def initialize(@bam : HTS::Bam, @options : Options, @on_record : Proc(Nil)? = nil)
       # store first-read of overlapping proper pairs to correct double-counting when mate arrives
       @seen = Hash(QnameKey, SeenMate).new
       @evbuf = [] of Tuple(Int32, Int32)
@@ -299,6 +299,7 @@ module Depth::Core
       # Assume Runner already sized/zeroed the coverage buffer; avoid duplicate initialization here
       @seen.clear
       @bam.query(tid, q_start, q_stop) do |rec|
+        @on_record.try(&.call)
         found = true
         next if filtered_out?(rec)
         accumulate_record!(rec, a, offset)
@@ -315,6 +316,7 @@ module Depth::Core
 
       @seen.clear
       @bam.each do |rec|
+        @on_record.try(&.call)
         # Break if we encounter a different chromosome to prevent array corruption
         if current_tid != Int32::MIN && rec.tid != current_tid
           break

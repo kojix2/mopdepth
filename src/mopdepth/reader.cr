@@ -14,47 +14,14 @@ module Mopdepth
   class Reader
     CHECK_INTERVAL = 65_536
 
-    private class ObservedBam < HTS::Bam
-      getter records_examined = 0_i64
-      @control : Control? = nil
-      @on_records : Proc(Int64, Nil)? = nil
-
-      def initialize(path : String, reference : String, threads : Int32)
-        super(path, fai: reference, threads: threads)
-      end
-
-      def observe(control : Control, on_records : Proc(Int64, Nil)) : Nil
-        @control = control
-        @on_records = on_records
-      end
-
-      def stop_observing : Nil
-        @control = nil
-        @on_records = nil
-      end
-
-      def query(tid : Int32, beg : Int64, end_pos : Int64, &)
-        @control.try(&.check!)
-        super(tid, beg, end_pos) do |record|
-          @records_examined += 1
-          if @records_examined % 8192 == 0
-            @control.try(&.check!)
-            @on_records.try(&.call(@records_examined))
-            @control.try(&.check!)
-          end
-          yield record
-        end
-        @control.try(&.check!)
-      end
-    end
-
     getter path : String
     getter targets : Array(Target)
     getter file_format : String
+    getter records_examined = 0_i64
 
     @closed = false
 
-    private def initialize(@path : String, @bam : ObservedBam, @targets : Array(Target), @file_format : String)
+    private def initialize(@path : String, @bam : HTS::Bam, @targets : Array(Target), @file_format : String)
       @targets_by_name = Hash(String, Target).new
       @targets.each { |target| @targets_by_name[target.name] = target }
     end
@@ -62,9 +29,9 @@ module Mopdepth
     def self.open(path : String | Path, *, reference : String | Path = "", threads : Int32 = 0) : self
       raise ArgumentError.new("threads must not be negative") if threads < 0
       input = path.to_s
-      bam = nil.as(ObservedBam?)
+      bam = nil.as(HTS::Bam?)
       begin
-        bam = ObservedBam.new(input, reference.to_s, threads)
+        bam = HTS::Bam.open(input, fai: reference.to_s, threads: threads)
         format = bam.file_format
         unless format == "bam" || format == "cram"
           raise InputError.new("indexed BAM or CRAM input is required; got #{format}")
@@ -107,10 +74,6 @@ module Mopdepth
     def target(name : String) : Target
       ensure_open
       @targets_by_name[name]? || raise UnknownReferenceError.new("reference not found: #{name}")
-    end
-
-    def records_examined : Int64
-      @bam.records_examined
     end
 
     def coverage(chromosome : String, *, options : Options = Options.new,
@@ -186,14 +149,11 @@ module Mopdepth
       before = records_examined
       progress = progress.copy_with(stage: Stage::Reading)
       control.update(progress)
-      @bam.observe(control, ->(count : Int64) {
-        control.update(progress.copy_with(records_examined: count))
-      })
-      result = begin
-        Depth::Core::CoverageCalculator.new(@bam, core_options).calculate(values, query, region.start)
-      ensure
-        @bam.stop_observing
-      end
+      on_record = -> {
+        @records_examined += 1
+        control.update(progress.copy_with(records_examined: records_examined)) if records_examined % 8192 == 0
+      }
+      result = Depth::Core::CoverageCalculator.new(@bam, core_options, on_record).calculate(values, query, region.start)
       control.update(progress.copy_with(stage: Stage::Finalizing, records_examined: records_examined))
       status = result == Depth::Core::CoverageResult::NoData.value ? CoverageStatus::NoData : CoverageStatus::Observed
       finalize_values(values, region.length, status, control)

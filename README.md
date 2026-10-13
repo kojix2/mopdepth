@@ -16,7 +16,7 @@ A fast BAM/CRAM depth calculation tool written in Crystal, inspired by [mosdepth
 - BED file support for custom regions
 - Plain, gzip, and BGZF BED input
 - Explicit FASTA references for CRAM input
-- Optional D4 per-base output
+- D4 per-base output via the pure-Crystal `d4.cr` library
 - Window-based analysis
 - Comprehensive filtering options (MAPQ, fragment length, flags)
 
@@ -39,17 +39,10 @@ make
 The default target always builds an optimized release binary at `bin/mopdepth`.
 Use `make debug` only when a non-optimized development binary is needed.
 
-To build with D4 support, install Rust/Cargo and run:
-
-```bash
-make d4
-```
-
-This downloads the pinned D4 source, builds `libd4binding.a`, and links that
-archive into the optimized mopdepth binary. The D4 binding is therefore not a
-runtime shared-library dependency. Other platform libraries, including HTSlib,
-follow the normal Crystal and system linker configuration. Run `make test-d4`
-to execute the D4 write/read-back integration tests.
+D4 support is included in the regular build through
+[`kojix2/d4.cr`](https://github.com/kojix2/d4.cr). It requires neither Rust nor
+the native `d4binding` library. Run `make test-d4` to execute the D4
+write/read-back integration tests.
 
 ## Usage
 
@@ -70,7 +63,7 @@ to execute the D4 write/read-back integration tests.
 - `-b, --by BY`: BED file or numeric window size
 - `-f, --fasta FASTA`: FASTA reference for CRAM input (defaults to `REF_PATH`)
 - `-n, --no-per-base`: Skip per-base output
-- `--d4`: Write per-base depth as D4 (requires a `make d4` build)
+- `--d4`: Write per-base depth as D4
 - `-Q, --mapq MAPQ`: MAPQ threshold
 - `-l, --min-frag-len MIN`: Minimum fragment length
 - `-u, --max-frag-len MAX`: Maximum fragment length

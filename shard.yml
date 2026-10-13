@@ -14,13 +14,13 @@ dependencies:
     branch: develop
   d4:
     github: kojix2/d4.cr
-    commit: 612e806cb8c63c775b3d6ce0942ff5be82f42c5e
+    branch: main
 
 development_dependencies:
   ameba:
     github: crystal-ameba/ameba
     branch: master
 
-crystal: '>= 1.17.1'
+crystal: '>= 1.21.0'
 
 license: MIT

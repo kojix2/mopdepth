@@ -257,6 +257,101 @@
       
     </li>
   
+  <li class="parent " data-id="mopdepth/Mopdepth" data-name="mopdepth">
+      <a href="Mopdepth.html">Mopdepth</a>
+      
+        <ul>
+  
+  <li class=" " data-id="mopdepth/Mopdepth/CancelledError" data-name="mopdepth::cancellederror">
+      <a href="Mopdepth/CancelledError.html">CancelledError</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Mopdepth/ClosedError" data-name="mopdepth::closederror">
+      <a href="Mopdepth/ClosedError.html">ClosedError</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Mopdepth/Control" data-name="mopdepth::control">
+      <a href="Mopdepth/Control.html">Control</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Mopdepth/Coverage" data-name="mopdepth::coverage">
+      <a href="Mopdepth/Coverage.html">Coverage</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Mopdepth/CoverageOverflowError" data-name="mopdepth::coverageoverflowerror">
+      <a href="Mopdepth/CoverageOverflowError.html">CoverageOverflowError</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Mopdepth/CoverageStatus" data-name="mopdepth::coveragestatus">
+      <a href="Mopdepth/CoverageStatus.html">CoverageStatus</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Mopdepth/Error" data-name="mopdepth::error">
+      <a href="Mopdepth/Error.html">Error</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Mopdepth/IndexError" data-name="mopdepth::indexerror">
+      <a href="Mopdepth/IndexError.html">IndexError</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Mopdepth/InputError" data-name="mopdepth::inputerror">
+      <a href="Mopdepth/InputError.html">InputError</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Mopdepth/Mode" data-name="mopdepth::mode">
+      <a href="Mopdepth/Mode.html">Mode</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Mopdepth/Options" data-name="mopdepth::options">
+      <a href="Mopdepth/Options.html">Options</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Mopdepth/Progress" data-name="mopdepth::progress">
+      <a href="Mopdepth/Progress.html">Progress</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Mopdepth/Reader" data-name="mopdepth::reader">
+      <a href="Mopdepth/Reader.html">Reader</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Mopdepth/Region" data-name="mopdepth::region">
+      <a href="Mopdepth/Region.html">Region</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Mopdepth/Stage" data-name="mopdepth::stage">
+      <a href="Mopdepth/Stage.html">Stage</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Mopdepth/Target" data-name="mopdepth::target">
+      <a href="Mopdepth/Target.html">Target</a>
+      
+    </li>
+  
+  <li class=" " data-id="mopdepth/Mopdepth/UnknownReferenceError" data-name="mopdepth::unknownreferenceerror">
+      <a href="Mopdepth/UnknownReferenceError.html">UnknownReferenceError</a>
+      
+    </li>
+  
+</ul>
+
+      
+    </li>
+  
 </ul>
 
   </div>
@@ -318,6 +413,33 @@ Use <code>make debug</code> only when a non-optimized development binary is need
 <a href="https://github.com/kojix2/d4.cr"><code>kojix2/d4.cr</code></a>. It requires neither Rust nor
 the native <code>d4binding</code> library. Run <code>make test-d4</code> to execute the D4
 write/read-back integration tests.</p>
+<h3><a id="library-api" class="anchor" href="#library-api">
+  <svg class="octicon-link" aria-hidden="true">
+    <use href="#octicon-link"/>
+  </svg>
+</a>Library API</h3>
+<p>Applications can use mopdepth without invoking its CLI:</p>
+<pre><code class="language-crystal"><span class="k">require</span> <span class="s">&quot;mopdepth&quot;</span>
+
+options <span class="o">=</span> <span class="t">Mopdepth</span><span class="t">::</span><span class="t">Options</span>.new(
+  mode: <span class="t">Mopdepth</span><span class="t">::</span><span class="t">Mode</span><span class="t">::</span><span class="t">Standard</span>,
+  minimum_mapping_quality: <span class="n">20</span>
+)
+
+<span class="t">Mopdepth</span><span class="t">::</span><span class="t">Reader</span>.open(<span class="s">&quot;sample.bam&quot;</span>, threads: <span class="n">4</span>) <span class="k">do</span> <span class="o">|</span>reader<span class="o">|</span>
+  reader.each_coverage(options: options) <span class="k">do</span> <span class="o">|</span>coverage<span class="o">|</span>
+    puts <span class="s">&quot;</span><span class="i">#{</span>coverage.region.chromosome<span class="i">}</span><span class="s">: </span><span class="i">#{</span>coverage.values.size<span class="i">}</span><span class="s"> bases&quot;</span>
+  <span class="k">end</span>
+<span class="k">end</span></code></pre>
+<p><code><a href="Mopdepth/Reader.html">Mopdepth::Reader</a></code> owns the indexed BAM/CRAM handle and exposes <code>coverage</code>,
+<code>coverage_into</code>, and <code>each_coverage</code>. Coordinates are always zero-based and
+half-open. <code>coverage_into</code> reuses a caller-owned <code>Array(Int32)</code>; returned arrays
+contain one value per base and never expose the internal difference-array
+sentinel. A reader is serial: use one reader per concurrent worker.</p>
+<p>Long operations support cooperative cancellation and progress callbacks:</p>
+<pre><code class="language-crystal">control <span class="o">=</span> <span class="t">Mopdepth</span><span class="t">::</span><span class="t">Control</span>.new { <span class="o">|</span>progress<span class="o">|</span> puts progress }
+<span class="c"># Another fiber or thread may call control.cancel.</span>
+coverage <span class="o">=</span> reader.coverage(<span class="s">&quot;chr1&quot;</span>, options: options, control: control)</code></pre>
 <h2><a id="usage" class="anchor" href="#usage">
   <svg class="octicon-link" aria-hidden="true">
     <use href="#octicon-link"/>

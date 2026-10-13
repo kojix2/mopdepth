@@ -59,9 +59,9 @@ describe "mopdepth minimal output smoke tests (gz only, no -M)" do
     status.success?.should be_true
 
     TestIO.read_text("#{temp_dir}/overlap.per-base.bed.gz").should eq <<-BED.chomp + "\n"
-    1\t0\t565173\t0
-    1\t565173\t565253\t1
-    1\t565253\t249250621\t0
-    BED
+      1\t0\t565173\t0
+      1\t565173\t565253\t1
+      1\t565253\t249250621\t0
+      BED
   end
 end

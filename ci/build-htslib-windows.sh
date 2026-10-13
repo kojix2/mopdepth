@@ -2,6 +2,7 @@
 set -euo pipefail
 
 htslib_ref=${HTSLIB_REF:-develop}
+mingw_prefix=${MINGW_PREFIX:?MINGW_PREFIX must be set by MSYS2}
 
 git clone --depth 1 --branch "$htslib_ref" https://github.com/samtools/htslib.git htslib
 (
@@ -16,13 +17,13 @@ git clone --depth 1 --branch "$htslib_ref" https://github.com/samtools/htslib.gi
 )
 
 for archive in \
-  /mingw64/lib/libbz2.a \
-  /mingw64/lib/liblzma.a \
-  /mingw64/lib/libz.a \
-  /mingw64/lib/libdeflate.a \
-  /mingw64/lib/libregex.a \
-  /mingw64/lib/libtre.a \
-  /mingw64/lib/libintl.a; do
+  "$mingw_prefix/lib/libbz2.a" \
+  "$mingw_prefix/lib/liblzma.a" \
+  "$mingw_prefix/lib/libz.a" \
+  "$mingw_prefix/lib/libdeflate.a" \
+  "$mingw_prefix/lib/libregex.a" \
+  "$mingw_prefix/lib/libtre.a" \
+  "$mingw_prefix/lib/libintl.a"; do
   test -f "$archive" || { echo "Error: $archive not found" >&2; exit 1; }
 done
 

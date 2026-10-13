@@ -5,7 +5,15 @@ binary=${1:?binary path required}
 
 deps=$(otool -L "$binary")
 printf '%s\n' "$deps"
-if printf '%s\n' "$deps" | grep -E -q "lib(hts|deflate|bz2|lzma|z).*dylib|/(opt/homebrew|usr/local)/"; then
-  echo "Error: non-portable Homebrew or htslib dylib dependency linked on macOS" >&2
+
+nonportable_deps=$(
+  printf '%s\n' "$deps" |
+    awk 'NR > 1 { print $1 }' |
+    grep -E -v '^(/usr/lib/|/System/Library/)' || true
+)
+
+if [[ -n "$nonportable_deps" ]]; then
+  echo "Error: non-portable dynamic dependencies linked on macOS:" >&2
+  printf '%s\n' "$nonportable_deps" >&2
   exit 1
 fi

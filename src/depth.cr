@@ -1,4 +1,5 @@
 require "option_parser"
+require "./mopdepth"
 require "./depth/config"
 require "./depth/runner"
 require "./depth/version"

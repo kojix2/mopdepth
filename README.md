@@ -44,6 +44,39 @@ D4 support is included in the regular build through
 the native `d4binding` library. Run `make test-d4` to execute the D4
 write/read-back integration tests.
 
+### Library API
+
+Applications can use mopdepth without invoking its CLI:
+
+```crystal
+require "mopdepth"
+
+options = Mopdepth::Options.new(
+  mode: Mopdepth::Mode::Standard,
+  minimum_mapping_quality: 20
+)
+
+Mopdepth::Reader.open("sample.bam", threads: 4) do |reader|
+  reader.each_coverage(options: options) do |coverage|
+    puts "#{coverage.region.chromosome}: #{coverage.values.size} bases"
+  end
+end
+```
+
+`Mopdepth::Reader` owns the indexed BAM/CRAM handle and exposes `coverage`,
+`coverage_into`, and `each_coverage`. Coordinates are always zero-based and
+half-open. `coverage_into` reuses a caller-owned `Array(Int32)`; returned arrays
+contain one value per base and never expose the internal difference-array
+sentinel. A reader is serial: use one reader per concurrent worker.
+
+Long operations support cooperative cancellation and progress callbacks:
+
+```crystal
+control = Mopdepth::Control.new { |progress| puts progress }
+# Another fiber or thread may call control.cancel.
+coverage = reader.coverage("chr1", options: options, control: control)
+```
+
 ## Usage
 
 ```bash

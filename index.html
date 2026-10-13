@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Crystal Docs 1.20.3">
+<meta name="generator" content="Crystal Docs 1.21.0">
 <meta name="crystal_docs.project_version" content="main-dev">
 <meta name="crystal_docs.project_name" content="mopdepth">
 
@@ -285,7 +285,7 @@
 <li>BED file support for custom regions</li>
 <li>Plain, gzip, and BGZF BED input</li>
 <li>Explicit FASTA references for CRAM input</li>
-<li>Optional D4 per-base output</li>
+<li>D4 per-base output via the pure-Crystal <code>d4.cr</code> library</li>
 <li>Window-based analysis</li>
 <li>Comprehensive filtering options (MAPQ, fragment length, flags)</li>
 </ul>
@@ -314,13 +314,10 @@ cd mopdepth
 make</code></pre>
 <p>The default target always builds an optimized release binary at <code>bin/mopdepth</code>.
 Use <code>make debug</code> only when a non-optimized development binary is needed.</p>
-<p>To build with D4 support, install Rust/Cargo and run:</p>
-<pre><code class="language-bash">make d4</code></pre>
-<p>This downloads the pinned D4 source, builds <code>libd4binding.a</code>, and links that
-archive into the optimized mopdepth binary. The D4 binding is therefore not a
-runtime shared-library dependency. Other platform libraries, including HTSlib,
-follow the normal Crystal and system linker configuration. Run <code>make test-d4</code>
-to execute the D4 write/read-back integration tests.</p>
+<p>D4 support is included in the regular build through
+<a href="https://github.com/kojix2/d4.cr"><code>kojix2/d4.cr</code></a>. It requires neither Rust nor
+the native <code>d4binding</code> library. Run <code>make test-d4</code> to execute the D4
+write/read-back integration tests.</p>
 <h2><a id="usage" class="anchor" href="#usage">
   <svg class="octicon-link" aria-hidden="true">
     <use href="#octicon-link"/>
@@ -344,7 +341,7 @@ to execute the D4 write/read-back integration tests.</p>
 <li><code>-b, --by BY</code>: BED file or numeric window size</li>
 <li><code>-f, --fasta FASTA</code>: FASTA reference for CRAM input (defaults to <code>REF_PATH</code>)</li>
 <li><code>-n, --no-per-base</code>: Skip per-base output</li>
-<li><code>--d4</code>: Write per-base depth as D4 (requires a <code>make d4</code> build)</li>
+<li><code>--d4</code>: Write per-base depth as D4</li>
 <li><code>-Q, --mapq MAPQ</code>: MAPQ threshold</li>
 <li><code>-l, --min-frag-len MIN</code>: Minimum fragment length</li>
 <li><code>-u, --max-frag-len MAX</code>: Maximum fragment length</li>

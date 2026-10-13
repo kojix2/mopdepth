@@ -15,7 +15,66 @@ on:
 env:
   HTSLIB_REF: ${{ github.event.inputs.htslib_ref || 'develop' }}
 
+permissions:
+  contents: read
+
 jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository (with submodules)
+        uses: actions/checkout@v7
+        with:
+          submodules: true
+
+      - name: Install Crystal
+        uses: crystal-lang/install-crystal@v1
+        with:
+          crystal: latest
+
+      - name: Install native dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config curl git libhts-dev
+          pkg-config --modversion htslib
+
+      - name: Install Nim (choosenim)
+        env:
+          CHOOSENIM_NO_ANALYTICS: 1
+        run: |
+          curl -sSf https://nim-lang.org/choosenim/init.sh | bash -s -- -y
+          echo "/home/runner/.nimble/bin" >> $GITHUB_PATH
+          export PATH="/home/runner/.nimble/bin:$PATH"
+          nim --version
+          nimble --version
+
+      - name: Cache Nimble packages
+        uses: actions/cache@v6
+        with:
+          path: ~/.nimble
+          key: ${{ runner.os }}-nimble-${{ hashFiles('mosdepth/mosdepth.nimble') }}
+          restore-keys: |
+            ${{ runner.os }}-nimble-
+
+      - name: Build mosdepth from submodule
+        working-directory: mosdepth
+        run: |
+          nimble install -y
+          nim c -d:release mosdepth.nim
+          ls -l mosdepth || true
+          echo "MOSDEPTH_PATH=$PWD/mosdepth" >> $GITHUB_ENV
+
+      - name: Install shards (project deps)
+        run: shards install --without-development
+
+      - name: Run specs (using built mosdepth)
+        env:
+          MOSDEPTH_PATH: ${{ env.MOSDEPTH_PATH }}
+        run: |
+          echo "Using MOSDEPTH_PATH=$MOSDEPTH_PATH"
+          crystal spec
+
   build:
     name: build ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
@@ -175,8 +234,7 @@ jobs:
           cp README.md $PKG/
           zip -r $PKG.zip $PKG
 
-      - name: Upload artifacts (non-release)
-        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v7
         with:
           name: mopdepth-${{ matrix.target }}
@@ -184,10 +242,24 @@ jobs:
             mopdepth-*.tar.gz
             mopdepth-*.zip
 
-      - name: Upload release assets (release only)
-        if: startsWith(github.ref, 'refs/tags/')
+  release:
+    name: release
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [test, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v7
+        with:
+          pattern: mopdepth-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Publish GitHub release
         uses: softprops/action-gh-release@v3
         with:
           files: |
-            mopdepth-*.tar.gz
-            mopdepth-*.zip
+            release-assets/mopdepth-*.tar.gz
+            release-assets/mopdepth-*.zip

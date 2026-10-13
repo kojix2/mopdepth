@@ -59,5 +59,5 @@ format-check:
 	$(CRYSTAL) tool format --check src spec
 
 clean:
-	rm -f $(BIN)
+	rm -f $(BIN) $(BIN).dwarf
 	rm -rf $(CURDIR)/.build

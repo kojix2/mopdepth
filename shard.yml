@@ -13,7 +13,7 @@ dependencies:
     github: bio-cr/hts.cr
     branch: develop
   d4:
-    github: kojix2/d4.cr
+    github: bio-cr/d4.cr
     branch: main
 
 development_dependencies:

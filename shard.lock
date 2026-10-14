@@ -5,7 +5,7 @@ shards:
     version: 1.7.1-dev+git.commit.964e022df1982dbf6d4cbac9def4a44b0aaf2c14
 
   d4:
-    git: https://github.com/kojix2/d4.cr.git
+    git: https://github.com/bio-cr/d4.cr.git
     version: 0.1.0+git.commit.7075796d5c1ced4e31d33abc9f078adfeed85603
 
   hts:

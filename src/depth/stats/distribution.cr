@@ -7,6 +7,7 @@ module Depth::Stats
       i = start_i
       while i < istop
         v = a[i]
+        # Bound histogram size; depths above 400,000 share the 399,990 bin.
         v = Depth::Core::MAX_COVERAGE - 10 if v > Depth::Core::MAX_COVERAGE
         if v >= dist.size
           old = dist.size

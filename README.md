@@ -125,6 +125,14 @@ header: coordinates must be 0-based half-open, non-empty, non-negative, and
 contained in the named reference. References absent from the alignment header are
 reported and ignored. Overlapping BED intervals remain independent observations.
 
+With `-n -b regions.bed`, chromosomes absent from the BED are skipped entirely
+when neither `-q` nor `-T` is requested. They are therefore absent from the
+chromosome summaries and global distributions, and do not contribute to `total`.
+For chromosomes present in the BED, `total` and the global distribution still
+cover each entire processed chromosome (or the selected `--chrom` range), while
+`total_region` and the region distribution cover the BED intervals. This skip
+is a mosdepth-compatible performance optimization.
+
 `--chrom` also accepts a 1-based inclusive range such as `chr1:100-200`. Unlike
 mosdepth 0.3.x, mopdepth applies that range to calculation and output. In fragment
 mode it still examines the complete chromosome so fragments spanning the selected
@@ -142,6 +150,13 @@ range are not missed.
 - Thresholds: `<prefix>.thresholds.bed.gz` (when `--thresholds` and `--by`)
 
 By default, files are named with the `mopdepth.*` label. Use `-M/--mos` to switch to `mosdepth.*`.
+
+Histogram-based outputs have bounded depth bins, matching mosdepth's performance
+conventions: `-m` reports 65,535 for medians above 65,535; numeric-window
+`region.dist` places rounded means or medians above 511 in bin 511; and global
+or BED-region distributions place per-base depths above 400,000 in bin 399,990.
+These bounds do not clip per-base depth, threshold counts, quantized output, or
+mean and maximum depth in the summary.
 
 ### mosdepth compatibility
 

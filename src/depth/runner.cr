@@ -83,6 +83,7 @@ module Depth
       def initialize(use_median : Bool, @thresholds : Array(Int32))
         @global_dist = Array(Int64).new(512, 0_i64)
         @total_global_dist = Array(Int64).new(512, 0_i64)
+        # Window representatives above 511 share the last region-distribution bin.
         @region_dist = Array(Int64).new(512, 0_i64)
         @total_region_dist = Array(Int64).new(512, 0_i64)
         @global_stat = Stats::DepthStat.new
@@ -166,6 +167,8 @@ module Depth
     end
 
     private def skip_target?(target : Core::Target, bed_map : Hash(String, Array(Core::Region))?) : Bool
+      # With -n -b BED, skip BED-absent chromosomes even in global summaries.
+      # Quantized and threshold outputs still require visiting every chromosome.
       return false unless @config.no_per_base? && bed_map
       return false if @config.has_quantize? || @config.has_thresholds?
 

@@ -17,6 +17,7 @@ module Depth::Stats
     def add(value : Int32)
       @n += 1
       v = value < 0 ? raise ArgumentError.new("negative depth: #{value}") : value
+      # Keep the median histogram fixed-size; higher depths share its last bin.
       idx = v < counts.size ? v : counts.size - 1
       unless @mark[idx]
         @mark[idx] = true

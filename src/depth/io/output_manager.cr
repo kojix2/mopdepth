@@ -399,7 +399,8 @@ module Depth::FileIO
         return
       end
 
-      value.format(io, decimal_places: @precision)
+      # Keep the existing formatter but disable grouping in machine-readable output.
+      value.format(io, decimal_places: @precision, group: Int32::MAX)
     end
 
     private def write_mean(io, sum : UInt64, length : Int32)

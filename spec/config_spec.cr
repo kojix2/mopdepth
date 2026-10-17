@@ -53,6 +53,25 @@ describe Depth::Config do
       end
     end
 
+    it "rejects MAPQ above the BAM field range" do
+      config = Depth::Config.new
+      config.prefix = "test"
+      config.path = "test.bam"
+      config.mapq = 256
+      expect_raises(ArgumentError, "Invalid MAPQ threshold") { config.validate! }
+    end
+
+    it "rejects fragment lengths below the unset sentinel" do
+      config = Depth::Config.new
+      config.prefix = "test"
+      config.path = "test.bam"
+      config.min_frag_len = -2
+      expect_raises(ArgumentError, /min_frag_len/) { config.validate! }
+      config.min_frag_len = -1
+      config.max_frag_len = -2
+      expect_raises(ArgumentError, /max_frag_len/) { config.validate! }
+    end
+
     it "raises error for negative threads" do
       config = Depth::Config.new
       config.prefix = "test"

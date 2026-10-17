@@ -52,6 +52,12 @@ describe "Region Parsing" do
       region.should be_nil
     end
 
+    it "selects a reference literally named nil when present" do
+      targets = [Depth::Core::Target.new("nil", 10, 0)]
+      region = Depth::FileIO.parse_region_str("nil", targets)
+      region.should eq(Depth::Core::Region.new("nil", 0, 0))
+    end
+
     it "handles complex chromosome names" do
       region = Depth::FileIO.parse_region_str("chr22:20000000-23000000", region_targets)
       region.should_not be_nil

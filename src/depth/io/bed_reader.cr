@@ -7,10 +7,11 @@ require "set"
 module Depth::FileIO
   # Parse region like: chr1, chr1:100-200, or BED line
   def self.parse_region_str(s : String, targets : Array(Depth::Core::Target)) : Depth::Core::Region?
-    return if s.empty? || s == "nil"
+    return if s.empty?
     if target = targets.find { |candidate| candidate.name == s }
       return Depth::Core::Region.new(target.name, 0, 0)
     end
+    return if s == "nil"
 
     target = targets.sort_by { |candidate| -candidate.name.bytesize }
       .find { |candidate| s.starts_with?(candidate.name + ":") }
@@ -39,7 +40,7 @@ module Depth::FileIO
     HTS::Bgzf.open(path, "r") do |bed|
       bed.each_line do |line|
         line_number += 1
-        next if line.strip.empty? || line.starts_with?("#") || line.starts_with?("track ")
+        next if line.strip.empty? || line.starts_with?("#") || line.starts_with?("track ") || line.starts_with?("browser ")
         if region = parse_bed_line(line, path, line_number, target_lengths, unknown)
           tbl[region.chrom] << region
         end

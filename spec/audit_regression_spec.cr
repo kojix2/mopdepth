@@ -339,4 +339,62 @@ describe "audit regression coverage" do
       ENV.delete("MOSDEPTH_Q0")
     end
   end
+
+  it "writes machine-readable summary and region numbers above 999" do
+    config = Depth::Config.new
+    config.prefix = "#{temp_dir}/numeric"
+    config.path = "unused.bam"
+    config.by = "1"
+    config.no_per_base = true
+    output = Depth::FileIO::OutputManager.new(config)
+    stat = Depth::Stats::DepthStat.from_array([70_000])
+    output.write_summary_line("chr1", stat)
+    output.write_region_stat("chr1", 0, 1, nil, 70_000.0)
+    output.close_all(build_indices: false)
+
+    File.read("#{config.prefix}.mopdepth.summary.txt").should contain("chr1\t1\t70000\t70000.00\t70000\t70000")
+    TestIO.read_text("#{config.prefix}.regions.bed.gz").should eq("chr1\t0\t1\t70000.00\n")
+  end
+
+  it "counts zero-depth bases at threshold zero even without any records" do
+    bam_path = "#{temp_dir}/empty-threshold.bam"
+    create_audit_bam(bam_path, "@HD\tVN:1.6\tSO:coordinate\n@SQ\tSN:chr1\tLN:10\n") { |_bam, _header| }
+    prefix = "#{temp_dir}/empty-threshold"
+    run_audit_mopdepth(["-b", "10", "-T", "-1,0,1"], prefix, bam_path, temp_dir)
+    TestIO.read_text("#{prefix}.thresholds.bed.gz").should contain("chr1\t0\t10\tunknown\t10\t10\t0")
+  end
+
+  it "quantizes zero-depth references using the bin containing zero" do
+    bam_path = "#{temp_dir}/empty-quantize.bam"
+    create_audit_bam(bam_path, "@HD\tVN:1.6\tSO:coordinate\n@SQ\tSN:chr1\tLN:10\n") { |_bam, _header| }
+    prefix = "#{temp_dir}/empty-quantize"
+    run_audit_mopdepth(["-q", "-1:0:1:"], prefix, bam_path, temp_dir)
+    TestIO.read_text("#{prefix}.quantized.bed.gz").should eq("chr1\t0\t10\t0:1\n")
+  end
+
+  it "does not infer mate identity from an unknown QNAME" do
+    bam_path = "#{temp_dir}/unknown-qname.bam"
+    create_audit_bam(bam_path, "@HD\tVN:1.6\tSO:coordinate\n@SQ\tSN:chr1\tLN:50\n") do |bam, header|
+      add_audit_record(bam, header, "*", "chr1", 0, "10M", 10,
+        flag: 99_u16, mtid: 0, mpos: 5, isize: 15)
+      add_audit_record(bam, header, "*", "chr1", 1, "10M", 10,
+        flag: 99_u16, mtid: 0, mpos: 6, isize: 15)
+      add_audit_record(bam, header, "*", "chr1", 5, "10M", 10,
+        flag: 147_u16, mtid: 0, mpos: 0, isize: -15)
+      add_audit_record(bam, header, "*", "chr1", 6, "10M", 10,
+        flag: 147_u16, mtid: 0, mpos: 1, isize: -15)
+    end
+
+    prefix = "#{temp_dir}/unknown-qname"
+    run_audit_mopdepth([] of String, prefix, bam_path, temp_dir)
+    File.read("#{prefix}.mopdepth.summary.txt").should contain("chr1\t50\t40\t0.80\t0\t4")
+    TestIO.read_text("#{prefix}.per-base.bed.gz").should contain("chr1\t6\t10\t4\n")
+  end
+
+  it "ignores browser metadata in BED input" do
+    bed_path = "#{temp_dir}/browser.bed"
+    File.write(bed_path, "browser position chr1:1-10\ntrack name=test\nchr1\t0\t2\n")
+    targets = [Depth::Core::Target.new("chr1", 10, 0)]
+    Depth::FileIO.read_bed(bed_path, targets)["chr1"].size.should eq(1)
+  end
 end

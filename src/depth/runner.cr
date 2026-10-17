@@ -421,14 +421,10 @@ module Depth
       return if quants.empty?
 
       if tid == Core::CoverageResult::NoData.value
-        # Handle case with no data - write entire chromosome as first quantize bin if it includes 0
-        if quants[0] == 0
-          lookup = Stats::Quantize.make_lookup(quants)
-          # No data in this (sub)region
-          unless lookup.empty?
-            # write exactly over effective length [0, target_size-1]
-            output.write_quantized_interval(t.name, offset, offset + (target_size - 1), lookup[0])
-          end
+        lookup = Stats::Quantize.make_lookup(quants)
+        zero_bin = Stats::Quantize.linear_search(0, quants)
+        if zero_bin >= 0 && zero_bin < lookup.size
+          output.write_quantized_interval(t.name, offset, offset + (target_size - 1), lookup[zero_bin])
         end
       else
         # Generate quantized segments using the quantize module
@@ -441,7 +437,12 @@ module Depth
     private def count_threshold_bases_offset(coverage : Core::Coverage, abs_start : Int32, abs_stop : Int32,
                                              thresholds : Array(Int32), tid : Int32, offset : Int32) : Array(Int32)
       counts = Array(Int32).new(thresholds.size, 0)
-      return counts if tid == Core::CoverageResult::NoData.value
+      if tid == Core::CoverageResult::NoData.value
+        thresholds.each_with_index do |threshold, idx|
+          counts[idx] = abs_stop - abs_start if threshold <= 0
+        end
+        return counts
+      end
       s = (abs_start - offset).clamp(0, coverage.size)
       e = (abs_stop - offset).clamp(0, coverage.size)
       (s...e).each do |i|

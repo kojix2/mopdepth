@@ -28,6 +28,8 @@ module Depth::Stats
         value.to_i64? || raise ArgumentError.new("Invalid quantize string: '#{qa}'")
       end
       qs.sort!
+      qs.uniq!
+      raise ArgumentError.new("Quantize requires at least two distinct boundaries: '#{qa}'") if qs.size < 2
       qs
     end
 

@@ -38,9 +38,12 @@ describe Depth::Stats::Quantize do
       Depth::Stats::Quantize.get_quantize_args("").should eq([] of Int64)
     end
 
-    it "handles duplicate values" do
-      result = Depth::Stats::Quantize.get_quantize_args("1:1:5")
-      result.should eq([1, 1, 5])
+    it "removes duplicate boundaries so every label has a nonempty interval" do
+      Depth::Stats::Quantize.get_quantize_args("1:1:5").should eq([1_i64, 5_i64])
+      Depth::Stats::Quantize.get_quantize_args("0").should eq([0_i64, Int64::MAX])
+      expect_raises(ArgumentError, /at least two distinct boundaries/) do
+        Depth::Stats::Quantize.get_quantize_args("0:0")
+      end
     end
   end
 

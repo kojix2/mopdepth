@@ -165,7 +165,9 @@ module Depth::Core
     end
 
     private def mate_overlap_candidate?(rec) : Bool
-      rec.proper_pair? && !rec.supplementary? && rec.tid == rec.mtid && rec.mate_pos >= 0
+      # SAM QNAME "*" carries no template identity, so overlap correction is unsafe.
+      rec.proper_pair? && !rec.supplementary? && rec.tid == rec.mtid && rec.mate_pos >= 0 &&
+        !(rec.qname_data[0] == '*'.ord && rec.qname_data[1] == 0)
     end
 
     private def correct_record_mate_overlap!(rec, coverage : Coverage, offset : Int32)

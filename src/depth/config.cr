@@ -31,7 +31,7 @@ module Depth
     def validate!
       raise ArgumentError.new("BAM/CRAM path is required") if path.empty?
       raise ArgumentError.new("Output prefix is required") if prefix.empty?
-      raise ArgumentError.new("Invalid MAPQ threshold") if mapq < 0
+      raise ArgumentError.new("Invalid MAPQ threshold") unless 0 <= mapq <= 255
       raise ArgumentError.new("Invalid thread count") if threads < 0
 
       validate_fragment_lengths!
@@ -48,6 +48,8 @@ module Depth
     end
 
     private def validate_fragment_lengths!
+      raise ArgumentError.new("min_frag_len must not be less than -1") if min_frag_len < -1
+      raise ArgumentError.new("max_frag_len must not be less than -1") if max_frag_len < -1
       return unless min_frag_len >= 0 && max_frag_len >= 0 && min_frag_len > max_frag_len
 
       raise ArgumentError.new("min_frag_len cannot be greater than max_frag_len")

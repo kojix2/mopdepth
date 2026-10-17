@@ -1,5 +1,5 @@
 name: mopdepth
-version: 0.0.6
+version: 0.0.7
 
 authors:
   - kojix2 <2xijok@gmail.com>
@@ -14,7 +14,7 @@ dependencies:
     branch: develop
   d4:
     github: bio-cr/d4.cr
-    tag: v0.0.0
+    version: 0.0.0
 
 development_dependencies:
   ameba:

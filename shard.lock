@@ -6,9 +6,9 @@ shards:
 
   d4:
     git: https://github.com/bio-cr/d4.cr.git
-    version: 0.0.0+git.commit.bd858c5167058424f01fdb85587279449a682128
+    version: 0.0.0
 
   hts:
     git: https://github.com/bio-cr/hts.cr.git
-    version: 0.4.0+git.commit.6c798c0b8538ac4b17de2101bbe5ad5fb32f4c71
+    version: 0.4.0+git.commit.f2efb5da9b8b08a65d69464071a42bd159639fee
 

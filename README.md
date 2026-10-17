@@ -40,7 +40,7 @@ The default target always builds an optimized release binary at `bin/mopdepth`.
 Use `make debug` only when a non-optimized development binary is needed.
 
 D4 support is included in the regular build through
-[`kojix2/d4.cr`](https://github.com/kojix2/d4.cr). It requires neither Rust nor
+[`bio-cr/d4.cr`](https://github.com/bio-cr/d4.cr). It requires neither Rust nor
 the native `d4binding` library. Run `make test-d4` to execute the D4
 write/read-back integration tests.
 

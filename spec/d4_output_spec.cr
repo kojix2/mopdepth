@@ -28,6 +28,21 @@ describe "D4 output" do
     FileUtils.rm_rf(temp_dir) if Dir.exists?(temp_dir)
   end
 
+  it "preserves depths at and above the dictionary boundary" do
+    path = "#{temp_dir}/high-depth.d4"
+    targets = [Depth::Core::Target.new("chr1", 5_i32, 0_i32)]
+    output = Depth::FileIO::D4Output.new(path, targets)
+    output.write_interval("chr1", 0_i32, 1_i32, 255_i32)
+    output.write_interval("chr1", 1_i32, 2_i32, 256_i32)
+    output.write_interval("chr1", 2_i32, 3_i32, 10_000_i32)
+    output.close
+    output.build_index
+
+    D4.open(path) do |file|
+      file.values("chr1").should eq([255, 256, 10_000, 0, 0])
+    end
+  end
+
   it "writes indexed per-base coverage without a BGZF per-base file" do
     bam_path = "#{temp_dir}/input.bam"
     create_d4_test_bam(bam_path)

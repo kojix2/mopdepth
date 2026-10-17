@@ -16,17 +16,13 @@ module Depth::FileIO
     def initialize(@path : String, targets : Array(Core::Target), buffer_size : Int32 = DEFAULT_BUFFER_SIZE)
       raise Depth::OutputError.new("D4 interval buffer size must be positive") if buffer_size <= 0
 
-      @writer = D4::Writer.new(@path)
       @intervals = Array(D4::RawInterval).new(buffer_size)
       @chromosome = nil
       @buffer_size = buffer_size
-      begin
-        chromosomes = targets.map { |target| {target.name, target.length.to_u32} }
-        @writer.set_chromosomes(chromosomes)
-      rescue ex
-        @writer.abort
-        raise ex
-      end
+      chromosomes = targets.map { |target| D4::Chromosome.new(target.name, target.length) }
+      @writer = D4::Writer.new(@path,
+        chromosomes: chromosomes,
+        dictionary: D4::Dictionary.new(0_i32, 256_i32))
     end
 
     def write_interval(chromosome : String, start : Int32, stop : Int32, value : Int32)

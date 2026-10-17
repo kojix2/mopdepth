@@ -1,4 +1,5 @@
 require "./spec_helper"
+require "./support/mopdepth_fixture"
 require "file_utils"
 require "process"
 
@@ -9,11 +10,12 @@ end
 
 describe "mopdepth minimal output smoke tests (gz only, no -M)" do
   temp_dir = "/tmp/mopdepth_validation"
-  mosdepth_dir = "./mosdepth"
-  test_bam = "#{mosdepth_dir}/tests/ovl.bam"
+  test_bam = "#{temp_dir}/input.bam"
 
   before_each do
+    FileUtils.rm_rf(temp_dir) if Dir.exists?(temp_dir)
     FileUtils.mkdir_p(temp_dir)
+    MopdepthSpecFixture.create_bam(test_bam)
   end
 
   after_each do
@@ -52,16 +54,13 @@ describe "mopdepth minimal output smoke tests (gz only, no -M)" do
   end
 
   it "does not double-count overlapping mate pairs" do
-    overlap_bam = "#{mosdepth_dir}/tests/overlapping-pairs.bam"
-    next unless File.exists?(overlap_bam)
-
-    status = run_mopdepth_min(["-M"], "#{temp_dir}/overlap", overlap_bam, temp_dir)
+    status = run_mopdepth_min(["-M"], "#{temp_dir}/overlap", test_bam, temp_dir)
     status.success?.should be_true
 
     TestIO.read_text("#{temp_dir}/overlap.per-base.bed.gz").should eq <<-BED.chomp + "\n"
-      1\t0\t565173\t0
-      1\t565173\t565253\t1
-      1\t565253\t249250621\t0
+      chr1\t0\t2\t0
+      chr1\t2\t10\t1
+      chr1\t10\t20\t0
       BED
   end
 end

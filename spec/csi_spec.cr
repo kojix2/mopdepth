@@ -1,13 +1,16 @@
 require "./spec_helper"
+require "./support/mopdepth_fixture"
 require "file_utils"
 require "hts"
 
 describe "CSI index generation" do
   temp_dir = "/tmp/mopdepth_csi_test"
-  test_bam = "./mosdepth/tests/ovl.bam"
+  test_bam = "#{temp_dir}/input.bam"
 
   before_each do
+    FileUtils.rm_rf(temp_dir) if Dir.exists?(temp_dir)
     FileUtils.mkdir_p(temp_dir)
+    MopdepthSpecFixture.create_bam(test_bam)
   end
 
   after_each do
@@ -15,7 +18,6 @@ describe "CSI index generation" do
   end
 
   it "creates .csi files by default" do
-    next unless File.exists?(test_bam)
     status = TestBin.run(["-M"], "#{temp_dir}/csi_out", test_bam, temp_dir)
     status.success?.should be_true
 
@@ -34,7 +36,7 @@ describe "CSI index generation" do
     rows = [] of Array(String)
     bed_gz = "#{temp_dir}/csi_out.per-base.bed.gz"
     HTS::Tabix.open(bed_gz, index: "#{bed_gz}.csi") do |tabix|
-      tabix.query("MT", 0, 16_569) { |fields| rows << fields }
+      tabix.query("chr1", 0, 20) { |fields| rows << fields }
     end
     rows.should_not be_empty
     rows.each(&.size.should(eq(4)))

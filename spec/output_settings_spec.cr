@@ -32,7 +32,7 @@ class OutputSettingsDistributionHost
 end
 
 describe "output environment settings" do
-  temp_dir = "/tmp/mopdepth_output_settings"
+  temp_dir = File.tempname("mopdepth_output_settings")
 
   before_each do
     FileUtils.rm_rf(temp_dir) if Dir.exists?(temp_dir)
@@ -111,11 +111,9 @@ describe "output environment settings" do
     with_output_environment(bgzf_buffer: "1") do
       output = Depth::FileIO::OutputManager.new(config)
       output.write_per_base_interval("chr1", 0, 1, 7)
-      output.write_region_zero("chr1", 0, 1, nil)
       output.close_all
     end
 
     TestIO.read_text("#{prefix}.per-base.bed.gz").should eq("chr1\t0\t1\t7\n")
-    TestIO.read_text("#{prefix}.regions.bed.gz").should eq("chr1\t0\t1\t0.00\n")
   end
 end

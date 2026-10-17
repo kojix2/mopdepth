@@ -1,6 +1,7 @@
 require "../stats/depth_stat"
 require "../config"
 require "../errors"
+require "../output_settings"
 require "../core/target"
 require "./d4_output"
 require "hts"
@@ -77,10 +78,10 @@ module Depth::FileIO
       @prefix = config.prefix
       label = config.mos_style? ? "mosdepth" : "mopdepth"
       @paths_to_index = [] of String
-      @precision = resolve_precision
+      @precision = OutputSettings.precision
       @zero_float = zero_float_string(@precision)
       @mean_scale = decimal_scale(@precision)
-      @buffer_size = (ENV["MOPDEPTH_BGZF_BUFFER"]? || "2097152").to_i
+      @buffer_size = OutputSettings.bgzf_buffer_size
       @f_summary = nil
       @f_global = nil
       @f_region = nil
@@ -450,10 +451,6 @@ module Depth::FileIO
                                              name : String?, counts : Array(Int32))
       io << chrom << '\t' << start << '\t' << stop << '\t' << (name || "unknown")
       counts.each { |count| io << '\t' << count }
-    end
-
-    private def resolve_precision : Int32
-      (ENV["MOPDEPTH_PRECISION"]?.try &.to_i?) || (ENV["MOSDEPTH_PRECISION"]?.try &.to_i?) || 2
     end
 
     private def zero_float_string(precision : Int32) : String

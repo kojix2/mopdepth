@@ -1,6 +1,7 @@
 require "./stats/quantize"
 require "./stats/threshold"
 require "./core/options"
+require "./output_settings"
 
 module Depth
   class Config
@@ -37,6 +38,7 @@ module Depth
       validate_mode_combination!
       validate_region_options!
       validate_window_size!
+      OutputSettings.validate!
       quantize_args if has_quantize?
       threshold_values if has_thresholds?
     end

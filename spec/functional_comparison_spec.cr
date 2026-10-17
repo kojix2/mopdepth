@@ -192,8 +192,12 @@ describe "Functional comparison with mosdepth" do
   describe "threshold processing" do
     it "handles threshold calculations" do
       next unless mosdepth_available?(mosdepth_dir)
-      mosdepth_status = run_mosdepth(["-T", "0,1,2", "-b", "100"], "#{temp_dir}/mosdepth_thresh", temp_dir, mosdepth_dir, test_bam)
-      mopdepth_status = run_mopdepth(["-T", "0,1,2", "-b", "100"], "#{temp_dir}/mopdepth_thresh", temp_dir, test_bam)
+      # ovl.bam also has a no-read chromosome, where mosdepth incorrectly emits
+      # zero bases at threshold 0. Compare the chromosome with reads here; the
+      # no-read case has a separate mopdepth regression test.
+      args = ["-T", "0,1,2", "-b", "100", "-c", "MT"]
+      mosdepth_status = run_mosdepth(args, "#{temp_dir}/mosdepth_thresh", temp_dir, mosdepth_dir, test_bam)
+      mopdepth_status = run_mopdepth(args, "#{temp_dir}/mopdepth_thresh", temp_dir, test_bam)
 
       mosdepth_status.success?.should be_true
       mopdepth_status.success?.should be_true

@@ -22,15 +22,18 @@ module Depth::Stats
       sum = dist.sum
       return if sum < 1
       # cumulative from high → low so line is: depth \t cumulative_fraction
-      rev = dist.dup.reverse
       cum = 0.0
       pr = OutputSettings.precision
-      rev.each_with_index do |v, i|
-        irev = dist.size - i - 1
-        next if irev > 300 && v == 0
-        cum += v.to_f / sum
-        next if cum < 8e-5
-        io << chrom << "\t" << irev << "\t" << sprintf("%.#{pr}f", cum) << '\n'
+      i = dist.size - 1
+      while i >= 0
+        v = dist[i]
+        unless i > 300 && v == 0
+          cum += v.to_f / sum
+          if cum >= 8e-5
+            io << chrom << "\t" << i << "\t" << sprintf("%.#{pr}f", cum) << '\n'
+          end
+        end
+        i -= 1
       end
     end
 

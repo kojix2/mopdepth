@@ -70,6 +70,24 @@ describe "output environment settings" do
     end
   end
 
+  it "writes a sparse distribution in descending order without changing it" do
+    dist = Array(Int64).new(303, 0_i64)
+    dist[302] = 1_i64
+    original = dist.dup
+    io = IO::Memory.new
+
+    with_output_environment(mop_precision: "3") do
+      OutputSettingsDistributionHost.write_distribution(io, "chr1", dist)
+    end
+
+    lines = io.to_s.lines
+    lines.size.should eq(302)
+    lines.first.should eq("chr1\t302\t1.000")
+    lines[1].should eq("chr1\t300\t1.000")
+    lines.last.should eq("chr1\t0\t1.000")
+    dist.should eq(original)
+  end
+
   it "rejects invalid precision before OutputManager creates output" do
     prefix = "#{temp_dir}/invalid-precision"
     config = Depth::Config.new

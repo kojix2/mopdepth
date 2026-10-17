@@ -33,8 +33,9 @@ module Depth
         targets = selected_targets(all_targets, region)
         bed_map = load_bed_map(all_targets)
         output = FileIO::OutputManager.new(@config, all_targets)
-        write_threshold_header(output)
-        state = ProcessingState.new(@config.use_median?)
+        thresholds = @config.threshold_values
+        write_threshold_header(output, thresholds)
+        state = ProcessingState.new(@config.use_median?, thresholds)
         process_targets(bam, opts, targets, region, bed_map, output, state)
         write_total_outputs(output, state)
         completed = true
@@ -75,10 +76,11 @@ module Depth
       getter region_dist : Array(Int64)
       getter total_region_dist : Array(Int64)
       getter cs : Stats::IntHistogram
+      getter thresholds : Array(Int32)
       property global_stat : Stats::DepthStat
       property global_region_stat : Stats::DepthStat
 
-      def initialize(use_median : Bool)
+      def initialize(use_median : Bool, @thresholds : Array(Int32))
         @global_dist = Array(Int64).new(512, 0_i64)
         @total_global_dist = Array(Int64).new(512, 0_i64)
         @region_dist = Array(Int64).new(512, 0_i64)
@@ -111,10 +113,10 @@ module Depth
       bam
     end
 
-    private def write_threshold_header(output : FileIO::OutputManager)
-      return unless @config.has_thresholds?
+    private def write_threshold_header(output : FileIO::OutputManager, thresholds : Array(Int32))
+      return if thresholds.empty?
 
-      output.write_thresholds_header(@config.threshold_values)
+      output.write_thresholds_header(thresholds)
     end
 
     private def load_targets(bam : HTS::Bam) : Array(Core::Target)
@@ -243,7 +245,7 @@ module Depth
       return Stats::DepthStat.new unless output.f_regions
 
       write_region_stats(target, coverage, tid, window, bed_map, state.cs, output,
-        state.region_dist, slice.offset, slice.effective_len)
+        state.region_dist, slice.offset, slice.effective_len, state.thresholds)
     end
 
     private def write_target_stats(target : Core::Target, coverage : Core::Coverage, tid : Int32, target_size : Int32,
@@ -305,18 +307,20 @@ module Depth
     private def write_region_stats(t : Core::Target, coverage : Core::Coverage, tid : Int32,
                                    window : Int32, bed_map : Hash(String, Array(Core::Region))?,
                                    cs : Stats::IntHistogram, output : FileIO::OutputManager,
-                                   region_dist : Array(Int64), offset : Int32, effective_len : Int32) : Stats::DepthStat
+                                   region_dist : Array(Int64), offset : Int32, effective_len : Int32,
+                                   thresholds : Array(Int32)) : Stats::DepthStat
       if window > 0
-        process_window_regions(t, coverage, tid, window, cs, output, region_dist, offset, effective_len)
+        process_window_regions(t, coverage, tid, window, cs, output, region_dist, offset, effective_len, thresholds)
       else
-        process_bed_regions(t, coverage, tid, bed_map, cs, output, region_dist, offset, effective_len)
+        process_bed_regions(t, coverage, tid, bed_map, cs, output, region_dist, offset, effective_len, thresholds)
       end
     end
 
     private def process_window_regions(t : Core::Target, coverage : Core::Coverage, tid : Int32,
                                        window : Int32, cs : Stats::IntHistogram,
                                        output : FileIO::OutputManager, region_dist : Array(Int64),
-                                       offset : Int32, effective_len : Int32) : Stats::DepthStat
+                                       offset : Int32, effective_len : Int32,
+                                       thresholds : Array(Int32)) : Stats::DepthStat
       chrom_region_stat = Stats::DepthStat.new
       start_local = 0
       end_local = effective_len
@@ -352,8 +356,7 @@ module Depth
           region_dist[idx] += 1
         end
 
-        if @config.has_thresholds?
-          thresholds = @config.threshold_values
+        unless thresholds.empty?
           counts = count_threshold_bases_offset(coverage, start_abs, stop_abs, thresholds, tid, offset)
           output.write_threshold_counts(t.name, start_abs, stop_abs, nil, counts)
         end
@@ -365,7 +368,8 @@ module Depth
     private def process_bed_regions(t : Core::Target, coverage : Core::Coverage, tid : Int32,
                                     bed_map : Hash(String, Array(Core::Region))?,
                                     cs : Stats::IntHistogram, output : FileIO::OutputManager,
-                                    region_dist : Array(Int64), offset : Int32, effective_len : Int32) : Stats::DepthStat
+                                    region_dist : Array(Int64), offset : Int32, effective_len : Int32,
+                                    thresholds : Array(Int32)) : Stats::DepthStat
       chrom_region_stat = Stats::DepthStat.new
       regs = bed_map.try(&.[t.name]?) || [] of Core::Region
       region_start = offset
@@ -399,8 +403,7 @@ module Depth
           self.class.bump_distribution!(region_dist, coverage, s_local, e_local)
         end
 
-        if @config.has_thresholds?
-          thresholds = @config.threshold_values
+        unless thresholds.empty?
           counts = count_threshold_bases_offset(coverage, s_abs, e_abs, thresholds, tid, offset)
           output.write_threshold_counts(t.name, s_abs, e_abs, region.name, counts)
         end

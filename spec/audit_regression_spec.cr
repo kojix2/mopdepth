@@ -99,6 +99,30 @@ describe "audit regression coverage" do
     TestIO.read_text("#{prefix}.thresholds.bed.gz").should contain("B\t0\t100\tunknown\t100")
   end
 
+  it "keeps sorted threshold columns and counts across multiple windows and BED regions" do
+    bam_path = "#{temp_dir}/threshold-cache.bam"
+    create_audit_bam(bam_path, "@HD\tVN:1.6\tSO:coordinate\n@SQ\tSN:chr1\tLN:6\n") do |bam, header|
+      add_audit_record(bam, header, "read", "chr1", 0, "3M", 3)
+    end
+
+    window_prefix = "#{temp_dir}/threshold-window"
+    run_audit_mopdepth(["-n", "-b", "2", "-T", "2,0,1,-1"], window_prefix, bam_path, temp_dir)
+    TestIO.read_text("#{window_prefix}.thresholds.bed.gz").should eq(
+      "#chrom\tstart\tend\tregion\t-1X\t0X\t1X\t2X\n" +
+      "chr1\t0\t2\tunknown\t2\t2\t2\t0\n" +
+      "chr1\t2\t4\tunknown\t2\t2\t1\t0\n" +
+      "chr1\t4\t6\tunknown\t2\t2\t0\t0\n")
+
+    bed_path = "#{temp_dir}/threshold-cache.bed"
+    File.write(bed_path, "chr1\t1\t4\tfirst\nchr1\t3\t6\tsecond\n")
+    bed_prefix = "#{temp_dir}/threshold-bed"
+    run_audit_mopdepth(["-n", "-b", bed_path, "-T", "2,0,1,-1"], bed_prefix, bam_path, temp_dir)
+    TestIO.read_text("#{bed_prefix}.thresholds.bed.gz").should eq(
+      "#chrom\tstart\tend\tregion\t-1X\t0X\t1X\t2X\n" +
+      "chr1\t1\t4\tfirst\t3\t3\t2\t0\n" +
+      "chr1\t3\t6\tsecond\t3\t3\t0\t0\n")
+  end
+
   it "does not skip BED-external targets when quantization needs them" do
     bam_path = "#{temp_dir}/skip.bam"
     create_audit_bam(bam_path, "@HD\tVN:1.6\tSO:coordinate\n@SQ\tSN:A\tLN:10\n@SQ\tSN:B\tLN:10\n") do |bam, header|

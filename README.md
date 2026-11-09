@@ -3,6 +3,7 @@
 [![build](https://github.com/kojix2/mopdepth/actions/workflows/build.yml/badge.svg)](https://github.com/kojix2/mopdepth/actions/workflows/build.yml)
 [![Lines of Code](https://img.shields.io/endpoint?url=https%3A%2F%2Ftokei.kojix2.net%2Fbadge%2Fgithub%2Fkojix2%2Fmopdepth%2Flines)](https://tokei.kojix2.net/github/kojix2/mopdepth)
 ![Static Badge](https://img.shields.io/badge/PURE-VIBE_CODING-magenta)
+[![DOI](https://zenodo.org/badge/1051173738.svg)](https://doi.org/10.5281/zenodo.24075779)
 
 An LLM-assisted port of [mosdepth](https://github.com/brentp/mosdepth) to Crystal
 for BAM/CRAM depth calculation. LLMs were used to translate and adapt the original

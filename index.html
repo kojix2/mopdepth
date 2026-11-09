@@ -112,6 +112,11 @@
       
     </li>
   
+  <li class=" " data-id="mopdepth/Depth/Core/Interval" data-name="depth::core::interval">
+      <a href="Depth/Core/Interval.html">Interval</a>
+      
+    </li>
+  
   <li class=" " data-id="mopdepth/Depth/Core/Options" data-name="depth::core::options">
       <a href="Depth/Core/Options.html">Options</a>
       
@@ -342,6 +347,11 @@
       
     </li>
   
+  <li class=" " data-id="mopdepth/Mopdepth/TagFilter" data-name="mopdepth::tagfilter">
+      <a href="Mopdepth/TagFilter.html">TagFilter</a>
+      
+    </li>
+  
   <li class=" " data-id="mopdepth/Mopdepth/Target" data-name="mopdepth::target">
       <a href="Mopdepth/Target.html">Target</a>
       
@@ -387,7 +397,7 @@
 <li>Explicit FASTA references for CRAM input</li>
 <li>D4 per-base output via the pure-Crystal <code>d4.cr</code> library</li>
 <li>Window-based analysis</li>
-<li>Comprehensive filtering options (MAPQ, fragment length, flags)</li>
+<li>Comprehensive filtering options (MAPQ, fragment length, flags, read groups, AUX tag values)</li>
 </ul>
 <h2><a id="installation" class="anchor" href="#installation">
   <svg class="octicon-link" aria-hidden="true">
@@ -480,6 +490,7 @@ coverage <span class="o">=</span> reader.coverage(<span class="s">&quot;chr1&quo
 <li><code>-F, --flag FLAG</code>: Exclude reads with FLAG bits set</li>
 <li><code>-i, --include-flag FLAG</code>: Include only reads with FLAG bits set</li>
 <li><code>-R, --read-groups GROUPS</code>: Comma-separated read group IDs</li>
+<li><code>--exclude-tag TAG:VALUE</code>: Exclude records with an exactly matching string AUX tag; comma-separated and repeatable</li>
 <li><code>-M, --mos</code>: Use mosdepth-compatible filenames (mosdepth.<em>); default is mopdepth.</em></li>
 <li><code>-v, --version</code>: Show version</li>
 <li><code>-h, --help</code>: Show help message</li>
@@ -495,6 +506,20 @@ coverage <span class="o">=</span> reader.coverage(<span class="s">&quot;chr1&quo
 <li><strong>Fragment mode</strong> (<code>-a</code>): Counts full fragments for paired-end reads</li>
 </ul>
 <p><strong>Note</strong>: Fast mode and fragment mode cannot be used together.</p>
+<p>To retain PCR/library duplicates while excluding optical duplicates:</p>
+<pre><code class="language-bash">./mopdepth -F 772 --exclude-tag DT:SQ output sample.bam</code></pre>
+<p>Flag filters still apply; the default exclusion mask removes all duplicate-flagged
+reads. Tag conditions are combined with OR, for example <code>--exclude-tag DT:SQ,DT:LB</code>.
+Repeating <code>--exclude-tag</code> adds conditions. Matching is case-sensitive, preserves
+colons and spaces in values, and permits empty string values (<code>--exclude-tag XX:</code>).
+Missing tags and tags with non-string types do not match. Tag names must follow
+SAM's two-character <code>[A-Za-z][A-Za-z0-9]</code> pattern. Conditions filter individual
+records before coverage calculation in every processing mode.</p>
+<p>The library API accepts the same conditions as validated objects:</p>
+<pre><code class="language-crystal">options <span class="o">=</span> <span class="t">Mopdepth</span><span class="t">::</span><span class="t">Options</span>.new(
+  exclude_flags: <span class="n">772_u16</span>,
+  exclude_tags: [<span class="t">Mopdepth</span><span class="t">::</span><span class="t">TagFilter</span>.new(<span class="s">&quot;DT&quot;</span>, <span class="s">&quot;SQ&quot;</span>)]
+)</code></pre>
 <p>Window sizes must be positive. BED intervals are validated against the alignment
 header: coordinates must be 0-based half-open, non-empty, non-negative, and
 contained in the named reference. References absent from the alignment header are

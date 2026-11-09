@@ -112,6 +112,11 @@
       
     </li>
   
+  <li class=" " data-id="mopdepth/Depth/Core/Interval" data-name="depth::core::interval">
+      <a href="../Depth/Core/Interval.html">Interval</a>
+      
+    </li>
+  
   <li class=" " data-id="mopdepth/Depth/Core/Options" data-name="depth::core::options">
       <a href="../Depth/Core/Options.html">Options</a>
       
@@ -342,6 +347,11 @@
       
     </li>
   
+  <li class=" " data-id="mopdepth/Mopdepth/TagFilter" data-name="mopdepth::tagfilter">
+      <a href="../Mopdepth/TagFilter.html">TagFilter</a>
+      
+    </li>
+  
   <li class=" " data-id="mopdepth/Mopdepth/Target" data-name="mopdepth::target">
       <a href="../Mopdepth/Target.html">Target</a>
       
@@ -436,7 +446,7 @@
   <ul class="list-summary">
     
       <li class="entry-summary">
-        <a href="#new%28mode%3AMode%3DMode%3A%3AStandard%2Cminimum_mapping_quality%3AInt32%3D0%2Cminimum_fragment_length%3AInt32%7CNil%3Dnil%2Cmaximum_fragment_length%3AInt32%7CNil%3Dnil%2Cexclude_flags%3AUInt16%3D1796_u16%2Cinclude_flags%3AUInt16%3D0_u16%2Cread_groups%3AArray%28String%29%3D%5B%5DofString%29-class-method" class="signature"><strong>.new</strong>(mode : Mode = <span class="t">Mode</span><span class="t">::</span><span class="t">Standard</span>, minimum_mapping_quality : Int32 = <span class="n">0</span>, minimum_fragment_length : Int32 | Nil = <span class="n">nil</span>, maximum_fragment_length : Int32 | Nil = <span class="n">nil</span>, exclude_flags : UInt16 = <span class="n">1796_u16</span>, include_flags : UInt16 = <span class="n">0_u16</span>, read_groups : Array(String) = <span class="o">[]</span> <span class="k">of</span> <span class="t">String</span>)</a>
+        <a href="#new%28mode%3AMode%3DMode%3A%3AStandard%2Cminimum_mapping_quality%3AInt32%3D0%2Cminimum_fragment_length%3AInt32%7CNil%3Dnil%2Cmaximum_fragment_length%3AInt32%7CNil%3Dnil%2Cexclude_flags%3AUInt16%3D1796_u16%2Cinclude_flags%3AUInt16%3D0_u16%2Cread_groups%3AArray%28String%29%3D%5B%5DofString%2Cexclude_tags%3AArray%28TagFilter%29%3D%5B%5DofTagFilter%29-class-method" class="signature"><strong>.new</strong>(mode : Mode = <span class="t">Mode</span><span class="t">::</span><span class="t">Standard</span>, minimum_mapping_quality : Int32 = <span class="n">0</span>, minimum_fragment_length : Int32 | Nil = <span class="n">nil</span>, maximum_fragment_length : Int32 | Nil = <span class="n">nil</span>, exclude_flags : UInt16 = <span class="n">1796_u16</span>, include_flags : UInt16 = <span class="n">0_u16</span>, read_groups : Array(String) = <span class="o">[]</span> <span class="k">of</span> <span class="t">String</span>, exclude_tags : Array(TagFilter) = <span class="o">[]</span> <span class="k">of</span> <span class="t">TagFilter</span>)</a>
         
       </li>
     
@@ -464,12 +474,17 @@
       </li>
     
       <li class="entry-summary">
-        <a href="#copy_with%28mode_mode%3D%40mode%2Cminimum_mapping_quality_minimum_mapping_quality%3D%40minimum_mapping_quality%2Cminimum_fragment_length_minimum_fragment_length%3D%40minimum_fragment_length%2Cmaximum_fragment_length_maximum_fragment_length%3D%40maximum_fragment_length%2Cexclude_flags_exclude_flags%3D%40exclude_flags%2Cinclude_flags_include_flags%3D%40include_flags%2Cread_groups_read_groups%3D%40read_groups%29-instance-method" class="signature"><strong>#copy_with</strong>(mode _mode = @mode, minimum_mapping_quality _minimum_mapping_quality = @minimum_mapping_quality, minimum_fragment_length _minimum_fragment_length = @minimum_fragment_length, maximum_fragment_length _maximum_fragment_length = @maximum_fragment_length, exclude_flags _exclude_flags = @exclude_flags, include_flags _include_flags = @include_flags, read_groups _read_groups = @read_groups)</a>
+        <a href="#copy_with%28mode_mode%3D%40mode%2Cminimum_mapping_quality_minimum_mapping_quality%3D%40minimum_mapping_quality%2Cminimum_fragment_length_minimum_fragment_length%3D%40minimum_fragment_length%2Cmaximum_fragment_length_maximum_fragment_length%3D%40maximum_fragment_length%2Cexclude_flags_exclude_flags%3D%40exclude_flags%2Cinclude_flags_include_flags%3D%40include_flags%2Cread_groups_read_groups%3D%40read_groups%2Cexclude_tags_exclude_tags%3D%40exclude_tags%29-instance-method" class="signature"><strong>#copy_with</strong>(mode _mode = @mode, minimum_mapping_quality _minimum_mapping_quality = @minimum_mapping_quality, minimum_fragment_length _minimum_fragment_length = @minimum_fragment_length, maximum_fragment_length _maximum_fragment_length = @maximum_fragment_length, exclude_flags _exclude_flags = @exclude_flags, include_flags _include_flags = @include_flags, read_groups _read_groups = @read_groups, exclude_tags _exclude_tags = @exclude_tags)</a>
         
       </li>
     
       <li class="entry-summary">
         <a href="#exclude_flags%3AUInt16-instance-method" class="signature"><strong>#exclude_flags</strong> : UInt16</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#exclude_tags%3AArray%28TagFilter%29-instance-method" class="signature"><strong>#exclude_tags</strong> : Array(TagFilter)</a>
         
       </li>
     
@@ -565,12 +580,12 @@
     Constructor Detail
   </h2>
   
-    <div class="entry-detail" id="new(mode:Mode=Mode::Standard,minimum_mapping_quality:Int32=0,minimum_fragment_length:Int32|Nil=nil,maximum_fragment_length:Int32|Nil=nil,exclude_flags:UInt16=1796_u16,include_flags:UInt16=0_u16,read_groups:Array(String)=[]ofString)-class-method">
+    <div class="entry-detail" id="new(mode:Mode=Mode::Standard,minimum_mapping_quality:Int32=0,minimum_fragment_length:Int32|Nil=nil,maximum_fragment_length:Int32|Nil=nil,exclude_flags:UInt16=1796_u16,include_flags:UInt16=0_u16,read_groups:Array(String)=[]ofString,exclude_tags:Array(TagFilter)=[]ofTagFilter)-class-method">
       <div class="signature">
         
-        def self.<strong>new</strong>(mode : <a href="../Mopdepth/Mode.html">Mode</a> = <span class="t">Mode</span><span class="t">::</span><span class="t">Standard</span>, minimum_mapping_quality : Int32 = <span class="n">0</span>, minimum_fragment_length : Int32 | Nil = <span class="n">nil</span>, maximum_fragment_length : Int32 | Nil = <span class="n">nil</span>, exclude_flags : UInt16 = <span class="n">1796_u16</span>, include_flags : UInt16 = <span class="n">0_u16</span>, read_groups : Array(String) = <span class="o">[]</span> <span class="k">of</span> <span class="t">String</span>)
+        def self.<strong>new</strong>(mode : <a href="../Mopdepth/Mode.html">Mode</a> = <span class="t">Mode</span><span class="t">::</span><span class="t">Standard</span>, minimum_mapping_quality : Int32 = <span class="n">0</span>, minimum_fragment_length : Int32 | Nil = <span class="n">nil</span>, maximum_fragment_length : Int32 | Nil = <span class="n">nil</span>, exclude_flags : UInt16 = <span class="n">1796_u16</span>, include_flags : UInt16 = <span class="n">0_u16</span>, read_groups : Array(String) = <span class="o">[]</span> <span class="k">of</span> <span class="t">String</span>, exclude_tags : Array(<a href="../Mopdepth/TagFilter.html">TagFilter</a>) = <span class="o">[]</span> <span class="k">of</span> <span class="t">TagFilter</span>)
 
-        <a class="method-permalink" href="#new%28mode%3AMode%3DMode%3A%3AStandard%2Cminimum_mapping_quality%3AInt32%3D0%2Cminimum_fragment_length%3AInt32%7CNil%3Dnil%2Cmaximum_fragment_length%3AInt32%7CNil%3Dnil%2Cexclude_flags%3AUInt16%3D1796_u16%2Cinclude_flags%3AUInt16%3D0_u16%2Cread_groups%3AArray%28String%29%3D%5B%5DofString%29-class-method">#</a>
+        <a class="method-permalink" href="#new%28mode%3AMode%3DMode%3A%3AStandard%2Cminimum_mapping_quality%3AInt32%3D0%2Cminimum_fragment_length%3AInt32%7CNil%3Dnil%2Cmaximum_fragment_length%3AInt32%7CNil%3Dnil%2Cexclude_flags%3AUInt16%3D1796_u16%2Cinclude_flags%3AUInt16%3D0_u16%2Cread_groups%3AArray%28String%29%3D%5B%5DofString%2Cexclude_tags%3AArray%28TagFilter%29%3D%5B%5DofTagFilter%29-class-method">#</a>
       </div>
       
       <br/>
@@ -609,12 +624,12 @@
       </div>
     </div>
   
-    <div class="entry-detail" id="copy_with(mode_mode=@mode,minimum_mapping_quality_minimum_mapping_quality=@minimum_mapping_quality,minimum_fragment_length_minimum_fragment_length=@minimum_fragment_length,maximum_fragment_length_maximum_fragment_length=@maximum_fragment_length,exclude_flags_exclude_flags=@exclude_flags,include_flags_include_flags=@include_flags,read_groups_read_groups=@read_groups)-instance-method">
+    <div class="entry-detail" id="copy_with(mode_mode=@mode,minimum_mapping_quality_minimum_mapping_quality=@minimum_mapping_quality,minimum_fragment_length_minimum_fragment_length=@minimum_fragment_length,maximum_fragment_length_maximum_fragment_length=@maximum_fragment_length,exclude_flags_exclude_flags=@exclude_flags,include_flags_include_flags=@include_flags,read_groups_read_groups=@read_groups,exclude_tags_exclude_tags=@exclude_tags)-instance-method">
       <div class="signature">
         
-        def <strong>copy_with</strong>(mode _mode = @mode, minimum_mapping_quality _minimum_mapping_quality = @minimum_mapping_quality, minimum_fragment_length _minimum_fragment_length = @minimum_fragment_length, maximum_fragment_length _maximum_fragment_length = @maximum_fragment_length, exclude_flags _exclude_flags = @exclude_flags, include_flags _include_flags = @include_flags, read_groups _read_groups = @read_groups)
+        def <strong>copy_with</strong>(mode _mode = @mode, minimum_mapping_quality _minimum_mapping_quality = @minimum_mapping_quality, minimum_fragment_length _minimum_fragment_length = @minimum_fragment_length, maximum_fragment_length _maximum_fragment_length = @maximum_fragment_length, exclude_flags _exclude_flags = @exclude_flags, include_flags _include_flags = @include_flags, read_groups _read_groups = @read_groups, exclude_tags _exclude_tags = @exclude_tags)
 
-        <a class="method-permalink" href="#copy_with%28mode_mode%3D%40mode%2Cminimum_mapping_quality_minimum_mapping_quality%3D%40minimum_mapping_quality%2Cminimum_fragment_length_minimum_fragment_length%3D%40minimum_fragment_length%2Cmaximum_fragment_length_maximum_fragment_length%3D%40maximum_fragment_length%2Cexclude_flags_exclude_flags%3D%40exclude_flags%2Cinclude_flags_include_flags%3D%40include_flags%2Cread_groups_read_groups%3D%40read_groups%29-instance-method">#</a>
+        <a class="method-permalink" href="#copy_with%28mode_mode%3D%40mode%2Cminimum_mapping_quality_minimum_mapping_quality%3D%40minimum_mapping_quality%2Cminimum_fragment_length_minimum_fragment_length%3D%40minimum_fragment_length%2Cmaximum_fragment_length_maximum_fragment_length%3D%40maximum_fragment_length%2Cexclude_flags_exclude_flags%3D%40exclude_flags%2Cinclude_flags_include_flags%3D%40include_flags%2Cread_groups_read_groups%3D%40read_groups%2Cexclude_tags_exclude_tags%3D%40exclude_tags%29-instance-method">#</a>
       </div>
       
       <br/>
@@ -629,6 +644,20 @@
         def <strong>exclude_flags</strong> : UInt16
 
         <a class="method-permalink" href="#exclude_flags%3AUInt16-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="exclude_tags:Array(TagFilter)-instance-method">
+      <div class="signature">
+        
+        def <strong>exclude_tags</strong> : Array(<a href="../Mopdepth/TagFilter.html">TagFilter</a>)
+
+        <a class="method-permalink" href="#exclude_tags%3AArray%28TagFilter%29-instance-method">#</a>
       </div>
       
       <br/>

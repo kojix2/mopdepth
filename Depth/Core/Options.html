@@ -112,6 +112,11 @@
       
     </li>
   
+  <li class=" " data-id="mopdepth/Depth/Core/Interval" data-name="depth::core::interval">
+      <a href="../../Depth/Core/Interval.html">Interval</a>
+      
+    </li>
+  
   <li class=" current" data-id="mopdepth/Depth/Core/Options" data-name="depth::core::options">
       <a href="../../Depth/Core/Options.html">Options</a>
       
@@ -342,6 +347,11 @@
       
     </li>
   
+  <li class=" " data-id="mopdepth/Mopdepth/TagFilter" data-name="mopdepth::tagfilter">
+      <a href="../../Mopdepth/TagFilter.html">TagFilter</a>
+      
+    </li>
+  
   <li class=" " data-id="mopdepth/Mopdepth/Target" data-name="mopdepth::target">
       <a href="../../Mopdepth/Target.html">Target</a>
       
@@ -424,7 +434,7 @@
   <ul class="list-summary">
     
       <li class="entry-summary">
-        <a href="#new%28mapq%3AInt32%3D0%2Cmin_frag_len%3AInt32%3D-1%2Cmax_frag_len%3AInt32%3DInt32%3A%3AMAX%2Cexclude_flag%3AUInt16%3D1796_u16%2Cinclude_flag%3AUInt16%3D0_u16%2Cfast_mode%3ABool%3Dfalse%2Cfragment_mode%3ABool%3Dfalse%2Cread_groups%3AArray%28String%29%3D%5B%5DofString%29-class-method" class="signature"><strong>.new</strong>(mapq : Int32 = <span class="n">0</span>, min_frag_len : Int32 = <span class="n">-1</span>, max_frag_len : Int32 = <span class="t">Int32</span><span class="t">::</span><span class="t">MAX</span>, exclude_flag : UInt16 = <span class="n">1796_u16</span>, include_flag : UInt16 = <span class="n">0_u16</span>, fast_mode : Bool = <span class="n">false</span>, fragment_mode : Bool = <span class="n">false</span>, read_groups : Array(String) = <span class="o">[]</span> <span class="k">of</span> <span class="t">String</span>)</a>
+        <a href="#new%28mapq%3AInt32%3D0%2Cmin_frag_len%3AInt32%3D-1%2Cmax_frag_len%3AInt32%3DInt32%3A%3AMAX%2Cexclude_flag%3AUInt16%3D1796_u16%2Cinclude_flag%3AUInt16%3D0_u16%2Cfast_mode%3ABool%3Dfalse%2Cfragment_mode%3ABool%3Dfalse%2Cread_groups%3AArray%28String%29%3D%5B%5DofString%2Cexclude_tags%3AArray%28Mopdepth%3A%3ATagFilter%29%3D%5B%5DofMopdepth%3A%3ATagFilter%29-class-method" class="signature"><strong>.new</strong>(mapq : Int32 = <span class="n">0</span>, min_frag_len : Int32 = <span class="n">-1</span>, max_frag_len : Int32 = <span class="t">Int32</span><span class="t">::</span><span class="t">MAX</span>, exclude_flag : UInt16 = <span class="n">1796_u16</span>, include_flag : UInt16 = <span class="n">0_u16</span>, fast_mode : Bool = <span class="n">false</span>, fragment_mode : Bool = <span class="n">false</span>, read_groups : Array(String) = <span class="o">[]</span> <span class="k">of</span> <span class="t">String</span>, exclude_tags : Array(Mopdepth::TagFilter) = <span class="o">[]</span> <span class="k">of</span> <span class="t">Mopdepth</span><span class="t">::</span><span class="t">TagFilter</span>)</a>
         
       </li>
     
@@ -452,12 +462,17 @@
       </li>
     
       <li class="entry-summary">
-        <a href="#copy_with%28mapq_mapq%3D%40mapq%2Cmin_frag_len_min_frag_len%3D%40min_frag_len%2Cmax_frag_len_max_frag_len%3D%40max_frag_len%2Cexclude_flag_exclude_flag%3D%40exclude_flag%2Cinclude_flag_include_flag%3D%40include_flag%2Cfast_mode_fast_mode%3D%40fast_mode%2Cfragment_mode_fragment_mode%3D%40fragment_mode%2Cread_groups_read_groups%3D%40read_groups%29-instance-method" class="signature"><strong>#copy_with</strong>(mapq _mapq = @mapq, min_frag_len _min_frag_len = @min_frag_len, max_frag_len _max_frag_len = @max_frag_len, exclude_flag _exclude_flag = @exclude_flag, include_flag _include_flag = @include_flag, fast_mode _fast_mode = @fast_mode, fragment_mode _fragment_mode = @fragment_mode, read_groups _read_groups = @read_groups)</a>
+        <a href="#copy_with%28mapq_mapq%3D%40mapq%2Cmin_frag_len_min_frag_len%3D%40min_frag_len%2Cmax_frag_len_max_frag_len%3D%40max_frag_len%2Cexclude_flag_exclude_flag%3D%40exclude_flag%2Cinclude_flag_include_flag%3D%40include_flag%2Cfast_mode_fast_mode%3D%40fast_mode%2Cfragment_mode_fragment_mode%3D%40fragment_mode%2Cread_groups_read_groups%3D%40read_groups%2Cexclude_tags_exclude_tags%3D%40exclude_tags%29-instance-method" class="signature"><strong>#copy_with</strong>(mapq _mapq = @mapq, min_frag_len _min_frag_len = @min_frag_len, max_frag_len _max_frag_len = @max_frag_len, exclude_flag _exclude_flag = @exclude_flag, include_flag _include_flag = @include_flag, fast_mode _fast_mode = @fast_mode, fragment_mode _fragment_mode = @fragment_mode, read_groups _read_groups = @read_groups, exclude_tags _exclude_tags = @exclude_tags)</a>
         
       </li>
     
       <li class="entry-summary">
         <a href="#exclude_flag%3AUInt16-instance-method" class="signature"><strong>#exclude_flag</strong> : UInt16</a>
+        
+      </li>
+    
+      <li class="entry-summary">
+        <a href="#exclude_tags%3AArray%28Mopdepth%3A%3ATagFilter%29-instance-method" class="signature"><strong>#exclude_tags</strong> : Array(Mopdepth::TagFilter)</a>
         
       </li>
     
@@ -553,12 +568,12 @@
     Constructor Detail
   </h2>
   
-    <div class="entry-detail" id="new(mapq:Int32=0,min_frag_len:Int32=-1,max_frag_len:Int32=Int32::MAX,exclude_flag:UInt16=1796_u16,include_flag:UInt16=0_u16,fast_mode:Bool=false,fragment_mode:Bool=false,read_groups:Array(String)=[]ofString)-class-method">
+    <div class="entry-detail" id="new(mapq:Int32=0,min_frag_len:Int32=-1,max_frag_len:Int32=Int32::MAX,exclude_flag:UInt16=1796_u16,include_flag:UInt16=0_u16,fast_mode:Bool=false,fragment_mode:Bool=false,read_groups:Array(String)=[]ofString,exclude_tags:Array(Mopdepth::TagFilter)=[]ofMopdepth::TagFilter)-class-method">
       <div class="signature">
         
-        def self.<strong>new</strong>(mapq : Int32 = <span class="n">0</span>, min_frag_len : Int32 = <span class="n">-1</span>, max_frag_len : Int32 = <span class="t">Int32</span><span class="t">::</span><span class="t">MAX</span>, exclude_flag : UInt16 = <span class="n">1796_u16</span>, include_flag : UInt16 = <span class="n">0_u16</span>, fast_mode : Bool = <span class="n">false</span>, fragment_mode : Bool = <span class="n">false</span>, read_groups : Array(String) = <span class="o">[]</span> <span class="k">of</span> <span class="t">String</span>)
+        def self.<strong>new</strong>(mapq : Int32 = <span class="n">0</span>, min_frag_len : Int32 = <span class="n">-1</span>, max_frag_len : Int32 = <span class="t">Int32</span><span class="t">::</span><span class="t">MAX</span>, exclude_flag : UInt16 = <span class="n">1796_u16</span>, include_flag : UInt16 = <span class="n">0_u16</span>, fast_mode : Bool = <span class="n">false</span>, fragment_mode : Bool = <span class="n">false</span>, read_groups : Array(String) = <span class="o">[]</span> <span class="k">of</span> <span class="t">String</span>, exclude_tags : Array(<a href="../../Mopdepth/TagFilter.html">Mopdepth::TagFilter</a>) = <span class="o">[]</span> <span class="k">of</span> <span class="t">Mopdepth</span><span class="t">::</span><span class="t">TagFilter</span>)
 
-        <a class="method-permalink" href="#new%28mapq%3AInt32%3D0%2Cmin_frag_len%3AInt32%3D-1%2Cmax_frag_len%3AInt32%3DInt32%3A%3AMAX%2Cexclude_flag%3AUInt16%3D1796_u16%2Cinclude_flag%3AUInt16%3D0_u16%2Cfast_mode%3ABool%3Dfalse%2Cfragment_mode%3ABool%3Dfalse%2Cread_groups%3AArray%28String%29%3D%5B%5DofString%29-class-method">#</a>
+        <a class="method-permalink" href="#new%28mapq%3AInt32%3D0%2Cmin_frag_len%3AInt32%3D-1%2Cmax_frag_len%3AInt32%3DInt32%3A%3AMAX%2Cexclude_flag%3AUInt16%3D1796_u16%2Cinclude_flag%3AUInt16%3D0_u16%2Cfast_mode%3ABool%3Dfalse%2Cfragment_mode%3ABool%3Dfalse%2Cread_groups%3AArray%28String%29%3D%5B%5DofString%2Cexclude_tags%3AArray%28Mopdepth%3A%3ATagFilter%29%3D%5B%5DofMopdepth%3A%3ATagFilter%29-class-method">#</a>
       </div>
       
       <br/>
@@ -597,12 +612,12 @@
       </div>
     </div>
   
-    <div class="entry-detail" id="copy_with(mapq_mapq=@mapq,min_frag_len_min_frag_len=@min_frag_len,max_frag_len_max_frag_len=@max_frag_len,exclude_flag_exclude_flag=@exclude_flag,include_flag_include_flag=@include_flag,fast_mode_fast_mode=@fast_mode,fragment_mode_fragment_mode=@fragment_mode,read_groups_read_groups=@read_groups)-instance-method">
+    <div class="entry-detail" id="copy_with(mapq_mapq=@mapq,min_frag_len_min_frag_len=@min_frag_len,max_frag_len_max_frag_len=@max_frag_len,exclude_flag_exclude_flag=@exclude_flag,include_flag_include_flag=@include_flag,fast_mode_fast_mode=@fast_mode,fragment_mode_fragment_mode=@fragment_mode,read_groups_read_groups=@read_groups,exclude_tags_exclude_tags=@exclude_tags)-instance-method">
       <div class="signature">
         
-        def <strong>copy_with</strong>(mapq _mapq = @mapq, min_frag_len _min_frag_len = @min_frag_len, max_frag_len _max_frag_len = @max_frag_len, exclude_flag _exclude_flag = @exclude_flag, include_flag _include_flag = @include_flag, fast_mode _fast_mode = @fast_mode, fragment_mode _fragment_mode = @fragment_mode, read_groups _read_groups = @read_groups)
+        def <strong>copy_with</strong>(mapq _mapq = @mapq, min_frag_len _min_frag_len = @min_frag_len, max_frag_len _max_frag_len = @max_frag_len, exclude_flag _exclude_flag = @exclude_flag, include_flag _include_flag = @include_flag, fast_mode _fast_mode = @fast_mode, fragment_mode _fragment_mode = @fragment_mode, read_groups _read_groups = @read_groups, exclude_tags _exclude_tags = @exclude_tags)
 
-        <a class="method-permalink" href="#copy_with%28mapq_mapq%3D%40mapq%2Cmin_frag_len_min_frag_len%3D%40min_frag_len%2Cmax_frag_len_max_frag_len%3D%40max_frag_len%2Cexclude_flag_exclude_flag%3D%40exclude_flag%2Cinclude_flag_include_flag%3D%40include_flag%2Cfast_mode_fast_mode%3D%40fast_mode%2Cfragment_mode_fragment_mode%3D%40fragment_mode%2Cread_groups_read_groups%3D%40read_groups%29-instance-method">#</a>
+        <a class="method-permalink" href="#copy_with%28mapq_mapq%3D%40mapq%2Cmin_frag_len_min_frag_len%3D%40min_frag_len%2Cmax_frag_len_max_frag_len%3D%40max_frag_len%2Cexclude_flag_exclude_flag%3D%40exclude_flag%2Cinclude_flag_include_flag%3D%40include_flag%2Cfast_mode_fast_mode%3D%40fast_mode%2Cfragment_mode_fragment_mode%3D%40fragment_mode%2Cread_groups_read_groups%3D%40read_groups%2Cexclude_tags_exclude_tags%3D%40exclude_tags%29-instance-method">#</a>
       </div>
       
       <br/>
@@ -617,6 +632,20 @@
         def <strong>exclude_flag</strong> : UInt16
 
         <a class="method-permalink" href="#exclude_flag%3AUInt16-instance-method">#</a>
+      </div>
+      
+      <br/>
+      <div>
+        
+      </div>
+    </div>
+  
+    <div class="entry-detail" id="exclude_tags:Array(Mopdepth::TagFilter)-instance-method">
+      <div class="signature">
+        
+        def <strong>exclude_tags</strong> : Array(<a href="../../Mopdepth/TagFilter.html">Mopdepth::TagFilter</a>)
+
+        <a class="method-permalink" href="#exclude_tags%3AArray%28Mopdepth%3A%3ATagFilter%29-instance-method">#</a>
       </div>
       
       <br/>

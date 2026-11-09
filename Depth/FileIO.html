@@ -112,6 +112,11 @@
       
     </li>
   
+  <li class=" " data-id="mopdepth/Depth/Core/Interval" data-name="depth::core::interval">
+      <a href="../Depth/Core/Interval.html">Interval</a>
+      
+    </li>
+  
   <li class=" " data-id="mopdepth/Depth/Core/Options" data-name="depth::core::options">
       <a href="../Depth/Core/Options.html">Options</a>
       
@@ -342,6 +347,11 @@
       
     </li>
   
+  <li class=" " data-id="mopdepth/Mopdepth/TagFilter" data-name="mopdepth::tagfilter">
+      <a href="../Mopdepth/TagFilter.html">TagFilter</a>
+      
+    </li>
+  
   <li class=" " data-id="mopdepth/Mopdepth/Target" data-name="mopdepth::target">
       <a href="../Mopdepth/Target.html">Target</a>
       
@@ -441,9 +451,9 @@
       </li>
     
       <li class="entry-summary">
-        <a href="#read_bed%28path%3AString%2Ctargets%3AArray%28Depth%3A%3ACore%3A%3ATarget%29%29%3AHash%28String%2CArray%28Depth%3A%3ACore%3A%3ARegion%29%29-class-method" class="signature"><strong>.read_bed</strong>(path : String, targets : Array(Depth::Core::Target)) : Hash(String, Array(Depth::Core::Region))</a>
+        <a href="#read_bed%28path%3AString%2Ctargets%3AArray%28Depth%3A%3ACore%3A%3ATarget%29%29%3AHash%28String%2CArray%28Depth%3A%3ACore%3A%3AInterval%29%29-class-method" class="signature"><strong>.read_bed</strong>(path : String, targets : Array(Depth::Core::Target)) : Hash(String, Array(Depth::Core::Interval))</a>
         
-          <div class="summary"><p>BED reader → {chrom =&gt; [Region]}</p></div>
+          <div class="summary"><p>BED reader → {chrom =&gt; [Interval]}; intervals do not retain chromosome strings.</p></div>
         
       </li>
     
@@ -490,17 +500,17 @@
       </div>
     </div>
   
-    <div class="entry-detail" id="read_bed(path:String,targets:Array(Depth::Core::Target)):Hash(String,Array(Depth::Core::Region))-class-method">
+    <div class="entry-detail" id="read_bed(path:String,targets:Array(Depth::Core::Target)):Hash(String,Array(Depth::Core::Interval))-class-method">
       <div class="signature">
         
-        def self.<strong>read_bed</strong>(path : String, targets : Array(<a href="../Depth/Core/Target.html">Depth::Core::Target</a>)) : Hash(String, Array(<a href="../Depth/Core/Region.html">Depth::Core::Region</a>))
+        def self.<strong>read_bed</strong>(path : String, targets : Array(<a href="../Depth/Core/Target.html">Depth::Core::Target</a>)) : Hash(String, Array(<a href="../Depth/Core/Interval.html">Depth::Core::Interval</a>))
 
-        <a class="method-permalink" href="#read_bed%28path%3AString%2Ctargets%3AArray%28Depth%3A%3ACore%3A%3ATarget%29%29%3AHash%28String%2CArray%28Depth%3A%3ACore%3A%3ARegion%29%29-class-method">#</a>
+        <a class="method-permalink" href="#read_bed%28path%3AString%2Ctargets%3AArray%28Depth%3A%3ACore%3A%3ATarget%29%29%3AHash%28String%2CArray%28Depth%3A%3ACore%3A%3AInterval%29%29-class-method">#</a>
       </div>
       
         <div class="doc">
           
-          <p>BED reader → {chrom =&gt; [Region]}</p>
+          <p>BED reader → {chrom =&gt; [Interval]}; intervals do not retain chromosome strings.</p>
         </div>
       
       <br/>

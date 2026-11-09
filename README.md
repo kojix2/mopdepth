@@ -4,243 +4,179 @@
 [![Lines of Code](https://img.shields.io/endpoint?url=https%3A%2F%2Ftokei.kojix2.net%2Fbadge%2Fgithub%2Fkojix2%2Fmopdepth%2Flines)](https://tokei.kojix2.net/github/kojix2/mopdepth)
 ![Static Badge](https://img.shields.io/badge/PURE-VIBE_CODING-magenta)
 
-A fast BAM/CRAM depth calculation tool written in Crystal, inspired by [mosdepth](https://github.com/brentp/mosdepth).
-
-**This is an experiment to see if well-known tools can be ported to Crystal using “vibe coding”.**
-
-## Features
-
-- Fast depth calculation for BAM/CRAM files
-- Multiple processing modes (fast mode, fragment mode, CIGAR-based)
-- Per-base and region-based depth analysis
-- BED file support for custom regions
-- Plain, gzip, and BGZF BED input
-- Explicit FASTA references for CRAM input
-- D4 per-base output via the pure-Crystal `d4.cr` library
-- Window-based analysis
-- Comprehensive filtering options (MAPQ, fragment length, flags, read groups, AUX tag values)
+An LLM-assisted port of [mosdepth](https://github.com/brentp/mosdepth) to Crystal
+for BAM/CRAM depth calculation. LLMs were used to translate and adapt the original
+implementation. It provides per-base depth, region statistics, coverage
+distributions, quantization, and threshold counts.
 
 ## Installation
 
-### Prerequisites
+Building from source requires Crystal, Shards, HTSlib, and Make.
 
-- Crystal
-- hts-lib (for BAM/CRAM support)
-- Make
-
-### Build from source
-
-```bash
+```sh
 git clone https://github.com/kojix2/mopdepth
 cd mopdepth
 make
+bin/mopdepth --help
 ```
 
-The default target always builds an optimized release binary at `bin/mopdepth`.
-Use `make debug` only when a non-optimized development binary is needed.
+`make` builds an optimized release binary at `bin/mopdepth`. Use `make debug`
+for a development build. D4 output is included through
+[d4.cr](https://github.com/bio-cr/d4.cr), with no Rust or native D4 dependency.
 
-D4 support is included in the regular build through
-[`bio-cr/d4.cr`](https://github.com/bio-cr/d4.cr). It requires neither Rust nor
-the native `d4binding` library. Run `make test-d4` to execute the D4
-write/read-back integration tests.
+## Usage
 
-### Library API
+Input must be an indexed BAM or CRAM file. For CRAM, supply the reference FASTA
+with `-f` or `REF_PATH`.
 
-Applications can use mopdepth without invoking its CLI:
+```sh
+bin/mopdepth [options] <prefix> <BAM-or-CRAM>
+
+# Per-base depth and summary statistics
+bin/mopdepth output sample.bam
+
+# BED regions or 1 kb windows, without per-base output
+bin/mopdepth -n -b regions.bed regions sample.bam
+bin/mopdepth -n -b 1000 windows sample.bam
+
+# CRAM input or D4 output
+bin/mopdepth -f reference.fa cram sample.cram
+bin/mopdepth --d4 depth sample.bam
+```
+
+Use `bin/mopdepth --help` for the full option list.
+
+| Option | Purpose |
+| --- | --- |
+| `-t, --threads N` | BAM decompression threads |
+| `-c, --chrom REGION` | Select a chromosome or a 1-based inclusive range, such as `chr1:100-200` |
+| `-b, --by BED_OR_SIZE` | BED regions or a positive window size |
+| `-f, --fasta FASTA` | CRAM reference; defaults to `REF_PATH` |
+| `-n, --no-per-base` | Skip per-base output |
+| `--d4` | Replace per-base BED.gz with D4 |
+| `-Q, --mapq N` | Minimum mapping quality |
+| `-l, --min-frag-len N` | Minimum fragment length |
+| `-u, --max-frag-len N` | Maximum fragment length |
+| `-x, --fast-mode` | Calculate depth from read start/end positions |
+| `-a, --fragment-mode` | Count full fragments from proper pairs |
+| `-m, --use-median` | Use median instead of mean for region statistics |
+| `-q, --quantize BINS` | Quantized output, for example `0:1:4:` |
+| `-T, --thresholds LIST` | Region coverage counts at comma-separated thresholds; requires `--by` |
+| `-F, --flag MASK` | Exclude records with any specified FLAG bit; default `1796` |
+| `-i, --include-flag MASK` | Include records with any specified FLAG bit |
+| `-R, --read-groups LIST` | Select comma-separated read group IDs |
+| `--exclude-tag TAG:VALUE` | Exclude exact string AUX tag matches; comma-separated and repeatable |
+| `-M, --mos` | Use `mosdepth` instead of `mopdepth` in summary and distribution filenames |
+
+The default mode uses CIGAR operations to calculate depth. Fast mode and fragment
+mode are mutually exclusive. Fragment mode examines the complete chromosome even
+with `--chrom`, so fragments spanning the selected range are included.
+
+### Regions
+
+BED input may be plain text, gzip, or BGZF. Coordinates must be zero-based,
+half-open, non-empty, and within the named reference. Unknown references are
+reported and ignored. Overlapping intervals are counted independently.
+
+With `-n -b regions.bed`, chromosomes absent from the BED are skipped unless
+`-q` or `-T` is also requested. Skipped chromosomes do not contribute to summaries,
+distributions, or `total`. For processed chromosomes, `total` and the global
+distribution cover the entire chromosome or selected `--chrom` range;
+`total_region` and the region distribution cover the BED intervals.
+
+### Tag filtering
+
+To keep PCR/library duplicates while excluding optical duplicates:
+
+```sh
+bin/mopdepth -F 772 --exclude-tag DT:SQ output sample.bam
+```
+
+The default FLAG mask excludes all duplicate-flagged records, so changing `-F`
+is necessary for this use. Tag conditions are combined with OR and apply to
+individual records in every mode. Matching is exact and case-sensitive; missing
+or non-string tags do not match. Tag names must match `[A-Za-z][A-Za-z0-9]`.
+Values may contain colons, spaces, or be empty (`XX:`); quote shell arguments
+containing spaces. Commas separate conditions.
+
+## Output
+
+`<label>` is `mopdepth` by default and `mosdepth` with `-M`.
+
+| File | Written when |
+| --- | --- |
+| `<prefix>.<label>.summary.txt` | Always |
+| `<prefix>.<label>.global.dist.txt` | Always |
+| `<prefix>.per-base.bed.gz` | Per-base output is enabled without `--d4` |
+| `<prefix>.per-base.d4` | `--d4` replaces per-base BED.gz; `-n` disables both |
+| `<prefix>.regions.bed.gz` | `--by` is set |
+| `<prefix>.<label>.region.dist.txt` | `--by` is set |
+| `<prefix>.quantized.bed.gz` | `--quantize` is set |
+| `<prefix>.thresholds.bed.gz` | `--thresholds` and `--by` are set |
+
+BED outputs are BGZF-compressed and receive CSI indexes after successful
+completion. D4 output receives an embedded secondary frame index.
+
+The summary columns are `chrom`, `length`, `bases`, `mean`, `min`, and `max`.
+`length` is the number of bases summarized; `bases` is the sum of their depths.
+
+Histogram-based statistics have fixed limits:
+
+| Statistic | Limit |
+| --- | --- |
+| Region median (`-m`) | Depths above 65,535 share bin 65,535 |
+| Numeric-window region distribution | Rounded means or medians above 511 share bin 511 |
+| Global and BED-region distributions | Depths above 400,000 share bin 399,990 |
+
+These limits leave per-base depth, threshold counts, quantization, and summary
+mean and maximum depth unchanged.
+
+## Library API
 
 ```crystal
 require "mopdepth"
 
-options = Mopdepth::Options.new(
-  mode: Mopdepth::Mode::Standard,
-  minimum_mapping_quality: 20
-)
+options = Mopdepth::Options.new(minimum_mapping_quality: 20)
+control = Mopdepth::Control.new { |progress| STDERR.puts progress }
 
 Mopdepth::Reader.open("sample.bam", threads: 4) do |reader|
-  reader.each_coverage(options: options) do |coverage|
+  reader.each_coverage(options: options, control: control) do |coverage|
     puts "#{coverage.region.chromosome}: #{coverage.values.size} bases"
   end
 end
 ```
 
-`Mopdepth::Reader` owns the indexed BAM/CRAM handle and exposes `coverage`,
-`coverage_into`, and `each_coverage`. Coordinates are always zero-based and
-half-open. `coverage_into` reuses a caller-owned `Array(Int32)`; returned arrays
-contain one value per base and never expose the internal difference-array
-sentinel. A reader is serial: use one reader per concurrent worker.
+`Reader` provides `coverage`, `coverage_into`, and `each_coverage`. Coordinates
+are zero-based and half-open. `coverage_into` reuses a caller-owned
+`Array(Int32)`; results contain one depth per base. Use one reader per concurrent
+worker. The block form closes the reader automatically.
 
-Long operations support cooperative cancellation and progress callbacks:
+`Options` supports `Mode::Standard`, `Mode::Fast`, and `Mode::Fragment`. Tag
+exclusions use `exclude_tags: [Mopdepth::TagFilter.new("DT", "SQ")]`; FLAG
+filtering is set separately through `exclude_flags`. Pass `control:` for progress
+callbacks and cooperative cancellation; another fiber or thread can call
+`control.cancel`. For CRAM, pass `reference: "reference.fa"` to `Reader.open`.
 
-```crystal
-control = Mopdepth::Control.new { |progress| puts progress }
-# Another fiber or thread may call control.cancel.
-coverage = reader.coverage("chr1", options: options, control: control)
-```
+## mosdepth compatibility
 
-## Usage
+Coverage, filtering, NoData, thresholds, quantization, and window distributions
+follow mosdepth conventions. Compatibility checks compare decoded output and
+indexed query results.
 
-```bash
-./mopdepth [options] <prefix> <BAM-or-CRAM>
-```
+Mopdepth uses the true intersection when removing overlap from contained read
+pairs, includes the final reference base in quantization, and applies `--chrom`
+ranges to calculation and output. These intentionally differ from mosdepth
+0.3.x edge cases. Region means use integer depth sums before formatting.
 
-### Basic example
+## Development
 
-```bash
-./mopdepth output sample.bam
-```
-
-### Options
-
-- `-t, --threads THREADS`: BAM decompression threads
-- `-c, --chrom CHROM`: Restrict to chromosome
-- `-b, --by BY`: BED file or numeric window size
-- `-f, --fasta FASTA`: FASTA reference for CRAM input (defaults to `REF_PATH`)
-- `-n, --no-per-base`: Skip per-base output
-- `--d4`: Write per-base depth as D4
-- `-Q, --mapq MAPQ`: MAPQ threshold
-- `-l, --min-frag-len MIN`: Minimum fragment length
-- `-u, --max-frag-len MAX`: Maximum fragment length
-- `-x, --fast-mode`: Fast mode (read start/end positions only)
-- `-a, --fragment-mode`: Count full fragment (proper pairs only)
-- `-m, --use-median`: Use median for region stats instead of mean
-- `-q, --quantize QUANTIZE`: Write quantized output (for example, `0:1:4:`)
-- `-T, --thresholds THRESHOLDS`: Comma-separated thresholds for region coverage
-- `-F, --flag FLAG`: Exclude reads with FLAG bits set
-- `-i, --include-flag FLAG`: Include only reads with FLAG bits set
-- `-R, --read-groups GROUPS`: Comma-separated read group IDs
-- `--exclude-tag TAG:VALUE`: Exclude records with an exactly matching string AUX tag; comma-separated and repeatable
-- `-M, --mos`: Use mosdepth-compatible filenames (mosdepth.*); default is mopdepth.*
-- `-v, --version`: Show version
-- `-h, --help`: Show help message
-
-### Processing modes
-
-- **Default mode**: CIGAR-based depth calculation (most accurate)
-- **Fast mode** (`-x`): Uses read start/end positions (faster but less accurate)
-- **Fragment mode** (`-a`): Counts full fragments for paired-end reads
-
-**Note**: Fast mode and fragment mode cannot be used together.
-
-To retain PCR/library duplicates while excluding optical duplicates:
-
-```bash
-./mopdepth -F 772 --exclude-tag DT:SQ output sample.bam
-```
-
-Flag filters still apply; the default exclusion mask removes all duplicate-flagged
-reads. Tag conditions are combined with OR, for example `--exclude-tag DT:SQ,DT:LB`.
-Repeating `--exclude-tag` adds conditions. Matching is case-sensitive, preserves
-colons and spaces in values, and permits empty string values (`--exclude-tag XX:`).
-Missing tags and tags with non-string types do not match. Tag names must follow
-SAM's two-character `[A-Za-z][A-Za-z0-9]` pattern. Conditions filter individual
-records before coverage calculation in every processing mode.
-
-The library API accepts the same conditions as validated objects:
-
-```crystal
-options = Mopdepth::Options.new(
-  exclude_flags: 772_u16,
-  exclude_tags: [Mopdepth::TagFilter.new("DT", "SQ")]
-)
-```
-
-Window sizes must be positive. BED intervals are validated against the alignment
-header: coordinates must be 0-based half-open, non-empty, non-negative, and
-contained in the named reference. References absent from the alignment header are
-reported and ignored. Overlapping BED intervals remain independent observations.
-
-With `-n -b regions.bed`, chromosomes absent from the BED are skipped entirely
-when neither `-q` nor `-T` is requested. They are therefore absent from the
-chromosome summaries and global distributions, and do not contribute to `total`.
-For chromosomes present in the BED, `total` and the global distribution still
-cover each entire processed chromosome (or the selected `--chrom` range), while
-`total_region` and the region distribution cover the BED intervals. This skip
-is a mosdepth-compatible performance optimization.
-
-`--chrom` also accepts a 1-based inclusive range such as `chr1:100-200`. Unlike
-mosdepth 0.3.x, mopdepth applies that range to calculation and output. In fragment
-mode it still examines the complete chromosome so fragments spanning the selected
-range are not missed.
-
-### Output files
-
-- Summary: `<prefix>.(mopdepth|mosdepth).summary.txt`
-- Per-base: `<prefix>.per-base.bed.gz` (unless `-n`)
-- D4 per-base: `<prefix>.per-base.d4` (`--d4`, replacing per-base BED.gz)
-- Global dist: `<prefix>.(mopdepth|mosdepth).global.dist.txt`
-- Regions: `<prefix>.regions.bed.gz` (when `--by`)
-- Region dist: `<prefix>.(mopdepth|mosdepth).region.dist.txt` (when `--by`)
-- Quantized: `<prefix>.quantized.bed.gz` (when `--quantize`)
-- Thresholds: `<prefix>.thresholds.bed.gz` (when `--thresholds` and `--by`)
-
-By default, files are named with the `mopdepth.*` label. Use `-M/--mos` to switch to `mosdepth.*`.
-
-Histogram-based outputs have bounded depth bins, matching mosdepth's performance
-conventions: `-m` reports 65,535 for medians above 65,535; numeric-window
-`region.dist` places rounded means or medians above 511 in bin 511; and global
-or BED-region distributions place per-base depths above 400,000 in bin 399,990.
-These bounds do not clip per-base depth, threshold counts, quantized output, or
-mean and maximum depth in the summary.
-
-### mosdepth compatibility
-
-mopdepth follows mosdepth's coverage, filtering, NoData, threshold, quantization,
-and window-distribution conventions where those conventions are well-defined.
-Compressed output and CSI files are compared by decoded content and query results,
-not by their binary bytes.
-
-Two known mosdepth edge-case errors are intentionally not reproduced: contained
-read pairs use the true intersection when removing mate overlap, and quantization
-examines the final real base of every reference. Region means are accumulated as
-integer depth sums before formatting to avoid floating-point accumulation drift.
-
-D4-enabled builds support mosdepth-style `--d4` per-base output and create an
-embedded secondary frame index after successfully closing the file. `-M/--mos`
-changes compatible output names; it does not enable bug-for-bug compatibility.
-
-### Summary file format
-
-The summary file contains the following columns:
-
-- `chrom`: Chromosome name
-- `length`: Chromosome length
-- `bases`: Total depth (sum of all depths)
-- `mean`: Mean depth
-- `min`: Minimum depth
-- `max`: Maximum depth
-
-## Examples
-
-### Basic depth calculation
-
-```bash
-./mopdepth output sample.bam
-```
-
-### With BED regions
-
-```bash
-./mopdepth -b regions.bed output sample.bam
-```
-
-### Window-based analysis (1kb windows)
-
-```bash
-./mopdepth -b 1000 output sample.bam
-```
-
-### Fast mode with MAPQ filtering
-
-```bash
-./mopdepth -x -Q 20 output sample.bam
-```
-
-### Fragment mode for paired-end data
-
-```bash
-./mopdepth -a -l 100 -u 1000 output sample.bam
+```sh
+make test
+make test-d4
+make lint
+make format-check
 ```
 
 ## License
 
-MIT License
+[MIT](LICENSE)

@@ -2,7 +2,7 @@ version: 2.0
 shards:
   ameba:
     git: https://github.com/crystal-ameba/ameba.git
-    version: 1.7.1-dev+git.commit.1551fdad4764b17ed76fda69c6cf37a3bb663e93
+    version: 1.7.1-dev+git.commit.1fe2b8b101deccef06a0b6f6dadae80cd01168a2
 
   d4:
     git: https://github.com/bio-cr/d4.cr.git
@@ -10,5 +10,5 @@ shards:
 
   hts:
     git: https://github.com/bio-cr/hts.cr.git
-    version: 0.4.0+git.commit.f2efb5da9b8b08a65d69464071a42bd159639fee
+    version: 0.5.0+git.commit.66466cfe351024c187af0f0fedc9a0cc366b9922
 

@@ -235,8 +235,8 @@ module Depth
       if tid == Core::CoverageResult::NoData.value
         output.write_per_base_interval(target.name, slice.offset, slice.offset + slice.effective_len, 0)
       else
-        self.class.each_constant_segment(coverage, slice.target_size - 1) do |(s, e, v)|
-          output.write_per_base_interval(target.name, s + slice.offset, e + slice.offset, v)
+        self.class.each_constant_segment(coverage, slice.target_size - 1) do |(start, stop, value)|
+          output.write_per_base_interval(target.name, start + slice.offset, stop + slice.offset, value)
         end
       end
     end

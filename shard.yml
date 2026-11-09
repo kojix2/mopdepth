@@ -14,13 +14,11 @@ dependencies:
     branch: develop
   d4:
     github: bio-cr/d4.cr
-    version: 0.0.0
+    version: 0.0.1
 
 development_dependencies:
   ameba:
     github: crystal-ameba/ameba
     branch: master
-
-crystal: '>= 1.21.0'
 
 license: MIT

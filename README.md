@@ -18,7 +18,7 @@ A fast BAM/CRAM depth calculation tool written in Crystal, inspired by [mosdepth
 - Explicit FASTA references for CRAM input
 - D4 per-base output via the pure-Crystal `d4.cr` library
 - Window-based analysis
-- Comprehensive filtering options (MAPQ, fragment length, flags)
+- Comprehensive filtering options (MAPQ, fragment length, flags, read groups, AUX tag values)
 
 ## Installation
 
@@ -108,6 +108,7 @@ coverage = reader.coverage("chr1", options: options, control: control)
 - `-F, --flag FLAG`: Exclude reads with FLAG bits set
 - `-i, --include-flag FLAG`: Include only reads with FLAG bits set
 - `-R, --read-groups GROUPS`: Comma-separated read group IDs
+- `--exclude-tag TAG:VALUE`: Exclude records with an exactly matching string AUX tag; comma-separated and repeatable
 - `-M, --mos`: Use mosdepth-compatible filenames (mosdepth.*); default is mopdepth.*
 - `-v, --version`: Show version
 - `-h, --help`: Show help message
@@ -119,6 +120,29 @@ coverage = reader.coverage("chr1", options: options, control: control)
 - **Fragment mode** (`-a`): Counts full fragments for paired-end reads
 
 **Note**: Fast mode and fragment mode cannot be used together.
+
+To retain PCR/library duplicates while excluding optical duplicates:
+
+```bash
+./mopdepth -F 772 --exclude-tag DT:SQ output sample.bam
+```
+
+Flag filters still apply; the default exclusion mask removes all duplicate-flagged
+reads. Tag conditions are combined with OR, for example `--exclude-tag DT:SQ,DT:LB`.
+Repeating `--exclude-tag` adds conditions. Matching is case-sensitive, preserves
+colons and spaces in values, and permits empty string values (`--exclude-tag XX:`).
+Missing tags and tags with non-string types do not match. Tag names must follow
+SAM's two-character `[A-Za-z][A-Za-z0-9]` pattern. Conditions filter individual
+records before coverage calculation in every processing mode.
+
+The library API accepts the same conditions as validated objects:
+
+```crystal
+options = Mopdepth::Options.new(
+  exclude_flags: 772_u16,
+  exclude_tags: [Mopdepth::TagFilter.new("DT", "SQ")]
+)
+```
 
 Window sizes must be positive. BED intervals are validated against the alignment
 header: coordinates must be 0-based half-open, non-empty, non-negative, and

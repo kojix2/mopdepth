@@ -24,6 +24,7 @@ module Depth
     property exclude_flag : UInt16 = 1796_u16
     property include_flag : UInt16 = 0_u16
     property read_groups_str : String = ""
+    property exclude_tags : Array(Mopdepth::TagFilter) = [] of Mopdepth::TagFilter
     property? d4 : Bool = false
     # When true, use mosdepth-compatible names (mosdepth.*); otherwise mopdepth.*
     property? mos_style : Bool = false
@@ -85,6 +86,7 @@ module Depth
         fast_mode: fast_mode?,
         fragment_mode: fragment_mode?,
         read_groups: parse_read_groups,
+        exclude_tags: exclude_tags,
       )
     end
 

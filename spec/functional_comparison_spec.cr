@@ -53,6 +53,22 @@ describe "Functional comparison with mosdepth" do
     FileUtils.rm_rf(temp_dir) if Dir.exists?(temp_dir)
   end
 
+  it "matches mosdepth's string tag exclusion with multiple conditions" do
+    next unless mosdepth_available?(mosdepth_dir)
+    tagged_bam = File.expand_path("#{mosdepth_dir}/tests/dup-tags.bam")
+    next unless File.exists?(tagged_bam)
+
+    ["DT:SQ", "DT:SQ,DT:LB", "ZZ:absent"].each_with_index do |condition, index|
+      arguments = ["-F", "772", "--exclude-tag", condition]
+      mos_prefix = "#{temp_dir}/mos_tags#{index}"
+      mop_prefix = "#{temp_dir}/mop_tags#{index}"
+      run_mosdepth(arguments, mos_prefix, temp_dir, mosdepth_dir, tagged_bam).success?.should be_true
+      run_mopdepth(arguments, mop_prefix, temp_dir, tagged_bam).success?.should be_true
+      compare_files("#{mos_prefix}.per-base.bed.gz", "#{mop_prefix}.per-base.bed.gz").should be_true
+      compare_files("#{mos_prefix}.mosdepth.summary.txt", "#{mop_prefix}.mosdepth.summary.txt").should be_true
+    end
+  end
+
   describe "basic coverage calculation" do
     it "produces identical per-base output" do
       next unless mosdepth_available?(mosdepth_dir)

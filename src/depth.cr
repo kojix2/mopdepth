@@ -50,6 +50,9 @@ module Depth
         psr.on("-F", "--flag FLAG", "Exclude reads with FLAG bits set") { |v| config.exclude_flag = parse_u16(v, "--flag") }
         psr.on("-i", "--include-flag FLAG", "Include only reads with FLAG bits set") { |v| config.include_flag = parse_u16(v, "--include-flag") }
         psr.on("-R", "--read-groups GROUPS", "Comma-separated read group IDs") { |v| config.read_groups_str = v }
+        psr.on("--exclude-tag TAG:VALUE", "Exclude matching string AUX tags (comma-separated; repeatable)") do |value|
+          config.exclude_tags.concat(Mopdepth::TagFilter.parse_list(value))
+        end
         psr.on("-v", "--version", "Show version") { puts Depth::VERSION; exit 0 }
         psr.on("-M", "--mos", "Use mosdepth-compatible filenames (mosdepth.*)") { config.mos_style = true }
         psr.on("-h", "--help", "Show this message") { puts psr; exit 0 }

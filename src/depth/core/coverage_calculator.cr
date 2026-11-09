@@ -99,11 +99,15 @@ module Depth::Core
     end
 
     @evbuf : Array(Tuple(Int32, Int32))
+    @exclude_tags : Array(Tuple(StaticArray(UInt8, 2), String))
 
     def initialize(@bam : HTS::Bam, @options : Options, @on_record : Proc(Nil)? = nil)
       # store first-read of overlapping proper pairs to correct double-counting when mate arrives
       @seen = Hash(QnameKey, SeenMate).new
       @evbuf = [] of Tuple(Int32, Int32)
+      @exclude_tags = @options.exclude_tags.map do |filter|
+        {HTS::Bam.aux_tag_to_static_array(filter.tag), filter.value}
+      end
     end
 
     # Check if record should be filtered out
@@ -123,7 +127,26 @@ module Depth::Core
         return true unless rg && @options.read_groups.includes?(rg)
       end
 
+      @exclude_tags.each do |tag, value|
+        return true if matching_tag?(rec, tag, value)
+      end
+
       false
+    end
+
+    private def matching_tag?(rec, tag : StaticArray(UInt8, 2), expected : String) : Bool
+      data = HTS::LibHTS.bam_aux_get(rec.to_unsafe, tag)
+      return false if data.null?
+      # Only Z/H tags are strings; other types are ordinary non-matches.
+      return false unless data.value == 'Z'.ord || data.value == 'H'.ord
+
+      # Compare borrowed bytes without allocating a String for every record.
+      actual = HTS::LibHTS.bam_aux2_z(data)
+      expected.each_byte do |byte|
+        return false unless actual.value == byte
+        actual += 1
+      end
+      actual.value == 0
     end
 
     # Calculate coverage for a single record (positions are shifted by `offset` for region queries)

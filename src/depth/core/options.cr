@@ -1,3 +1,5 @@
+require "../../mopdepth/tag_filter"
+
 module Depth::Core
   record Options,
     mapq : Int32 = 0,
@@ -7,5 +9,6 @@ module Depth::Core
     include_flag : UInt16 = 0_u16,
     fast_mode : Bool = false,
     fragment_mode : Bool = false,
-    read_groups : Array(String) = [] of String
+    read_groups : Array(String) = [] of String,
+    exclude_tags : Array(Mopdepth::TagFilter) = [] of Mopdepth::TagFilter
 end

@@ -1,3 +1,5 @@
+require "./tag_filter"
+
 module Mopdepth
   enum Mode
     Standard
@@ -15,7 +17,8 @@ module Mopdepth
     maximum_fragment_length : Int32? = nil,
     exclude_flags : UInt16 = 1796_u16,
     include_flags : UInt16 = 0_u16,
-    read_groups : Array(String) = [] of String do
+    read_groups : Array(String) = [] of String,
+    exclude_tags : Array(TagFilter) = [] of TagFilter do
     def validate! : Nil
       unless (0..255).includes?(minimum_mapping_quality)
         raise ArgumentError.new("minimum_mapping_quality must be between 0 and 255")

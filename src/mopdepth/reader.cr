@@ -140,6 +140,7 @@ module Mopdepth
         fast_mode: options.mode.fast?,
         fragment_mode: options.mode.fragment?,
         read_groups: options.read_groups,
+        exclude_tags: options.exclude_tags,
       )
       query = if options.mode.fragment?
                 Depth::Core::Region.new(region.chromosome, 0, reference.length)

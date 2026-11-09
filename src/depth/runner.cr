@@ -140,14 +140,14 @@ module Depth
       selected
     end
 
-    private def load_bed_map(targets : Array(Core::Target)) : Hash(String, Array(Core::Region))?
+    private def load_bed_map(targets : Array(Core::Target)) : Hash(String, Array(Core::Interval))?
       return unless bed_path = @config.bed_path
 
       FileIO.read_bed(bed_path, targets)
     end
 
     private def process_targets(bam : HTS::Bam, opts : Core::Options, targets : Array(Core::Target),
-                                region : Core::Region?, bed_map : Hash(String, Array(Core::Region))?,
+                                region : Core::Region?, bed_map : Hash(String, Array(Core::Interval))?,
                                 output : FileIO::OutputManager, state : ProcessingState)
       calculator = Core::CoverageCalculator.new(bam, opts)
       coverage = Core::Coverage.new(0)
@@ -163,10 +163,11 @@ module Depth
 
         finalize_coverage!(coverage, tid, slice.target_size)
         process_target_outputs(target, coverage, tid, slice, window, bed_map, output, state)
+        bed_map.try(&.delete(target.name))
       end
     end
 
-    private def skip_target?(target : Core::Target, bed_map : Hash(String, Array(Core::Region))?) : Bool
+    private def skip_target?(target : Core::Target, bed_map : Hash(String, Array(Core::Interval))?) : Bool
       # With -n -b BED, skip BED-absent chromosomes even in global summaries.
       # Quantized and threshold outputs still require visiting every chromosome.
       return false unless @config.no_per_base? && bed_map
@@ -218,7 +219,7 @@ module Depth
 
     private def process_target_outputs(target : Core::Target, coverage : Core::Coverage, tid : Int32,
                                        slice : TargetSlice,
-                                       window : Int32, bed_map : Hash(String, Array(Core::Region))?,
+                                       window : Int32, bed_map : Hash(String, Array(Core::Interval))?,
                                        output : FileIO::OutputManager, state : ProcessingState)
       write_per_base_intervals(target, coverage, tid, slice, output)
       write_quantized_intervals(target, coverage, tid, output, slice.offset, slice.target_size) if output.f_quantized && @config.has_quantize?
@@ -243,7 +244,7 @@ module Depth
 
     private def write_regions_if_needed(target : Core::Target, coverage : Core::Coverage, tid : Int32,
                                         slice : TargetSlice,
-                                        window : Int32, bed_map : Hash(String, Array(Core::Region))?,
+                                        window : Int32, bed_map : Hash(String, Array(Core::Interval))?,
                                         output : FileIO::OutputManager, state : ProcessingState) : Stats::DepthStat
       return Stats::DepthStat.new unless output.f_regions
 
@@ -308,7 +309,7 @@ module Depth
     end
 
     private def write_region_stats(t : Core::Target, coverage : Core::Coverage, tid : Int32,
-                                   window : Int32, bed_map : Hash(String, Array(Core::Region))?,
+                                   window : Int32, bed_map : Hash(String, Array(Core::Interval))?,
                                    cs : Stats::IntHistogram, output : FileIO::OutputManager,
                                    region_dist : Array(Int64), offset : Int32, effective_len : Int32,
                                    thresholds : Array(Int32)) : Stats::DepthStat
@@ -369,12 +370,12 @@ module Depth
     end
 
     private def process_bed_regions(t : Core::Target, coverage : Core::Coverage, tid : Int32,
-                                    bed_map : Hash(String, Array(Core::Region))?,
+                                    bed_map : Hash(String, Array(Core::Interval))?,
                                     cs : Stats::IntHistogram, output : FileIO::OutputManager,
                                     region_dist : Array(Int64), offset : Int32, effective_len : Int32,
                                     thresholds : Array(Int32)) : Stats::DepthStat
       chrom_region_stat = Stats::DepthStat.new
-      regs = bed_map.try(&.[t.name]?) || [] of Core::Region
+      regs = bed_map.try(&.[t.name]?) || [] of Core::Interval
       region_start = offset
       region_stop = offset + effective_len
       regs.each do |region|

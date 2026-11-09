@@ -1,4 +1,5 @@
 require "../core/region"
+require "../core/interval"
 require "../core/target"
 require "../errors"
 require "hts"
@@ -30,10 +31,10 @@ module Depth::FileIO
     Depth::Core::Region.new(target.name, (first - 1).to_i32, last.to_i32)
   end
 
-  # BED reader → {chrom => [Region]}
-  def self.read_bed(path : String, targets : Array(Depth::Core::Target)) : Hash(String, Array(Depth::Core::Region))
-    tbl = Hash(String, Array(Depth::Core::Region)).new { |hash, key| hash[key] = [] of Depth::Core::Region }
-    target_lengths = targets.to_h { |target| {target.name, target.length} }
+  # BED reader → {chrom => [Interval]}; intervals do not retain chromosome strings.
+  def self.read_bed(path : String, targets : Array(Depth::Core::Target)) : Hash(String, Array(Depth::Core::Interval))
+    tbl = Hash(String, Array(Depth::Core::Interval)).new { |hash, key| hash[key] = [] of Depth::Core::Interval }
+    targets_by_name = targets.to_h { |target| {target.name, target} }
     unknown = Set(String).new
     line_number = 0
 
@@ -41,8 +42,9 @@ module Depth::FileIO
       bed.each_line do |line|
         line_number += 1
         next if line.strip.empty? || line.starts_with?("#") || line.starts_with?("track ") || line.starts_with?("browser ")
-        if region = parse_bed_line(line, path, line_number, target_lengths, unknown)
-          tbl[region.chrom] << region
+        if parsed = parse_bed_line(line, path, line_number, targets_by_name, unknown)
+          chrom, interval = parsed
+          tbl[chrom] << interval
         end
       end
     end
@@ -52,15 +54,16 @@ module Depth::FileIO
   end
 
   private def self.parse_bed_line(line : String, path : String, line_number : Int32,
-                                  target_lengths : Hash(String, Int32), unknown : Set(String)) : Depth::Core::Region?
-    cols = line.rstrip.split('\t')
+                                  targets : Hash(String, Depth::Core::Target), unknown : Set(String)) : Tuple(String, Depth::Core::Interval)?
+    cols = line.rstrip.split('\t', 5)
     raise Depth::ConfigError.new("#{path}:#{line_number}: BED line has fewer than 3 columns") if cols.size < 3
 
     chrom = cols[0]
-    unless chrom_len = target_lengths[chrom]?
+    unless target = targets[chrom]?
       warn_unknown_chromosome(chrom, unknown)
       return
     end
+    chrom_len = target.length
 
     start_pos = cols[1].to_i32?
     stop_pos = cols[2].to_i32?
@@ -74,7 +77,7 @@ module Depth::FileIO
     end
 
     name = cols[3]?.try(&.strip).presence
-    Depth::Core::Region.new(chrom, start_pos, stop_pos, name)
+    {target.name, Depth::Core::Interval.new(start_pos, stop_pos, name)}
   end
 
   private def self.warn_unknown_chromosome(chrom : String, unknown : Set(String))
